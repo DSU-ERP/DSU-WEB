@@ -1,0 +1,21 @@
+{
+  "original": "grand-exploded-reference.png",
+  "originalSha256": "1d63be95dcd2df15100e515cf0a1ce16ae5d830d86921b129ceb85a750cffa96",
+  "method": "Lanczos3 interpolation with restrained edge sharpening; no new architectural detail invented.",
+  "outputs": [
+    {
+      "file": "grand-exploded-reference-2x.webp",
+      "scale": 2,
+      "width": 3344,
+      "height": 1882,
+      "bytes": 1267390
+    },
+    {
+      "file": "grand-exploded-reference-4x.webp",
+      "scale": 4,
+      "width": 6688,
+      "height": 3764,
+      "bytes": 2677284
+    }
+  ]
+}

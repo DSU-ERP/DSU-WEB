@@ -1,0 +1,58 @@
+/* One persistent college illustration, moving from introduction to portal. */
+html{scroll-behavior:auto}
+.site-header{position:sticky;top:0}
+.site-header nav>a::after{display:none}
+.static-campus{min-height:max(600px,calc(100svh - 80px));display:flex;flex-direction:column;padding:24px var(--gutter) 42px;scroll-margin-top:0}
+.static-campus:focus{outline:none}
+.campus-masthead{display:flex;justify-content:space-between;gap:20px;font:7px/1.5 var(--mono);letter-spacing:.05em;color:var(--muted)}
+.campus-presentation{width:min-content;max-width:100%;margin-inline:auto}
+.campus-heading{text-align:center;margin-top:20px}
+.campus-heading .eyebrow{justify-content:center;font-size:9px}
+.campus-heading h1{font-size:clamp(64px,min(10.8vw,15.2vh),176px);font-weight:400;letter-spacing:-.07em;line-height:.95;margin-top:26px;white-space:nowrap}
+.campus-tagline{font-size:clamp(10px,1vw,14px);letter-spacing:.13em;line-height:1.6;color:var(--muted);margin-top:24px}
+.campus-artwork{position:relative;aspect-ratio:1625/625;width:100%;margin:28px auto 20px}
+.detail-drawing{position:absolute;inset:0;display:block;width:100%;height:100%;overflow:hidden;mix-blend-mode:multiply}
+.drawing-picture,.drawing-picture img{display:block;width:100%;height:100%}
+.drawing-picture img{object-fit:fill;filter:grayscale(1)}
+.campus-caption{display:flex;justify-content:space-between;align-items:center;gap:24px;margin-top:auto;padding-bottom:32px;border-bottom:1px solid var(--line)}
+.campus-caption p{font-size:12px;line-height:1.75;color:var(--muted)}
+.campus-caption>span{font:8px/1.8 var(--mono);text-align:right;color:var(--muted)}
+.drawing-unavailable{height:100%;display:grid;place-items:center;font:11px var(--mono);color:var(--muted)}
+.campus-scroll-stage{position:relative;isolation:isolate}
+.campus-artwork{z-index:2;transform-origin:0 0}
+.portal-artwork-target{position:absolute;left:49%;width:49%;aspect-ratio:1625/625;top:54%;transform:translateY(-50%);pointer-events:none}
+.portal-seal{display:none;position:absolute;width:min(43vw,78svh);aspect-ratio:1;right:5%;top:48%;transform:translateY(-50%);overflow:hidden;border-radius:50%;filter:grayscale(1);mix-blend-mode:multiply;pointer-events:none;z-index:-1}
+.portal-seal img{display:block;height:100%;width:auto;max-width:none}
+.portal-copy{margin:64px 0;position:relative;z-index:3}
+.portal-eyebrow{font:11px/1.5 var(--mono);letter-spacing:.025em}
+.portal-eyebrow::first-letter{color:var(--red)}
+.portal-copy h2{font-size:clamp(42px,5.65vw,112px);font-weight:400;line-height:1.04;letter-spacing:-.065em;white-space:nowrap;margin:20px 0 24px}
+.portal-description{font-size:clamp(13px,1.3vw,22px);line-height:1.5;letter-spacing:-.025em}
+.portal-index{font:8px/1.5 var(--mono);color:var(--muted);margin-top:20px}
+.portal-actions{display:flex;gap:16px;margin-top:40px}
+.portal-button{display:inline-flex;align-items:center;justify-content:center;background:transparent;color:var(--ink);border:1px solid var(--ink);width:clamp(120px,12vw,230px);height:clamp(42px,3.4vw,64px);font-size:clamp(10px,1vw,15px)}
+.portal-button-primary{background:var(--ink);color:var(--paper)}
+.portal-button:hover{background:var(--paper-alt)}
+.portal-button-primary:hover{background:#333}
+.portal-feedback{position:absolute;top:100%;margin-top:14px;font:11px/1.5 var(--mono);color:var(--muted)}
+.campus-scroll-stage[data-enhanced]{height:calc(100svh - 80px);min-height:560px;overflow:hidden}
+[data-enhanced] .portal-seal{display:block}
+[data-enhanced] .portal-copy{position:absolute;left:var(--gutter);top:28%;width:45%;margin:0}
+[data-enhanced] .campus-caption{border:0;padding-bottom:0;position:absolute;bottom:42px;left:var(--gutter);right:var(--gutter)}
+@media(max-width:767px){
+ .static-campus{height:calc(100svh - 68px);min-height:570px;padding:22px var(--gutter) 28px}
+ .campus-masthead{font-size:6px}.campus-masthead>span:last-child{display:none}
+ .campus-heading{margin-top:42px}.campus-heading .eyebrow{font-size:7px}
+ .campus-heading h1{font-size:12.5vw;margin-top:28px}.campus-tagline{font-size:9px;margin-top:20px}
+ .campus-artwork{margin:24px auto}
+ .campus-caption{padding-bottom:24px;align-items:flex-end}.campus-caption p{font-size:11px}.campus-caption>span{font-size:6px}
+ .campus-scroll-stage{height:auto}
+ .campus-scroll-stage[data-enhanced]{height:calc(100svh - 68px);min-height:540px}
+ [data-enhanced] .portal-copy{top:13%;width:calc(100% - 2 * var(--gutter))}
+ .portal-copy h2{font-size:clamp(35px,9.4vw,64px);margin:18px 0}
+ .portal-eyebrow{font-size:9px}.portal-description{font-size:13px}.portal-index{font-size:7px;margin-top:12px}
+ .portal-actions{margin-top:22px;gap:12px}.portal-button{height:42px;width:125px}
+ .portal-artwork-target{left:var(--gutter);width:calc(100% - 2 * var(--gutter));top:66%}
+ .portal-seal{width:min(78vw,38svh);right:11%;top:65%}
+ [data-enhanced] .campus-caption{bottom:24px}
+}

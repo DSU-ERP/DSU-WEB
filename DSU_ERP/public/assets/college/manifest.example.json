@@ -1,0 +1,38 @@
+{
+  "registrationReviewed": false,
+  "referenceWidth": 1000,
+  "referenceHeight": 800,
+  "assembled": "assembled.png",
+  "layers": [
+    {
+      "id": "foundation",
+      "file": "foundation.png",
+      "explodedY": 120,
+      "anchors": []
+    },
+    {
+      "id": "ground-floor",
+      "file": "ground-floor.png",
+      "explodedY": 65,
+      "anchors": []
+    },
+    {
+      "id": "middle-floor",
+      "file": "middle-floor.png",
+      "explodedY": -20,
+      "anchors": []
+    },
+    {
+      "id": "upper-floor",
+      "file": "upper-floor.png",
+      "explodedY": -105,
+      "anchors": []
+    },
+    {
+      "id": "roof",
+      "file": "roof.png",
+      "explodedY": -200,
+      "anchors": []
+    }
+  ]
+}
