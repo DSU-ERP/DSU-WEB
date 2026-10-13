@@ -2,15 +2,8 @@ import "server-only";
 import { cache } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "./supabase/server";
-
-export class CampusError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+import { CampusError, readCampusResponse } from "./campus-response";
+export { CampusError } from "./campus-response";
 export const campusSession = cache(async () => {
   const client = await supabaseServer();
   const {
@@ -32,7 +25,16 @@ export async function campusApi<T>(
   const origin = process.env.DSU_BACKEND_URL;
   if (!origin)
     throw new CampusError(503, "Campus services have not been configured.");
-  const base = new URL(origin);
+  let base: URL;
+  try {
+    base = new URL(origin);
+    if (
+      !["http:", "https:"].includes(base.protocol) ||
+      base.username || base.password || base.pathname !== "/" || base.search || base.hash
+    ) throw new Error("Invalid backend origin");
+  } catch {
+    throw new CampusError(503, "Campus services have not been configured correctly.");
+  }
   if (process.env.NODE_ENV === "production" && base.protocol !== "https:")
     throw new CampusError(503, "Campus services require a secure connection.");
   let response: Response;
@@ -45,6 +47,7 @@ export async function campusApi<T>(
         ...(options.body ? { "Content-Type": "text/csv" } : {}),
       },
       cache: "no-store",
+      redirect: "error",
       signal: AbortSignal.timeout(options.method === "POST" ? 45000 : 15000),
     });
   } catch {
@@ -54,13 +57,7 @@ export async function campusApi<T>(
     );
   }
   if (response.status === 401) redirect("/login");
-  const payload = await response.json();
-  if (!response.ok)
-    throw new CampusError(
-      response.status,
-      payload.error?.message || "Unable to load campus information.",
-    );
-  return payload as T;
+  return readCampusResponse<T>(response);
 }
 export type Membership = {
   id: string;
