@@ -17,17 +17,22 @@ Every row action also has a keyboard-accessible link. Details are retrieved only
 for the expanded student, not embedded for everyone in the list.
 
 All records come directly from Supabase through `dsu_batch_read`. Apply API
-migration `004_batch_drilldown.sql` before deploying this website update. No
+migrations `004_batch_drilldown.sql` and `005_placement_eligibility.sql` before deploying this website update. No
 student records are re-imported or modified. Existing CGPA category functions
 remain the source of classification; numeric sorting precedes display rounding.
-Actual quota values are displayed, without guessed group mappings.
+The table always includes DSAT, CET, COMEDK, UNIGAUGE, DCET, Mgmt and Other.
+DSAT Online is included in DSAT. Only explicit management quotas count as Mgmt;
+other and missing quotas are grouped under Other. Student lists retain raw quotas.
 
 Permissions remain enforced inside Supabase. Students cannot browse batches.
 Staff see academic records but not contact, family, gender or fee information.
 Administrators may export the filtered list (maximum 20,000 rows and five exports
-per minute, shared with category exports). Unknown placement policy is displayed
-as not configured. The CGPA ≥ 6.0 statistic is separate from placement eligibility
-and the final three performance categories.
+per minute, shared with category exports). The confirmed placement policy is
+valid CGPA ≥ 6.75: Eligible; valid CGPA below 6.75: Not Eligible. Missing or
+invalid CGPA remains Unclassified. No backlog or attendance condition is applied.
+The CGPA ≥ 6.0 statistic is separate from placement eligibility and the final
+three performance categories. Supabase computes counts, eligibility and category
+panel percentages using exact stored values; the browser only formats them.
 
 Validation: run `npm test` and `npm run build` here. In the API repository run
 `node --env-file-if-exists=.env scripts/verify-batches.js`; it checks sorting,

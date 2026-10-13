@@ -23,13 +23,13 @@ test("Supabase failures preserve authorization, not-found and deployment distinc
 test("Supabase exports preserve exact CGPA strings and neutralize spreadsheet formulas", () => {
   const data = {category:{id:"medium",name:"Medium",conditionLabel:"6.75 to below 8.50"},
     students:[{rank:1,enrollment_no:"=FORMULA()",full_name:'A "name"',department_short_name:null,
-      source_batch:"2023",cgpa:"8.499999999999999999"}]} as CategoryData;
+      source_batch:"2023",cgpa:"8.499999999999999999",placement_eligible:true}]} as CategoryData;
   const result = exportCsv({data}).data;
   assert.equal(result.rows,1);
   assert.match(result.content,/'=FORMULA\(\)/);
   assert.match(result.content,/8\.499999999999999999/);
   assert.match(result.content,/A ""name""/);
-  assert.match(result.content,/Not configured/);
+  assert.match(result.content,/"Eligible"/);
 });
 
 test("portal GETs use Supabase before any Render configuration is consulted", () => {
