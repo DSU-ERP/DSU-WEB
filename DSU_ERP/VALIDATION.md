@@ -1,5 +1,9 @@
 # Validation — larger hero and individual details
 
+## October 13 — Supabase platform integration
+
+See INTEGRATION.md for the current three-service implementation and executed validation. Live import contains 5,082 student records, with 358 source rows rejected for review. Re-import added/updated zero rows. Production WEB build, 13 WEB tests, 13 API tests, 3 gateway tests, live database RLS checks and HTTP health/auth-denial checks passed. Authenticated browser sessions and responsive visual verification remain pending; no administrator account exists yet. Older entries below describe earlier frontend-only revisions.
+
 ## Latest revision — hero to access portal
 
 - One reversible, scrubbed GSAP timeline translates/scales the same assembled artwork into a two-column portal layout. No exploded layers are animated.

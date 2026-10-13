@@ -1,8 +1,12 @@
 # DSU Agentic ERP
 
+## Integrated campus portal
+
+The landing page now links to `/login` and a Supabase-authenticated campus workspace. Admin/staff can view real records and admins can import official CSV exports; students see only their explicitly linked record. See [INTEGRATION.md](INTEGRATION.md) for the three-service architecture, setup, data-quality counts, deployment steps and validation limits. An administrator Auth account still needs to be created and assigned.
+
 A Next.js landing page that transitions from the ONE CAMPUS introduction into an ACCESS PORTAL composition as the visitor scrolls.
 
-One GSAP ScrollTrigger timeline keeps the assembled college visible as it moves right, introduces a faint DSU seal, and reveals the portal copy and buttons on the left. Scrolling upward reverses the transition. There are no exploded views, ERP services, or authentication flows. The Vision link returns to the introduction.
+One GSAP ScrollTrigger timeline keeps the assembled college visible as it moves right, introduces a faint DSU seal, and reveals the portal copy and buttons on the left. Scrolling upward reverses the transition. The Vision link returns to the introduction; portal buttons lead to the authenticated workspace.
 
 ## Run locally
 
@@ -29,7 +33,7 @@ The illustration is the existing assembled composition of the supplied landscape
 
 Previous exploded-journey components are retained as unused source files. The active animation lives only in CampusPortal. Only static-campus.css and the base globals are imported by the layout.
 
-The design adapts to desktop and mobile. Reduced-motion and no-JavaScript visitors get sequential static content without pinning. Image-load errors have a text fallback. SIGN IN and LOG IN currently display a coming-soon message; replace those handlers when destination URLs are supplied.
+The design adapts to desktop and mobile. Reduced-motion and no-JavaScript visitors get sequential static landing content without pinning. Image-load errors have a text fallback. SIGN IN and LOG IN lead to the email/password login screen.
 
 The official seal comes from https://www.dsu.edu.in/images/logo_white.png, retained in public/assets/college/dsu-official-logo.png. CSS frames the circular portion of the university lockup without modifying it. This official mark differs in its lettering and shield details from the supplied mockup. See ASSETS.md for architectural source provenance.
 

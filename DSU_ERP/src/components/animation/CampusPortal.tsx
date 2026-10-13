@@ -1,6 +1,7 @@
 'use client';
 
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useLayoutEffect, useRef } from 'react';
+import Link from 'next/link';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { IllustrationView } from './IllustrationView';
@@ -13,7 +14,6 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
   const artwork = useRef<HTMLElement>(null);
   const target = useRef<HTMLDivElement>(null);
   const portal = useRef<HTMLElement>(null);
-  const [message, setMessage] = useState('');
 
   useLayoutEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
@@ -88,10 +88,9 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
       <p className="portal-description">Connect to your digital campus environment.</p>
       <p className="portal-index">02 / PORTAL GATEWAY</p>
       <div className="portal-actions">
-        <button type="button" className="portal-button portal-button-primary" onClick={() => setMessage('Sign in — portal coming soon.')}>SIGN IN</button>
-        <button type="button" className="portal-button" onClick={() => setMessage('Log in — portal coming soon.')}>LOG IN</button>
+        <Link href="/login" className="portal-button portal-button-primary">SIGN IN</Link>
+        <Link href="/login" className="portal-button">LOG IN</Link>
       </div>
-      <p className="portal-feedback" role="status">{message}</p>
     </section>
     <div className="campus-caption"><p>An intelligent operating system<br/>for the modern university.</p><span>ONE INSTITUTION.<br/>EVERY POSSIBILITY.</span></div>
   </section>;
