@@ -47,7 +47,11 @@ export default async function PortalLayout({
         <nav aria-label="Campus navigation">
           <Link href="/portal">Overview</Link>
           {access.role !== "student" && (
-            <Link href="/portal/students">Student directory</Link>
+            <>
+              <Link href="/portal/students">Student directory</Link>
+              <Link href="/portal/batch-analytics">Batch Analytics</Link>
+              <Link href="/portal/analytics">Student Analytics</Link>
+            </>
           )}
           {access.role === "admin" && (
             <Link href="/portal/imports">Data imports</Link>

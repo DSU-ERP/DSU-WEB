@@ -652,3 +652,34 @@
     transition: none;
   }
 }
+
+/* Analytics extends the existing portal typography, controls, and palette. */
+.erp-analytics-filters select{background:white;border:1px solid #c6ccc0;border-radius:4px;padding:13px 14px;min-width:0;width:100%;font-size:12px;color:#1b211b;min-height:46px}
+.erp-category-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:18px}
+.erp-category-panel{display:block;border:1px solid var(--erp-border);border-radius:6px;padding:25px;background:white;color:inherit}
+.erp-category-panel:hover{border-color:#8b9e76;background:#fcfdf9}
+.erp-category-panel:focus-visible{outline:3px solid #697f54;outline-offset:4px}
+.erp-category-heading{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.erp-category-heading h2{font-size:21px;font-weight:500;letter-spacing:-.025em}
+.erp-category-range{font-size:12px;color:var(--erp-muted);margin-top:12px;min-height:30px}
+.erp-category-count{display:block;font-size:48px;font-weight:400;letter-spacing:-.05em;margin-top:20px}
+.erp-category-facts{border-top:1px solid var(--erp-border);margin:24px 0;padding-top:18px;display:grid;gap:14px;font-size:12px}
+.erp-category-facts>div{display:flex;justify-content:space-between;gap:15px}
+.erp-category-facts dt{color:var(--erp-muted)}
+.erp-category-facts dd{font-variant-numeric:tabular-nums}
+.erp-category-action{display:flex;justify-content:space-between;font-size:12px;color:#294a26}
+.erp-ranked-table td:first-child{min-width:50px;width:50px}
+.erp-ranked-table td:nth-child(2){min-width:180px;white-space:normal}
+.erp-policy-note{margin-bottom:28px}
+.erp-data-quality{display:flex;flex-wrap:wrap;gap:20px;justify-content:space-between}
+.erp-data-quality>p{width:100%}
+.erp-data-quality dl{display:flex;gap:28px}
+.erp-data-quality dt{font-size:11px;color:var(--erp-muted)}
+.erp-data-quality dd{font-size:26px;margin-top:8px}
+.erp-distribution{list-style:none;margin:26px 0 0;padding:0;display:grid;gap:22px}
+.erp-distribution li{display:grid;grid-template-columns:150px 1fr 55px 55px;gap:14px;align-items:center;font-size:12px}
+.erp-distribution li>div{height:8px;border-radius:4px;background:#f1f3ed;overflow:hidden}
+.erp-distribution i{display:block;height:100%;background:#8b9e76}
+.erp-distribution strong,.erp-distribution li>span:last-child{text-align:right;font-weight:400}
+@media(max-width:1100px){.erp-category-grid{gap:12px}.erp-category-panel{padding:20px 16px}.erp-category-heading h2{font-size:18px}}
+@media(max-width:767px){.erp-category-grid{grid-template-columns:1fr}.erp-category-panel{padding:24px}.erp-category-range{min-height:0}.erp-distribution li{grid-template-columns:110px 1fr 35px 45px;gap:8px;font-size:10px}.erp-analytics-filters select,.erp-analytics-filters input{font-size:16px}}

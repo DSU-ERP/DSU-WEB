@@ -10,6 +10,7 @@ type Student = {
   current_semester: string | null;
   cgpa: string | null;
   attendance: string | null;
+  category: { name: string } | null;
 };
 export default async function StudentsPage({
   searchParams,
@@ -115,7 +116,10 @@ export default async function StudentsPage({
                     <td>{s.department_short_name || "—"}</td>
                     <td>{s.source_batch}</td>
                     <td>{s.current_semester || "—"}</td>
-                    <td>{s.cgpa ?? "—"}</td>
+                    <td>
+                      {s.cgpa ?? "—"}
+                      <small>{s.category?.name || "Unclassified"}</small>
+                    </td>
                     <td>{s.attendance !== null ? `${s.attendance}%` : "—"}</td>
                   </tr>
                 ))}
