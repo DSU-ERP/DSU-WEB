@@ -1,4 +1,5 @@
-// Thresholds and display ranges come from the API's categoryRules module.
+// Thresholds and display ranges come from Supabase functions generated from
+// the shared categoryRules module. The portal never classifies rounded values.
 // This file describes the wire contract only; it does not classify students.
 export type CategoryId = "advanced" | "medium" | "needs-improvement";
 export type Category = {
@@ -22,7 +23,7 @@ export type AnalyticsSummary = {
   unclassified: number;
   averageCgpa: string | null;
   scale: { min: string; max: string };
-  placementPolicy: { configured: boolean };
+  placementPolicy: { configured: boolean; minimumCgpa?: string; label?: string };
   categories: CategoryStats[];
   distribution: {
     id: string;
@@ -62,6 +63,7 @@ export type CategoryData = AnalyticsData & {
     cgpa: string;
     rank: number;
     category_id: CategoryId;
+    placement_eligible: boolean | null;
   }[];
   pagination: { total: number; page: number; limit: number };
 };

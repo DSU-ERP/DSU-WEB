@@ -8,6 +8,8 @@ const result = spawnSync(
     ".qa/unit/tests/architecture.test.js",
     ".qa/unit/tests/campus-response.test.js",
     ".qa/unit/tests/analytics.test.js",
+    ".qa/unit/tests/supabase-portal.test.js",
+    ".qa/unit/tests/batches.test.js",
   ],
   { stdio: "inherit", windowsHide: true },
 );

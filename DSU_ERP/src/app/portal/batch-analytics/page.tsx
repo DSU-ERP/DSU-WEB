@@ -9,6 +9,7 @@ import {
   type SearchParams,
 } from "@/lib/analytics/filters";
 import type { BatchData } from "@/lib/analytics/types";
+import { DrilldownRow } from "@/components/analytics/DrilldownRow";
 import {
   AnalyticsFilters,
   DataQuality,
@@ -80,7 +81,10 @@ export default async function BatchAnalyticsPage({
               </thead>
               <tbody>
                 {data.batches.map((batch) => (
-                  <tr key={batch.source_batch}>
+                  <DrilldownRow
+                    key={batch.source_batch}
+                    href={`/portal/analytics?${filterQuery({ ...filters, batch: batch.source_batch })}`}
+                  >
                     <td>
                       <Link
                         href={`/portal/analytics?${filterQuery({ ...filters, batch: batch.source_batch })}`}
@@ -96,7 +100,7 @@ export default async function BatchAnalyticsPage({
                       </td>
                     ))}
                     <td>{formatCount(batch.unclassified)}</td>
-                  </tr>
+                  </DrilldownRow>
                 ))}
               </tbody>
             </table>

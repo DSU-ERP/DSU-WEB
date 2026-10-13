@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "./supabase/server";
 import { CampusError, readCampusResponse } from "./campus-response";
+import { readSupabasePortal } from "./supabase/portal-read";
 export { CampusError } from "./campus-response";
 export const campusSession = cache(async () => {
   const client = await supabaseServer();
@@ -22,6 +23,15 @@ export async function campusApi<T>(
   options: { method?: "GET" | "POST"; body?: string } = {},
 ): Promise<T> {
   const { token } = await campusSession();
+  // All portal reads go directly to Supabase. Render is used only for CSV ingestion.
+  if (!options.method || options.method === "GET") {
+    try {
+      return await readSupabasePortal<T>(path);
+    } catch (error) {
+      if (error instanceof CampusError && error.status === 401) redirect("/login");
+      throw error;
+    }
+  }
   const origin = process.env.DSU_BACKEND_URL;
   if (!origin)
     throw new CampusError(503, "Campus services have not been configured.");

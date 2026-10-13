@@ -1,3 +1,9 @@
+# Supabase direct reads
+
+Portal reads now go directly to Supabase using the signed-in user session. See
+[SUPABASE_DATA.md](SUPABASE_DATA.md) for the active data path and migration.
+The Render connection described below remains relevant for CSV uploads only.
+
 # DSU platform integration — 13 October 2026
 
 ## Inspected architecture
