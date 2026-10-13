@@ -163,12 +163,11 @@ export function CategoryPanels({
           </Link>
         ))}
       </div>
-      {!summary.placementPolicy.configured && (
-        <p className="erp-muted erp-policy-note">
-          Placement eligibility is not configured. CGPA category membership does
-          not establish placement eligibility.
-        </p>
-      )}
+      <p className="erp-muted erp-policy-note">
+        Placement eligible: {summary.placementPolicy.label ?? "Policy unavailable"}.
+        Missing or invalid CGPA remains unclassified. Eligibility percentages use
+        the students within each category.
+      </p>
     </>
   );
 }

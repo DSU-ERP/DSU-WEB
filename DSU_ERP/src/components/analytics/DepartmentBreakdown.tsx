@@ -3,6 +3,7 @@ import type { BatchView } from "@/lib/analytics/batches";
 import type { Filters } from "@/lib/analytics/types";
 import { filterQuery, formatCgpa, formatCount } from "@/lib/analytics/filters";
 import { DrilldownRow } from "./DrilldownRow";
+import { QUOTA_COLUMNS, quotaCounts } from "@/lib/analytics/placement";
 
 export function DepartmentBreakdown({
   data,
@@ -14,10 +15,7 @@ export function DepartmentBreakdown({
   canExport: boolean;
 }) {
   if (!data.batch) return null;
-  const quotas = [
-    ...data.options.quotas,
-    ...(data.options.missing_quota ? ["__missing__"] : []),
-  ];
+  const departments = data.departments.map((d) => ({ ...d, quotas: quotaCounts(d.quotas) }));
   const target = `/portal/batch-analytics/${data.batch}`;
   const cohort = { ...filters, batch: data.batch };
   const showOtherGender =
@@ -72,25 +70,26 @@ export function DepartmentBreakdown({
             <thead>
               <tr>
                 <th scope="col">#</th>
-                <th scope="col">Department</th>
+                <th scope="col">Branch</th>
                 <th scope="col">Total</th>
                 <th scope="col">Male</th>
                 <th scope="col">Female</th>
                 {showOtherGender && <th scope="col">Other / not recorded</th>}
-                {quotas.map((q) => (
+                {QUOTA_COLUMNS.map((q) => (
                   <th scope="col" key={q}>
-                    {q === "__missing__" ? "Quota not recorded" : q}
+                    {q}
                   </th>
                 ))}
                 <th scope="col">CGPA ≥ 6.0</th>
                 <th scope="col">CGPA &lt; 6.0</th>
                 <th scope="col">Unclassified</th>
-                <th scope="col">Placement eligible</th>
+                <th scope="col">Eligible</th>
+                <th scope="col">Not Eligible</th>
                 <th scope="col">Average CGPA</th>
               </tr>
             </thead>
             <tbody>
-              {data.departments.map((d, index) => {
+              {departments.map((d, index) => {
                 const href = `${target}?${filterQuery({ ...cohort, department: d.department_short_name ?? "__missing__" })}`;
                 return (
                   <DrilldownRow
@@ -107,13 +106,14 @@ export function DepartmentBreakdown({
                     <td>{genderCount(d.male)}</td>
                     <td>{genderCount(d.female)}</td>
                     {showOtherGender && <td>{genderCount(d.gender_other)}</td>}
-                    {quotas.map((q) => (
+                    {QUOTA_COLUMNS.map((q) => (
                       <td key={q}>{formatCount(d.quotas[q] ?? 0)}</td>
                     ))}
                     <td>{formatCount(d.at_least_six)}</td>
                     <td>{formatCount(d.below_six)}</td>
                     <td>{formatCount(d.unclassified)}</td>
-                    <td title="Placement policy is not configured">—</td>
+                    <td>{formatCount(d.eligible)}</td>
+                    <td>{formatCount(d.not_eligible)}</td>
                     <td>{formatCgpa(d.average_cgpa)}</td>
                   </DrilldownRow>
                 );
@@ -129,10 +129,10 @@ export function DepartmentBreakdown({
                 {showOtherGender && (
                   <td>{genderCount(data.summary.gender_other)}</td>
                 )}
-                {quotas.map((q) => (
+                {QUOTA_COLUMNS.map((q) => (
                   <td key={q}>
                     {formatCount(
-                      data.departments.reduce(
+                      departments.reduce(
                         (n, d) => n + (d.quotas[q] ?? 0),
                         0,
                       ),
@@ -142,7 +142,8 @@ export function DepartmentBreakdown({
                 <td>{formatCount(data.summary.at_least_six)}</td>
                 <td>{formatCount(data.summary.below_six)}</td>
                 <td>{formatCount(data.summary.unclassified)}</td>
-                <td title="Placement policy is not configured">—</td>
+                <td>{formatCount(data.summary.eligible)}</td>
+                <td>{formatCount(data.summary.not_eligible)}</td>
                 <td>{formatCgpa(data.summary.average_cgpa)}</td>
               </tr>
             </tfoot>
@@ -152,9 +153,11 @@ export function DepartmentBreakdown({
         <p className="erp-empty">No departments match these filters.</p>
       )}
       <p className="erp-muted erp-breakdown-note">
-        Admission quotas are shown as recorded. The ≥ 6.0 and &lt; 6.0 columns
-        are statistics, separate from the three performance categories.
-        Placement eligibility has not been configured.
+        Placement eligible: {data.placementPolicy.label}. Students below this
+        threshold are not eligible; missing or invalid CGPA is unclassified.
+        The ≥ 6.0 and &lt; 6.0 columns are separate statistical counts.
+        DSAT includes DSAT Online. Mgmt includes only explicit management quotas;
+        other or unrecorded quotas appear under Other.
         {!data.genderAvailable &&
           " Gender information is restricted to administrators."}
       </p>

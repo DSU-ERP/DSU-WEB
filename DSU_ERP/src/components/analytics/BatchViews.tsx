@@ -6,6 +6,7 @@ import {
   type StudentDetail,
 } from "@/lib/analytics/batches";
 import { formatCgpa, formatCount } from "@/lib/analytics/filters";
+import { placementStatus } from "@/lib/analytics/placement";
 export function BatchTabs({ data }: { data: BatchView }) {
   return (
     <nav className="erp-batch-tabs" aria-label="Select batch">
@@ -57,8 +58,8 @@ export function BatchMetrics({ data }: { data: BatchView }) {
         </article>
       </div>
       <p className="erp-muted erp-policy-note">
-        Placement eligibility: not configured. CGPA ≥ 6.0 is a statistical
-        count, not an eligibility rule. {formatCount(s.unclassified)} students
+        Placement eligible: {data.placementPolicy.label}. CGPA ≥ 6.0 is a statistical
+        count. {formatCount(s.unclassified)} students
         have missing or invalid CGPA.
       </p>
     </>
@@ -250,7 +251,7 @@ export function ExpandedStudent({ student: s }: { student: StudentDetail }) {
             "Total backlogs": a?.total_backlog,
             Achievements: a?.achievements,
             Status: s.status,
-            "Placement eligibility": "Not configured",
+            "Placement eligibility": placementStatus(s.placement_eligible),
           }}
         />
         {c && (

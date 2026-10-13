@@ -19,6 +19,7 @@ import {
   ExpandedStudent,
 } from "@/components/analytics/BatchViews";
 import { DrilldownRow } from "@/components/analytics/DrilldownRow";
+import { placementStatus } from "@/lib/analytics/placement";
 
 export default async function BatchStudentsPage({
   params,
@@ -117,8 +118,8 @@ export default async function BatchStudentsPage({
       </div>
       <BatchFilters data={data} filters={filters} path={path} students />
       <p className="erp-muted erp-policy-note">
-        Placement eligibility is not configured. Status below is the recorded
-        student status. CGPA sorting uses exact stored values.
+        Placement eligible: {data.placementPolicy.label}. Missing or invalid CGPA
+        is unclassified. CGPA sorting uses exact stored values.
       </p>
       <section className="erp-panel erp-student-list">
         {data.students.length ? (
@@ -143,6 +144,7 @@ export default async function BatchStudentsPage({
                   {sortHeading("Attendance", "attendance")}
                   {sortHeading("Backlogs", "backlogs")}
                   <th>Student status</th>
+                  <th>Placement</th>
                 </tr>
               </thead>
               <tbody>
@@ -190,10 +192,11 @@ export default async function BatchStudentsPage({
                         </td>
                         <td>{s.current_backlog ?? "—"}</td>
                         <td>{s.status ?? "—"}</td>
+                        <td>{placementStatus(s.placement_eligible)}</td>
                       </DrilldownRow>
                       {expanded && detail && (
                         <tr id={`details-${s.id}`}>
-                          <td colSpan={12} className="erp-detail-cell">
+                          <td colSpan={13} className="erp-detail-cell">
                             <ExpandedStudent student={detail} />
                           </td>
                         </tr>
