@@ -159,8 +159,8 @@ export async function answer(
       students: data.rows,
       links: [
         {
-          title: "View candidate ranking",
-          url: `/placement/ranking?${new URLSearchParams({ ...q, ...(intent.minimum ? { minimum: intent.minimum } : { eligibility: "eligible" }) })}`,
+          title: "View matching students",
+          url: `/placement/students?${new URLSearchParams({ ...q, ...(intent.minimum ? { minimum: intent.minimum } : { eligibility: "eligible" }) })}`,
         },
       ],
     };
