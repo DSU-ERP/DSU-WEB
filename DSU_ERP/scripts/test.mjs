@@ -10,6 +10,7 @@ const result = spawnSync(
     ".qa/unit/tests/analytics.test.js",
     ".qa/unit/tests/supabase-portal.test.js",
     ".qa/unit/tests/batches.test.js",
+    ".qa/unit/tests/placement.test.js",
   ],
   { stdio: "inherit", windowsHide: true },
 );

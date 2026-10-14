@@ -1,0 +1,516 @@
+.po-shell {
+  --po-surface: #fff;
+  --po-highlight: #edf1e7;
+  --po-text: #1b211b;
+  --erp-muted: #626a61;
+  --erp-border: #deded7;
+}
+.po-shell .erp-sidebar {
+  width: 246px;
+  padding: 28px 22px;
+  gap: 20px;
+}
+.po-shell .erp-sidebar nav {
+  gap: 3px;
+  overflow: auto;
+}
+.po-shell .erp-sidebar nav a {
+  padding: 9px 12px;
+  font-size: 12px;
+}
+.po-shell .erp-sidebar nav a[aria-current="page"] {
+  background: var(--po-highlight);
+  font-weight: 600;
+  border-radius: 5px;
+}
+.po-shell .erp-sidebar-bottom {
+  gap: 14px;
+}
+.po-shell .erp-workspace {
+  margin-left: 0;
+  min-width: 0;
+}
+.po-topbar {
+  gap: 16px;
+}
+.po-topbar button {
+  font-size: 11px;
+  cursor: pointer;
+}
+.po-shell h1 {
+  font-size: clamp(30px, 3.5vw, 56px);
+  letter-spacing: -0.05em;
+  line-height: 1.1;
+  font-weight: 400;
+  margin-bottom: 16px;
+}
+.po-shell h2 {
+  font-size: 22px;
+  font-weight: 400;
+  letter-spacing: -0.035em;
+  margin-bottom: 16px;
+}
+.po-shell h3 {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+.po-shell .erp-panel {
+  background: var(--po-surface);
+  margin: 24px 0;
+}
+.po-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  margin-bottom: 28px;
+}
+.po-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.po-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 12px;
+  margin: 24px 0;
+}
+.po-filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1 1 145px;
+  font-size: 12px;
+}
+.po-shell input,
+.po-shell select,
+.po-shell textarea {
+  background: var(--po-surface);
+  color: var(--po-text);
+  border: 1px solid var(--erp-border);
+  border-radius: 5px;
+  padding: 11px 12px;
+  max-width: 100%;
+  min-width: 0;
+  font: inherit;
+}
+.po-shell input[type="checkbox"] {
+  width: 17px;
+  height: 17px;
+  accent-color: #34462f;
+}
+.po-shell input:focus-visible,
+.po-shell select:focus-visible,
+.po-shell textarea:focus-visible,
+.po-shell button:focus-visible,
+.po-shell a:focus-visible,
+.po-shell summary:focus-visible {
+  outline: 2px solid #728760;
+  outline-offset: 3px;
+}
+.po-shell button:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+.po-shell select[multiple] {
+  min-height: 130px;
+}
+.po-filters button,
+.po-filters > a {
+  min-height: 44px;
+}
+.po-metrics {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  border: 1px solid var(--erp-border);
+  border-radius: 6px;
+  background: var(--po-surface);
+  margin: 24px 0;
+}
+.po-metrics article {
+  padding: 22px;
+  border-right: 1px solid var(--erp-border);
+}
+.po-metrics article span {
+  display: block;
+  color: var(--erp-muted);
+  font-size: 12px;
+}
+.po-metrics article strong {
+  display: block;
+  margin-top: 14px;
+  font-size: 28px;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+}
+.po-table {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.po-table td {
+  vertical-align: top;
+}
+.po-table a {
+  font-weight: 500;
+}
+.po-table th {
+  font-size: 10px;
+}
+.po-table summary {
+  cursor: pointer;
+}
+.po-inline-detail {
+  min-width: 280px;
+  max-width: 560px;
+  white-space: normal;
+  padding: 16px 0;
+}
+.po-facts {
+  display: grid;
+  gap: 0;
+  min-width: 0;
+}
+.po-facts > div {
+  padding: 10px 0;
+  border-bottom: 1px solid var(--erp-border);
+  display: grid;
+  grid-template-columns: minmax(100px, 0.6fr) 1fr;
+  gap: 16px;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.po-facts dt {
+  color: var(--erp-muted);
+}
+.po-facts dd {
+  margin: 0;
+  min-width: 0;
+}
+.po-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+.po-form fieldset {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+.po-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12px;
+  margin: 16px 0;
+}
+.po-form .po-checkbox {
+  flex-direction: row;
+  align-items: center;
+}
+.po-form textarea {
+  min-height: 110px;
+}
+.po-form-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+}
+.po-round-editor {
+  margin: 24px 0;
+}
+.po-round-editor > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 10px 0;
+}
+.po-round-editor input {
+  flex: 1;
+}
+.po-round-editor button {
+  font-size: 12px;
+  cursor: pointer;
+}
+.po-field-label {
+  font-size: 12px;
+}
+.po-delete {
+  margin: 36px 0;
+  border-top: 1px solid var(--erp-border);
+  padding-top: 20px;
+  max-width: 700px;
+}
+.po-delete summary {
+  color: #ae292a;
+  cursor: pointer;
+}
+.po-delete p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin-top: 18px;
+}
+.po-danger {
+  background: #9e3030;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.po-note {
+  font-size: 12px;
+  color: var(--erp-muted);
+  line-height: 1.8;
+  margin: 16px 0;
+}
+.po-tags {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.po-tags span {
+  background: var(--po-highlight);
+  padding: 7px 11px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+.po-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.po-card {
+  padding: 24px;
+  border: 1px solid var(--erp-border);
+  border-radius: 6px;
+  background: var(--po-surface);
+}
+.po-card strong {
+  display: block;
+  font-size: 40px;
+  font-weight: 400;
+  margin: 22px 0;
+}
+.po-skip {
+  position: fixed;
+  left: 12px;
+  top: -100px;
+  z-index: 100;
+  background: #fff;
+  padding: 12px;
+}
+.po-skip:focus {
+  top: 12px;
+}
+.po-collapsed .erp-sidebar {
+  width: 120px;
+}
+.po-collapsed .erp-sidebar .erp-wordmark span,
+.po-collapsed .erp-sidebar .erp-eyebrow,
+.po-collapsed .erp-sidebar .erp-role {
+  display: none;
+}
+.po-collapsed .erp-workspace {
+  margin-left: 0;
+}
+.po-dark {
+  --po-surface: #20251f;
+  --po-highlight: #303e2b;
+  --po-text: #e8ece3;
+  --erp-border: #3c4538;
+  --erp-muted: #adb6a6;
+  background: #181d17;
+  color: var(--po-text);
+}
+.po-dark .erp-sidebar,
+.po-dark .erp-topbar {
+  background: #1d231c;
+  color: var(--po-text);
+}
+.po-dark .erp-wordmark,
+.po-dark .erp-table,
+.po-dark .erp-secondary,
+.po-dark h1,
+.po-dark h2,
+.po-dark h3 {
+  color: var(--po-text);
+}
+.po-dark .erp-secondary {
+  background: transparent;
+}
+.po-dark .erp-table tbody tr:hover {
+  background: var(--po-highlight);
+}
+.po-dark .erp-primary {
+  background: #b7cba6;
+  color: #182111;
+}
+.po-dark .erp-category-panel {
+  background: var(--po-surface);
+}
+.po-dark .erp-table a,
+.po-dark .erp-back {
+  color: #c6ddae;
+}
+@media (max-width: 1000px) {
+  .po-shell {
+    display: block;
+  }
+  .po-shell .erp-sidebar {
+    position: relative;
+    width: auto;
+  }
+  .po-shell .erp-workspace,
+  .po-collapsed .erp-workspace {
+    margin-left: 0;
+  }
+  .po-shell .erp-sidebar nav {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    max-height: 160px;
+  }
+  .po-shell .erp-sidebar nav[hidden] {
+    display: none;
+  }
+  .po-shell .erp-sidebar-bottom {
+    flex-direction: row;
+    margin-top: 0;
+  }
+  .po-collapsed .erp-sidebar {
+    width: auto;
+  }
+  .po-card-grid {
+    grid-template-columns: 1fr;
+  }
+  .po-split {
+    grid-template-columns: 1fr;
+  }
+  .po-heading {
+    flex-direction: column;
+  }
+  .po-topbar span {
+    display: none;
+  }
+  .po-shell .erp-main {
+    padding: 24px 18px;
+  }
+  .po-round-editor > div {
+    flex-wrap: wrap;
+  }
+}
+.po-shell [hidden] {
+  display: none !important;
+}
+.po-assistant {
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 20px;
+}
+.po-assistant .erp-panel {
+  margin: 0;
+  padding: 22px;
+}
+.po-chat-history h2 {
+  font-size: 17px;
+  margin-top: 26px;
+}
+.po-history-row {
+  display: flex;
+  gap: 10px;
+  border-bottom: 1px solid var(--erp-border);
+  padding: 12px 0;
+  font-size: 12px;
+}
+.po-history-row button:first-child {
+  flex: 1;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.po-history-row button[aria-current="true"] {
+  font-weight: 600;
+}
+.po-chat-log {
+  max-height: 520px;
+  min-height: 280px;
+  overflow: auto;
+  padding: 20px 0;
+  margin-top: 20px;
+}
+.po-message {
+  padding: 16px;
+  border-bottom: 1px solid var(--erp-border);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.po-message-user {
+  background: var(--po-highlight);
+  border-radius: 5px;
+}
+.po-message p,
+.po-preserve {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.po-message strong {
+  display: block;
+  font-size: 11px;
+  color: var(--erp-muted);
+  margin-bottom: 12px;
+}
+.po-message a,
+.po-message button {
+  display: block;
+  text-decoration: underline;
+  font-size: 12px;
+  margin: 10px 0;
+  text-align: left;
+}
+.po-chat-compose {
+  display: grid;
+  gap: 12px;
+  border-top: 1px solid var(--erp-border);
+  padding-top: 20px;
+}
+.po-chat-compose label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.po-chat-compose textarea {
+  min-height: 95px;
+}
+.po-chat-compose button {
+  justify-self: start;
+}
+.po-email-draft {
+  padding: 24px 0;
+  border-top: 1px solid var(--erp-border);
+  margin-top: 24px;
+  font-size: 13px;
+  line-height: 1.8;
+}
+.po-timeline {
+  list-style: none;
+  padding: 0;
+}
+.po-timeline li {
+  border-left: 1px solid var(--erp-border);
+  padding: 12px 20px;
+}
+.po-chat-history {
+  max-height: 700px;
+  overflow: auto;
+}
+@media (max-width: 1100px) {
+  .po-assistant {
+    grid-template-columns: 1fr;
+  }
+  .po-chat-history {
+    max-height: 200px;
+  }
+}
