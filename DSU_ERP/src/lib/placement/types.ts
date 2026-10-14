@@ -35,6 +35,17 @@ export const SECTIONS = {
   talent: { title: "Talent intelligence", resource: "talent" },
 } as const;
 export type Section = keyof typeof SECTIONS;
+// Sections shown in the placement sidebar. Every key in SECTIONS stays
+// routable so in-page drill-downs, CSV exports and assistant links keep
+// working; this list only controls what the left menu displays.
+export const NAV_SECTIONS: Section[] = [
+  "overview",
+  "companies",
+  "drives",
+  "company-reports",
+  "batch",
+  "tests",
+];
 export const PACKAGES = ["regular", "dream", "super-dream", "mega"];
 export const STATUSES = ["upcoming", "ongoing", "completed", "cancelled"];
 export const text = (value: unknown) =>
