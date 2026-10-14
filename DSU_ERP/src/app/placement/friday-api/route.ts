@@ -7,6 +7,7 @@ import {
 import { runFriday, FridayConfigError, type FridayEvent } from "@/lib/friday/engine";
 import { fridayCapabilities } from "@/lib/friday/config";
 import { CampusError } from "@/lib/campus-response";
+import { sameOrigin } from "@/lib/placement/request";
 import type { Row } from "@/lib/placement/types";
 
 export const runtime = "nodejs";
@@ -36,7 +37,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   // Same-origin only, matching the existing assistant endpoint.
-  if (req.headers.get("origin") !== new URL(req.url).origin)
+  if (!sameOrigin(req))
     return json({ error: "Invalid request origin." }, 403);
 
   let conversationId: string | undefined;

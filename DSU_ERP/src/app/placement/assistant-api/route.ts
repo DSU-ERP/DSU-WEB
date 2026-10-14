@@ -15,6 +15,7 @@ import {
   type AssistantTool,
 } from "@/lib/placement/assistantRules";
 import { CampusError } from "@/lib/campus-response";
+import { sameOrigin } from "@/lib/placement/request";
 import type { Row } from "@/lib/placement/types";
 export const runtime = "nodejs";
 const reply = (data: unknown, status = 200) =>
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
   }
 }
 export async function POST(req: NextRequest) {
-  if (req.headers.get("origin") !== new URL(req.url).origin)
+  if (!sameOrigin(req))
     return reply({ error: "Invalid request origin." }, 403);
   try {
     await officerSession();

@@ -9,6 +9,11 @@ import {
   sentences,
   type ToolCallFragment,
 } from "../src/lib/friday/protocol";
+import { sameOrigin } from "../src/lib/placement/request";
+
+const req = (headers: Record<string, string>) => ({
+  headers: { get: (n: string) => headers[n.toLowerCase()] ?? null },
+});
 
 test("provider routing pins the provider and disables fallbacks", () => {
   const routing = providerRouting("baseten/fp8");
@@ -123,4 +128,41 @@ test("speakable output is safe for an empty or symbol-only reply", () => {
   assert.equal(speakable("***"), "");
   assert.equal(speakable("https://example.edu"), "");
   assert.deepEqual(sentences(""), []);
+});
+
+test("the loopback host and localhost are treated as the same origin", () => {
+  // The reported failure: the browser addressed 127.0.0.1:3108 while the
+  // framework rebuilt the request URL as localhost, producing a false
+  // "Invalid request origin" on a legitimate request.
+  assert.equal(
+    sameOrigin(
+      req({ origin: "http://127.0.0.1:3108", host: "127.0.0.1:3108" }),
+    ),
+    true,
+  );
+  assert.equal(
+    sameOrigin(req({ origin: "http://localhost:3002", host: "localhost:3002" })),
+    true,
+  );
+  assert.equal(
+    sameOrigin(
+      req({ origin: "https://dsu-erp-web.onrender.com", host: "dsu-erp-web.onrender.com" }),
+    ),
+    true,
+  );
+});
+
+test("a genuine cross-site or malformed origin is still rejected", () => {
+  assert.equal(
+    sameOrigin(req({ origin: "https://evil.example", host: "localhost:3000" })),
+    false,
+  );
+  // Same host, different port is a different origin.
+  assert.equal(
+    sameOrigin(req({ origin: "http://localhost:3001", host: "localhost:3000" })),
+    false,
+  );
+  assert.equal(sameOrigin(req({ host: "localhost:3000" })), false);
+  assert.equal(sameOrigin(req({ origin: "http://localhost:3000" })), false);
+  assert.equal(sameOrigin(req({ origin: "not a url", host: "localhost:3000" })), false);
 });
