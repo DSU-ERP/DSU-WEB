@@ -7,7 +7,7 @@ export async function GET(
 ) {
   await officerSession();
   const { resource } = await params;
-  if (!["batch", "students", "ranking", "offers", "talent"].includes(resource))
+  if (!["batch", "students"].includes(resource))
     return Response.json({ error: "Report not found" }, { status: 404 });
   try {
     const query = queryFrom(

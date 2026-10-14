@@ -47,12 +47,10 @@ export default async function PlacementSection({
               Create drive +
             </Link>
           )}
-          {["batch", "categories", "students", "offers", "talent"].includes(
-            section,
-          ) && (
+          {section === "batch" && (
             <a
               className="erp-secondary"
-              href={`/placement/export/${section === "categories" ? "students" : config.resource}?${new URLSearchParams(query)}`}
+              href={`/placement/export/${config.resource}?${new URLSearchParams(query)}`}
             >
               Export CSV ↓
             </a>

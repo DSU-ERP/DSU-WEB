@@ -21,31 +21,11 @@ export const SECTIONS = {
   overview: { title: "Placement overview", resource: "overview" },
   companies: { title: "Company management", resource: "companies" },
   drives: { title: "Placement drives", resource: "drives" },
-  offers: { title: "Offers & placed students", resource: "offers" },
   "company-reports": { title: "Company reports", resource: "company-reports" },
-  "multiple-offers": {
-    title: "Multiple-offer history",
-    resource: "multiple-offers",
-  },
-  departments: { title: "Department intelligence", resource: "departments" },
-  students: { title: "Student journeys", resource: "students" },
   batch: { title: "Batch analytics", resource: "batch" },
-  categories: { title: "Academic categories", resource: "batch" },
   tests: { title: "Master test results", resource: "tests" },
-  talent: { title: "Talent intelligence", resource: "talent" },
 } as const;
 export type Section = keyof typeof SECTIONS;
-// Sections shown in the placement sidebar. Every key in SECTIONS stays
-// routable so in-page drill-downs, CSV exports and assistant links keep
-// working; this list only controls what the left menu displays.
-export const NAV_SECTIONS: Section[] = [
-  "overview",
-  "companies",
-  "drives",
-  "company-reports",
-  "batch",
-  "tests",
-];
 export const PACKAGES = ["regular", "dream", "super-dream", "mega"];
 export const STATUSES = ["upcoming", "ongoing", "completed", "cancelled"];
 export const text = (value: unknown) =>

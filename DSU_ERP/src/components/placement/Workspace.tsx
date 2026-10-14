@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_SECTIONS, SECTIONS } from "@/lib/placement/types";
+import { SECTIONS } from "@/lib/placement/types";
 import { signOut } from "@/app/login/actions";
 export function Workspace({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -48,13 +48,13 @@ export function Workspace({ children }: { children: React.ReactNode }) {
           id="placement-nav"
           hidden={collapsed}
         >
-          {NAV_SECTIONS.map((key) => (
+          {Object.entries(SECTIONS).map(([key, section]) => (
             <Link
               key={key}
               href={`/placement/${key}`}
               aria-current={path === `/placement/${key}` ? "page" : undefined}
             >
-              {SECTIONS[key].title}
+              {section.title}
             </Link>
           ))}
           <Link

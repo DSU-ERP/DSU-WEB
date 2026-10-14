@@ -157,12 +157,10 @@ export async function answer(
           )
           .join("\n"),
       students: data.rows,
-      links: [
-        {
-          title: "View matching students",
-          url: `/placement/students?${new URLSearchParams({ ...q, ...(intent.minimum ? { minimum: intent.minimum } : { eligibility: "eligible" }) })}`,
-        },
-      ],
+      links: data.rows.map((s) => ({
+        title: `Open ${text(s.name)}’s profile`,
+        url: `/placement/students/${s.id}`,
+      })),
     };
   }
   const resource =
@@ -214,7 +212,13 @@ export async function answer(
                 `${s.name} · ${s.usn} · ${s.prediction_id ? `${text(s.readiness)} · ${Array.isArray(s.roles) ? s.roles.join(", ") : ""}` : "No recorded prediction"}`,
             )
             .join("\n"),
-    links: [{ title: "Open detailed report", url: `/placement/${resource}` }],
+    links:
+      resource === "tests"
+        ? [{ title: "Open detailed report", url: "/placement/tests" }]
+        : data.rows.map((s) => ({
+            title: `Open ${text(s.name)}’s profile`,
+            url: `/placement/students/${s.id}`,
+          })),
   };
 }
 async function recipient(studentId: string) {
