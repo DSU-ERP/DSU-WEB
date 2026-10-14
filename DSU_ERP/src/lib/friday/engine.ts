@@ -218,3 +218,72 @@ export async function* runFriday(opts: {
     recoverable: true,
   };
 }
+
+/**
+ * Turn an upstream failure into something the officer can act on. The real
+ * provider message is preserved, with anything resembling a credential
+ * stripped so a misconfigured key can never be echoed back to the browser.
+ */
+export function describeError(error: unknown): string {
+  if (error instanceof FridayConfigError) return error.message;
+  if (error instanceof Error && error.name === "AbortError")
+    return "Generation stopped.";
+  const raw =
+    error instanceof Error
+      ? `${error.name}: ${error.message}`
+      : typeof error === "string"
+        ? error
+        : "Unknown upstream failure.";
+  const scrubbed = raw
+    .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, "[redacted key]")
+    .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+    .slice(0, 400);
+  return `The model provider request failed. ${scrubbed}`;
+}
+
+/**
+ * Minimal live call used by the configuration check. Deliberately tiny: no
+ * tools, few tokens, same pinned model and provider as a real request, so a
+ * failure here isolates credentials and routing from the rest of the feature.
+ */
+export async function probeModel(): Promise<
+  | { ok: true; model: string; provider: string; reply: string }
+  | { ok: false; model: string; provider: string; error: string }
+> {
+  try {
+    const or = client();
+    const response = await or.chat.send(
+      {
+        chatRequest: {
+          model: FRIDAY_MODEL,
+          messages: [{ role: "user", content: "Reply with the single word: ready" }],
+          stream: false,
+          provider: providerRouting(FRIDAY_PROVIDER),
+          maxTokens: 16,
+        },
+      },
+      { signal: AbortSignal.timeout(30000) },
+    );
+    if (Symbol.asyncIterator in response)
+      return {
+        ok: false,
+        model: FRIDAY_MODEL,
+        provider: FRIDAY_PROVIDER,
+        error: "Expected a single response but the provider streamed one.",
+      };
+    const reply = response.choices?.[0]?.message?.content;
+    return {
+      ok: true,
+      model: FRIDAY_MODEL,
+      provider: FRIDAY_PROVIDER,
+      reply: typeof reply === "string" ? reply.trim().slice(0, 120) : "(empty)",
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      model: FRIDAY_MODEL,
+      provider: FRIDAY_PROVIDER,
+      error: describeError(error),
+    };
+  }
+}

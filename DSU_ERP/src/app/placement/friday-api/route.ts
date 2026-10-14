@@ -4,7 +4,13 @@ import {
   placementRead,
   placementMutate,
 } from "@/lib/placement/server";
-import { runFriday, FridayConfigError, type FridayEvent } from "@/lib/friday/engine";
+import {
+  runFriday,
+  describeError,
+  probeModel,
+  FridayConfigError,
+  type FridayEvent,
+} from "@/lib/friday/engine";
 import { fridayCapabilities } from "@/lib/friday/config";
 import { CampusError } from "@/lib/campus-response";
 import { sameOrigin } from "@/lib/placement/request";
@@ -17,6 +23,7 @@ const UUID = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i;
 const MAX_BODY = 20000;
 const MAX_MESSAGE = 1000;
 const MAX_HISTORY_TURNS = 12;
+const MAX_HISTORY_CHARS = 4000;
 
 const json = (data: unknown, status = 200) =>
   NextResponse.json(data, {
@@ -24,9 +31,14 @@ const json = (data: unknown, status = 200) =>
     headers: { "Cache-Control": "private, no-store" },
   });
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await officerSession();
+    if (req.nextUrl.searchParams.get("check") === "1")
+      return json({
+        capabilities: fridayCapabilities(),
+        probe: await probeModel(),
+      });
     return json({ capabilities: fridayCapabilities() });
   } catch (error) {
     if (error instanceof Error && error.message.includes("NEXT_REDIRECT"))
@@ -89,25 +101,21 @@ export async function POST(req: NextRequest) {
     // Per-user rate limit, reusing the existing assistant limiter.
     await placementMutate("assistant.request", {}, requestId);
 
-    // Ownership is enforced in the database; this also rejects another
-    // assistant's conversation.
-    let history: Array<{ role: "user" | "assistant"; content: string }> = [];
+    // Conversation context. The browser sends the turns currently on screen,
+    // so a brand-new conversation is contextual from the second message
+    // rather than only once it has been saved. It is the officer's own
+    // conversation, but it is still shape-checked and bounded here, and the
+    // system rules treat message content as data, never as instructions.
+    const history = readHistory(input.history);
+
     if (existing) {
+      // Ownership is enforced in the database; this also rejects another
+      // assistant's conversation.
       const conversation = await placementRead<Row>("conversation", {
         id: existing,
       });
       if (conversation.assistant !== "friday")
         return json({ error: "Choose a F.R.I.D.A.Y. conversation." }, 400);
-      const rows = Array.isArray(conversation.messages)
-        ? (conversation.messages as Row[])
-        : [];
-      history = rows
-        .slice(-MAX_HISTORY_TURNS * 2)
-        .map((m) => ({
-          role: m.role === "assistant" ? ("assistant" as const) : ("user" as const),
-          content: String(m.content ?? ""),
-        }))
-        .filter((m) => m.content);
       conversationId = existing;
     }
 
@@ -138,14 +146,12 @@ export async function POST(req: NextRequest) {
             ctl.enqueue(send(event));
           }
         } catch (error) {
-          const message =
-            error instanceof FridayConfigError
-              ? error.message
-              : error instanceof Error && error.name === "AbortError"
-                ? "Generation stopped."
-                : "The assistant connection was interrupted.";
           ctl.enqueue(
-            send({ type: "error", message, recoverable: true }),
+            send({
+              type: "error",
+              message: describeError(error),
+              recoverable: true,
+            }),
           );
         }
 
@@ -232,4 +238,24 @@ async function readBody(req: NextRequest): Promise<string | null> {
     chunks.push(value);
   }
   return Buffer.concat(chunks).toString("utf8");
+}
+
+/** Validate browser-supplied conversation turns: shape, roles, and size. */
+function readHistory(
+  value: unknown,
+): Array<{ role: "user" | "assistant"; content: string }> {
+  if (!Array.isArray(value)) return [];
+  const turns: Array<{ role: "user" | "assistant"; content: string }> = [];
+  for (const item of value.slice(-MAX_HISTORY_TURNS * 2)) {
+    if (!item || typeof item !== "object" || Array.isArray(item)) continue;
+    const row = item as { role?: unknown; content?: unknown };
+    if (typeof row.content !== "string") continue;
+    const content = row.content.trim().slice(0, MAX_HISTORY_CHARS);
+    if (!content) continue;
+    turns.push({
+      role: row.role === "assistant" ? "assistant" : "user",
+      content,
+    });
+  }
+  return turns;
 }

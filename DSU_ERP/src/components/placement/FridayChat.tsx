@@ -255,6 +255,11 @@ export function FridayChat({
     const token = ++turnToken.current;
     const conversationAtSend = conversation;
     const answerId = crypto.randomUUID();
+    // Context is the conversation as it stands on screen, so the assistant
+    // remembers earlier turns immediately rather than only after a save.
+    const context = turns
+      .filter((t) => t.state === "complete" && t.content.trim())
+      .map((t) => ({ role: t.role, content: t.content }));
 
     setTurns((t) => [
       ...t,
@@ -280,6 +285,7 @@ export function FridayChat({
           message: question,
           spoken,
           id: conversationAtSend,
+          history: context,
         }),
       });
 

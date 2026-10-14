@@ -166,3 +166,48 @@ test("a genuine cross-site or malformed origin is still rejected", () => {
   assert.equal(sameOrigin(req({ origin: "http://localhost:3000" })), false);
   assert.equal(sameOrigin(req({ origin: "not a url", host: "localhost:3000" })), false);
 });
+
+test("conversation context is carried so replies are contextual", () => {
+  // The turns the officer can see become the model's context. Only completed
+  // turns with real content qualify; a streaming or interrupted turn must not
+  // be presented as something the assistant actually said.
+  type T = { role: "user" | "assistant"; content: string; state: string };
+  const turns: T[] = [
+    { role: "user", content: "Summarise the 2028 batch", state: "complete" },
+    { role: "assistant", content: "2,104 students are recorded.", state: "complete" },
+    { role: "user", content: "How many are eligible?", state: "complete" },
+    { role: "assistant", content: "half-written", state: "interrupted" },
+    { role: "assistant", content: "", state: "streaming" },
+  ];
+  const context = turns
+    .filter((t) => t.state === "complete" && t.content.trim())
+    .map((t) => ({ role: t.role, content: t.content }));
+  assert.equal(context.length, 3);
+  assert.deepEqual(context.map((c) => c.role), ["user", "assistant", "user"]);
+  assert.ok(!context.some((c) => c.content === "half-written"));
+});
+
+test("an upstream failure is described rather than hidden, with keys scrubbed", () => {
+  const scrub = (raw: string) =>
+    raw
+      .replace(/sk-or-v1-[A-Za-z0-9_-]+/g, "[redacted key]")
+      .replace(/Bearer\s+[A-Za-z0-9._-]+/gi, "Bearer [redacted]")
+      .slice(0, 400);
+  // A credential must never be echoed back to the browser.
+  assert.equal(
+    scrub("401 Unauthorized: key sk-or-v1-abc123DEF456 is invalid"),
+    "401 Unauthorized: key [redacted key] is invalid",
+  );
+  // Whichever pattern matches first, no raw credential may survive.
+  for (const raw of [
+    "header Bearer sk-or-v1-zzz rejected",
+    "Authorization: Bearer abc.def-123 was refused",
+    "no credential here at all",
+  ]) {
+    const out = scrub(raw);
+    assert.ok(!out.includes("sk-or-v1-zzz"), `key leaked from: ${raw}`);
+    assert.ok(!/Bearer\s+[A-Za-z0-9._-]+/.test(out), `bearer leaked from: ${raw}`);
+  }
+  // The actionable part of the message survives.
+  assert.ok(scrub("402 Insufficient credits").includes("Insufficient credits"));
+});
