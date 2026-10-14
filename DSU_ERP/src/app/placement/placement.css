@@ -514,3 +514,35 @@
     max-height: 200px;
   }
 }
+
+/* Student analytics search */
+.po-student-search {
+  margin: 1.25rem 0 1.5rem;
+}
+.po-student-search label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.po-student-search-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  max-width: 44rem;
+}
+.po-student-search-row input {
+  flex: 1 1 18rem;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--po-line, #d4d8de);
+  border-radius: 0.5rem;
+  background: var(--po-surface, #fff);
+  color: inherit;
+  font: inherit;
+}
+.po-student-search-row input:focus-visible {
+  outline: 2px solid var(--po-accent, #1f5fd0);
+  outline-offset: 1px;
+}
