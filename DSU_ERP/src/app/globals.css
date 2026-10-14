@@ -10,3 +10,31 @@
 @media(max-width:1100px){.site-header nav{gap:24px}.capability-list summary{grid-template-columns:38px 1fr 230px 20px}.capability-detail{margin-left:54px}.demo-section{gap:60px}.scene-actions{gap:15px}.scene-actions .button{gap:15px;padding:12px 15px}.institution-equation{font-size:8px;gap:18px}}
 @media(max-width:767px){:root{--gutter:22px}html{scroll-padding-top:82px}.site-header{height:68px}.brand{gap:10px;font-size:12px}.brand-product{font-size:10px}.brand-slash{margin:0 5px}.brand-mark{width:20px;height:23px;font-size:19px}.site-header nav{gap:15px}.site-header nav>a:not(.nav-explore){display:none}.nav-explore{font-size:9px;padding:9px 10px;gap:12px}.section-shell{padding-top:65px;padding-bottom:65px}.platform-intro{grid-template-columns:1fr;gap:25px;margin:30px 0 38px}.platform-intro h2,.impact-layout h2,.demo-section h2{font-size:39px}.platform-intro>p{justify-self:start;max-width:300px;font-size:12px}.capability-list summary{grid-template-columns:24px 1fr 18px;gap:10px;min-height:66px}.capability-list h3{font-size:21px}.capability-category{display:none}.capability-detail{margin:0 20px 25px 34px;font-size:12px}.platform-footnote{font-size:8px;align-items:baseline}.impact-layout{grid-template-columns:1fr;gap:40px;margin:32px 0 45px}.impact-copy{justify-self:start;gap:17px}.impact-copy>svg{margin-bottom:0}.impact-copy p{font-size:13px}.institution-equation{flex-direction:column;align-items:flex-start;gap:16px;font-size:8px}.institution-equation i{height:20px;width:1px;min-width:1px;flex:none;margin-left:2px}.institution-equation i:after{top:auto;bottom:0;right:-1.5px}.final-cta h2{font-size:clamp(43px,9.5vw,65px);margin:30px 0 35px}.final-cta-bottom{flex-direction:column;align-items:flex-start;gap:25px}.final-cta-bottom>p{font-size:11px}.scene-actions{gap:20px}.demo-section{grid-template-columns:1fr;gap:42px}.demo-section h2{margin-top:27px}.demo-explanation{max-width:330px;font-size:11px;margin-top:17px}.form-two{gap:17px}.site-footer{display:grid;grid-template-columns:1fr auto;gap:24px;padding-top:30px;padding-bottom:30px}.site-footer p{grid-column:1;grid-row:2;font-size:10px}.site-footer>a:nth-last-child(2){font-size:8px;gap:5px}.footer-edition{grid-column:2;grid-row:2;font-size:7px}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Public policy pages */
+.erp-legal {
+  max-width: 48rem;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+  line-height: 1.65;
+}
+.erp-legal h1 {
+  margin: 0.4rem 0 1.25rem;
+}
+.erp-legal h2 {
+  margin: 2rem 0 0.6rem;
+  font-size: 1.1rem;
+}
+.erp-legal ul {
+  padding-left: 1.1rem;
+}
+.erp-legal li {
+  margin-bottom: 0.5rem;
+}
+.erp-callout {
+  margin: 1rem 0;
+  padding: 0.85rem 1rem;
+  border: 1px solid currentColor;
+  border-radius: 0.4rem;
+  font-size: 0.92rem;
+}

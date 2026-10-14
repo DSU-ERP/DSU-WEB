@@ -12,6 +12,7 @@
     "test:placement-ui": "node scripts/verify-placement-ui.cjs"
   },
   "dependencies": {
+    "@openrouter/sdk": "^1.4.25",
     "@supabase/ssr": "^0.12.7",
     "@supabase/supabase-js": "^2.117.3",
     "gsap": "3.15.0",
