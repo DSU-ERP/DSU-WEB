@@ -31,11 +31,7 @@ export const SECTIONS = {
   students: { title: "Student journeys", resource: "students" },
   batch: { title: "Batch analytics", resource: "batch" },
   categories: { title: "Academic categories", resource: "batch" },
-  ranking: { title: "CGPA ranking", resource: "ranking" },
   tests: { title: "Master test results", resource: "tests" },
-  points: { title: "Points ranking", resource: "points" },
-  github: { title: "GitHub ranking", resource: "github" },
-  domain: { title: "Domain ranking", resource: "domain" },
   talent: { title: "Talent intelligence", resource: "talent" },
 } as const;
 export type Section = keyof typeof SECTIONS;

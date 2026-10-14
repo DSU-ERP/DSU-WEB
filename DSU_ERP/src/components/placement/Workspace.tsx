@@ -58,12 +58,6 @@ export function Workspace({ children }: { children: React.ReactNode }) {
             </Link>
           ))}
           <Link
-            href="/placement/assistants/observation"
-            aria-current={path.endsWith("/observation") ? "page" : undefined}
-          >
-            Observation Haki
-          </Link>
-          <Link
             href="/placement/assistants/friday"
             aria-current={path.endsWith("/friday") ? "page" : undefined}
           >

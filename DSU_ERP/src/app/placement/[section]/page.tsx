@@ -47,14 +47,9 @@ export default async function PlacementSection({
               Create drive +
             </Link>
           )}
-          {[
-            "batch",
-            "categories",
-            "students",
-            "ranking",
-            "offers",
-            "talent",
-          ].includes(section) && (
+          {["batch", "categories", "students", "offers", "talent"].includes(
+            section,
+          ) && (
             <a
               className="erp-secondary"
               href={`/placement/export/${section === "categories" ? "students" : config.resource}?${new URLSearchParams(query)}`}

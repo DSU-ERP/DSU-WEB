@@ -88,7 +88,7 @@ export function ReportFilters({
         defaultValue: section === "offers" ? "true" : "false",
       },
     );
-  if (["students", "ranking"].includes(section))
+  if (section === "students")
     fields.push(
       { key: "minimum", title: "Minimum CGPA" },
       { key: "quota", options: data.options.quotas },
@@ -479,7 +479,7 @@ export function ReportBody({
         </section>
       </>
     );
-  if (["students", "ranking"].includes(section))
+  if (section === "students")
     return (
       <>
         <p className="po-note">
@@ -489,9 +489,7 @@ export function ReportBody({
         </p>
         <section className="erp-panel">
           <Table
-            caption={
-              section === "ranking" ? "CGPA ranking" : "Student journeys"
-            }
+            caption="Student journeys"
             rows={list}
             columns={[
               { key: "college_rank", title: "College rank", numeric: true },
@@ -665,33 +663,6 @@ export function ReportBody({
           <Pagination report={data} path={section} query={query} />
         </section>
       </>
-    );
-  if (["points", "github", "domain"].includes(section))
-    return (
-      <section className="erp-panel">
-        <Table
-          caption="Student points ranking"
-          rows={list}
-          columns={[
-            { key: "rank", numeric: true },
-            {
-              key: "usn",
-              title: "USN",
-              link: (r) => `/placement/students/${r.id}`,
-            },
-            { key: "name" },
-            { key: "department" },
-            ...numeric(["academic", "github", "domain", "total_points"]),
-            { key: "updated_at", title: "Last recorded" },
-          ]}
-          details={(r) => <Facts data={(r.breakdown as Row) || {}} />}
-        />
-        <Pagination report={data} path={section} query={query} />
-        <p className="po-note">
-          Only recorded scores are ranked. Refresh retrieves the latest stored
-          observations.
-        </p>
-      </section>
     );
   if (section === "talent")
     return (
