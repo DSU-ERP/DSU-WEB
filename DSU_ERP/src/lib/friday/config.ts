@@ -1,4 +1,5 @@
 import "server-only";
+import { parseProviders } from "./protocol";
 
 // Configuration is read lazily so that a missing key never breaks an unrelated
 // page build. Callers check readiness and surface a recoverable error instead.
@@ -6,11 +7,15 @@ import "server-only";
 export const FRIDAY_MODEL =
   process.env.OPENROUTER_MODEL?.trim() || "deepseek/deepseek-v4.1-flash";
 
-// Provider routing is pinned. Fallbacks stay disabled on every request,
-// including follow-up requests inside the tool loop, so an unavailable
-// provider surfaces as an error rather than silently rerouting.
-export const FRIDAY_PROVIDER =
-  process.env.OPENROUTER_PROVIDER?.trim() || "baseten/fp8";
+// Ordered provider list, comma separated. Baseten is preferred; DeepInfra is
+// used only when Baseten refuses (approved 2026-10-15 after Baseten's shared
+// capacity pool was exhausted). No provider outside this list is ever used,
+// on any request including follow-ups inside the tool loop.
+export const FRIDAY_PROVIDERS = parseProviders(process.env.OPENROUTER_PROVIDER, [
+  "baseten/fp8",
+  "deepinfra/fp8",
+]);
+export const FRIDAY_PROVIDER = FRIDAY_PROVIDERS.join(", ");
 
 export type SpeechConfig = {
   provider: string;

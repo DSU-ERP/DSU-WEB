@@ -15,12 +15,28 @@ export type ToolCallFragment = {
 
 export type AssembledCall = { id: string; name: string; args: string };
 
+/** Parse a comma-separated provider setting into an ordered, de-duplicated list. */
+export function parseProviders(value: string | undefined, fallback: string[]): string[] {
+  const list = (value ?? "")
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
+  const unique = [...new Set(list)];
+  return unique.length ? unique : [...fallback];
+}
+
 /**
- * Provider routing for a request. Rebuilt per call so every turn in the tool
- * loop carries the same pinned provider with fallbacks disabled.
+ * Provider routing for a request. Providers are tried in the configured order
+ * and nothing outside the list is ever eligible: `only` restricts the set,
+ * `order` sets the sequence, and fallbacks to other providers stay disabled.
+ * Rebuilt per call so every turn in the tool loop carries the same list.
  */
-export function providerRouting(provider: string) {
-  return { only: [provider], allowFallbacks: false as const };
+export function providerRouting(providers: readonly string[]) {
+  return {
+    order: [...providers],
+    only: [...providers],
+    allowFallbacks: false as const,
+  };
 }
 
 /**
@@ -97,4 +113,65 @@ export function sentences(text: string): string[] {
   return (text.match(/[^.!?]+[.!?]*/g) ?? [text])
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/**
+ * Explain an upstream HTTP failure in words an officer can act on. The raw
+ * OpenRouter body carries the real cause in error.metadata; the SDK's class
+ * name ("TooManyRequestsResponseError") does not.
+ */
+export function explainUpstream(
+  status: number,
+  body: string,
+  provider: string,
+): string {
+  let source = "";
+  try {
+    const parsed: unknown = JSON.parse(body);
+    const meta =
+      parsed && typeof parsed === "object"
+        ? (parsed as { error?: { metadata?: { limit_source?: unknown } } })
+            .error?.metadata
+        : undefined;
+    if (typeof meta?.limit_source === "string") source = meta.limit_source;
+  } catch {
+    // Non-JSON bodies (HTML error pages) fall through to the status message.
+  }
+  switch (status) {
+    case 429:
+      return source === "upstream_provider_shared_pool"
+        ? `The model provider (${provider}) is out of capacity for this model right now. This is a shared limit across all OpenRouter users, not a problem with this account. Try again in a few minutes.`
+        : "The model provider is rate-limiting requests. Wait a minute and try again.";
+    case 402:
+      return "The OpenRouter account has run out of credit. Add credit at openrouter.ai, then try again.";
+    case 401:
+    case 403:
+      return "The OpenRouter key was rejected. Check OPENROUTER_API_KEY on the server.";
+    case 404:
+      return `The configured provider (${provider}) is not currently serving this model.`;
+    case 408:
+    case 502:
+    case 503:
+    case 504:
+      return "The model provider did not respond in time. Try again shortly.";
+    default:
+      return `The model provider request failed with status ${status}.`;
+  }
+}
+
+/**
+ * Recognise an OpenRouter HTTP failure by shape rather than `instanceof`.
+ * Bundlers can load the SDK's error classes more than once, and then an
+ * instanceof check silently fails and the officer sees a raw class name
+ * such as "UnauthorizedResponseError: User not found." instead of an
+ * explanation. Every SDK HTTP error carries a numeric statusCode and the raw
+ * response body, which is what the explanation actually needs.
+ */
+export function upstreamFailure(
+  error: unknown,
+): { status: number; body: string } | null {
+  if (!(error instanceof Error)) return null;
+  const e = error as Error & { statusCode?: unknown; body?: unknown };
+  if (typeof e.statusCode !== "number") return null;
+  return { status: e.statusCode, body: typeof e.body === "string" ? e.body : "" };
 }

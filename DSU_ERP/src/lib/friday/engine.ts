@@ -1,11 +1,18 @@
 import "server-only";
 import { OpenRouter } from "@openrouter/sdk";
 import type { ChatMessages, ChatToolCall } from "@openrouter/sdk/models";
-import { FRIDAY_MODEL, FRIDAY_PROVIDER, openRouterKey } from "./config";
+import {
+  FRIDAY_MODEL,
+  FRIDAY_PROVIDER,
+  FRIDAY_PROVIDERS,
+  openRouterKey,
+} from "./config";
 import { FRIDAY_SYSTEM_PROMPT, FRIDAY_VOICE_HINT } from "./prompt";
 import { FRIDAY_TOOLS, runTool, toolLabel } from "./tools";
 import {
   assembleToolCalls,
+  explainUpstream,
+  upstreamFailure,
   normalizeUsage,
   parseToolArguments,
   providerRouting,
@@ -87,7 +94,7 @@ export async function* runFriday(opts: {
           model: FRIDAY_MODEL,
           messages,
           stream: true,
-          provider: providerRouting(FRIDAY_PROVIDER),
+          provider: providerRouting(FRIDAY_PROVIDERS),
           tools: iteration < MAX_TOOL_ITERATIONS ? [...FRIDAY_TOOLS] : undefined,
           toolChoice: iteration < MAX_TOOL_ITERATIONS ? "auto" : "none",
           maxTokens: MAX_OUTPUT_TOKENS,
@@ -228,6 +235,9 @@ export function describeError(error: unknown): string {
   if (error instanceof FridayConfigError) return error.message;
   if (error instanceof Error && error.name === "AbortError")
     return "Generation stopped.";
+  const upstream = upstreamFailure(error);
+  if (upstream)
+    return explainUpstream(upstream.status, upstream.body, FRIDAY_PROVIDER);
   const raw =
     error instanceof Error
       ? `${error.name}: ${error.message}`
@@ -258,7 +268,7 @@ export async function probeModel(): Promise<
           model: FRIDAY_MODEL,
           messages: [{ role: "user", content: "Reply with the single word: ready" }],
           stream: false,
-          provider: providerRouting(FRIDAY_PROVIDER),
+          provider: providerRouting(FRIDAY_PROVIDERS),
           maxTokens: 16,
         },
       },

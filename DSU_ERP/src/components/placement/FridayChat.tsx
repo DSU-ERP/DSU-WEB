@@ -83,9 +83,18 @@ export function FridayChat({
   const turnToken = useRef(0);
   const logEnd = useRef<HTMLDivElement>(null);
 
-  const sttAvailable = typeof window !== "undefined" && !!recognitionCtor();
-  const ttsAvailable =
-    typeof window !== "undefined" && "speechSynthesis" in window;
+  // Speech support can only be known in the browser. Detecting it during
+  // render made the server HTML (no window, so "unsupported") differ from the
+  // first client render and caused a hydration error. It is detected after
+  // mount instead; until then it is unknown, and both renders agree.
+  const [speech, setSpeech] = useState<{ stt: boolean; tts: boolean } | null>(
+    null,
+  );
+  useEffect(() => {
+    setSpeech({ stt: !!recognitionCtor(), tts: "speechSynthesis" in window });
+  }, []);
+  const sttAvailable = speech?.stt ?? false;
+  const ttsAvailable = speech?.tts ?? false;
 
   const stopAudio = useCallback(() => {
     if (ttsAvailable) window.speechSynthesis.cancel();
@@ -546,7 +555,7 @@ export function FridayChat({
             to enable replies. Conversation history remains available.
           </p>
         )}
-        {!ttsAvailable && (
+        {speech && !speech.tts && (
           <p className="po-note">
             This browser does not offer speech output, so replies are text only.
           </p>
@@ -636,7 +645,7 @@ export function FridayChat({
                 Stop
               </button>
             )}
-            {sttAvailable ? (
+            {!speech || sttAvailable ? (
               listening ? (
                 <button
                   type="button"
@@ -650,7 +659,7 @@ export function FridayChat({
                   type="button"
                   className="erp-secondary"
                   onClick={() => void startListening()}
-                  disabled={busy}
+                  disabled={busy || !speech}
                 >
                   Use microphone
                 </button>

@@ -5,8 +5,11 @@ import {
   normalizeUsage,
   parseToolArguments,
   providerRouting,
+  parseProviders,
   speakable,
   sentences,
+  explainUpstream,
+  upstreamFailure,
   type ToolCallFragment,
 } from "../src/lib/friday/protocol";
 import { sameOrigin } from "../src/lib/placement/request";
@@ -15,15 +18,31 @@ const req = (headers: Record<string, string>) => ({
   headers: { get: (n: string) => headers[n.toLowerCase()] ?? null },
 });
 
-test("provider routing pins the provider and disables fallbacks", () => {
-  const routing = providerRouting("baseten/fp8");
-  assert.deepEqual(routing.only, ["baseten/fp8"]);
+test("provider routing tries the listed providers in order and nothing else", () => {
+  const routing = providerRouting(["baseten/fp8", "deepinfra/fp8"]);
+  assert.deepEqual(routing.order, ["baseten/fp8", "deepinfra/fp8"]);
+  // only restricts eligibility to the same list, so no other provider is used.
+  assert.deepEqual(routing.only, ["baseten/fp8", "deepinfra/fp8"]);
   assert.equal(routing.allowFallbacks, false);
   // Rebuilt per call, so a later turn cannot inherit a mutated object.
-  const second = providerRouting("baseten/fp8");
-  assert.notEqual(routing, second);
+  const second = providerRouting(["baseten/fp8"]);
   second.only.push("other/provider");
-  assert.deepEqual(providerRouting("baseten/fp8").only, ["baseten/fp8"]);
+  assert.deepEqual(providerRouting(["baseten/fp8"]).only, ["baseten/fp8"]);
+});
+
+test("provider setting parses an ordered, de-duplicated list", () => {
+  const fallback = ["baseten/fp8", "deepinfra/fp8"];
+  assert.deepEqual(parseProviders(undefined, fallback), fallback);
+  assert.deepEqual(parseProviders("  ", fallback), fallback);
+  assert.deepEqual(parseProviders("baseten/fp8", fallback), ["baseten/fp8"]);
+  assert.deepEqual(
+    parseProviders(" deepinfra/fp8 , baseten/fp8,,deepinfra/fp8 ", fallback),
+    ["deepinfra/fp8", "baseten/fp8"],
+  );
+  // The fallback array is never shared, so callers cannot mutate the default.
+  const parsed = parseProviders(undefined, fallback);
+  parsed.push("x");
+  assert.deepEqual(fallback, ["baseten/fp8", "deepinfra/fp8"]);
 });
 
 test("fragmented tool-call arguments reassemble in arrival order", () => {
@@ -210,4 +229,49 @@ test("an upstream failure is described rather than hidden, with keys scrubbed", 
   }
   // The actionable part of the message survives.
   assert.ok(scrub("402 Insufficient credits").includes("Insufficient credits"));
+});
+
+test("upstream failures are explained in plain language, not SDK class names", () => {
+  // The exact body Baseten returned on 2026-10-15 for the reported failure.
+  const shared = JSON.stringify({
+    error: {
+      message: "Provider returned error",
+      code: 429,
+      metadata: {
+        provider_name: "BaseTen",
+        is_byok: false,
+        limit_source: "upstream_provider_shared_pool",
+      },
+    },
+  });
+  const msg = explainUpstream(429, shared, "baseten/fp8");
+  assert.match(msg, /baseten\/fp8/);
+  assert.match(msg, /shared limit/);
+  assert.match(msg, /not a problem with this account/);
+  assert.ok(!msg.includes("TooManyRequests"));
+
+  // A 429 without the shared-pool marker reads as ordinary rate limiting.
+  assert.match(explainUpstream(429, "{}", "baseten/fp8"), /rate-limiting/);
+  // An HTML error page never breaks the explanation.
+  assert.match(explainUpstream(503, "<html>Bad gateway</html>", "x"), /did not respond/);
+  assert.match(explainUpstream(402, "", "x"), /run out of credit/);
+  assert.match(explainUpstream(401, "", "x"), /key was rejected/);
+});
+
+test("SDK errors are recognised even when the class was loaded twice", () => {
+  // Simulates a bundler loading the SDK's error classes a second time: the
+  // class is unrelated to the one imported elsewhere, so instanceof fails,
+  // but the status and body are what the explanation needs.
+  class UnauthorizedResponseError extends Error {
+    statusCode = 401;
+    body = '{"error":{"message":"User not found.","code":401}}';
+  }
+  const found = upstreamFailure(new UnauthorizedResponseError("User not found."));
+  assert.deepEqual(found?.status, 401);
+  assert.match(explainUpstream(found!.status, found!.body, "baseten/fp8"), /key was rejected/);
+
+  // Ordinary failures are not mistaken for upstream HTTP errors.
+  assert.equal(upstreamFailure(new Error("socket hang up")), null);
+  assert.equal(upstreamFailure({ statusCode: 401, body: "" }), null);
+  assert.equal(upstreamFailure("401"), null);
 });
