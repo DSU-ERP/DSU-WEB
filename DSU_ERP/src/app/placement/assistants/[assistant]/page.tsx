@@ -5,7 +5,9 @@ import { diagnostics } from "@/lib/placement/assistant";
 import { AssistantChat } from "@/components/placement/AssistantChat";
 import { FridayChat } from "@/components/placement/FridayChat";
 import { fridayCapabilities } from "@/lib/friday/config";
+import { focusBatch } from "@/lib/friday/view";
 import type { Report } from "@/lib/placement/types";
+import "../../friday.css";
 export default async function AssistantPage({
   params,
 }: {
@@ -19,25 +21,15 @@ export default async function AssistantPage({
     limit: "100",
   });
   if (assistant === "friday")
+    // The assistant draws its own header bar, so the page adds nothing around
+    // it. The focus batch is decided here, on the server, so the starter
+    // prompts render identically on the server and in the browser.
     return (
-      <>
-        <Link href="/placement/overview">← Placement overview</Link>
-        <header className="po-heading">
-          <div>
-            <p className="erp-eyebrow">CAMPUS ASSISTANT</p>
-            <h1>F.R.I.D.A.Y.</h1>
-            <p className="po-note">
-              Ask about batches, students, eligibility, drives and placement
-              statistics by typing or speaking. Answers are grounded in recorded
-              campus data and name the records they came from.
-            </p>
-          </div>
-        </header>
-        <FridayChat
-          initialHistory={history.rows}
-          initialCapabilities={fridayCapabilities()}
-        />
-      </>
+      <FridayChat
+        initialHistory={history.rows}
+        initialCapabilities={fridayCapabilities()}
+        focusBatch={focusBatch(history.options?.batches ?? [], new Date().getFullYear())}
+      />
     );
 
   return (

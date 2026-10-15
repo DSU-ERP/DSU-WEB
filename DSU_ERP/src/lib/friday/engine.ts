@@ -29,7 +29,11 @@ export type { Usage };
 export type FridayEvent =
   | { type: "status"; state: FridayState }
   | { type: "text_delta"; text: string }
-  | { type: "tool_status"; label: string; state: "running" | "done" | "failed" }
+  | {
+      type: "tool_status";
+      label: string;
+      state: "running" | "done" | "failed";
+    }
   | { type: "usage"; usage: Usage }
   | { type: "done"; text: string }
   | { type: "error"; message: string; recoverable: boolean };

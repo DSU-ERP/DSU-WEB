@@ -239,17 +239,18 @@ const css =
       path: path.join(dir, "batch-desktop.png"),
       fullPage: true,
     });
-    await page.getByRole("button", { name: "Hide navigation" }).click();
-    assert.equal(await page.locator("#placement-nav").isVisible(), false);
-    await page.getByRole("button", { name: "Show navigation" }).click();
+    // Collapsing keeps the menu as an icon rail rather than emptying it, and
+    // every link keeps its accessible name.
+    await page.getByRole("button", { name: "Collapse sidebar" }).click();
+    assert.equal(await page.locator("#placement-nav").isVisible(), true);
+    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 8);
+    await page.getByRole("link", { name: "Batch analytics" }).waitFor();
+    await page.getByRole("button", { name: "Expand sidebar" }).click();
     await page.getByRole("button", { name: "Use dark theme" }).click();
     assert.ok(await page.locator(".po-dark").count());
-    await page.getByRole("link", { name: "CSE ↗", exact: true }).click();
-    assert.equal(new URL(page.url()).searchParams.get("batch"), "2028");
-    assert.equal(new URL(page.url()).searchParams.get("department"), "CSE");
-    await page.getByLabel("Sort", { exact: true }).selectOption("name");
-    await page.getByRole("button", { name: "Apply filters" }).click();
-    assert.equal(new URL(page.url()).searchParams.get("sort"), "name");
+    // Branch names are plain text since the drill-down links into the removed
+    // department and student sections were stripped (commit 6c13f25).
+    assert.equal(await page.getByRole("link", { name: "CSE ↗", exact: true }).count(), 0);
     await page.goto(origin + "/placement/drive-editor");
     await page.getByRole("button", { name: "Add round" }).click();
     await page
@@ -321,22 +322,14 @@ const css =
       path: path.join(dir, "batch-mobile.png"),
       fullPage: true,
     });
+    // The sections that remain in SECTIONS after the removals in 6c13f25.
     for (const section of [
       "overview",
       "companies",
       "drives",
-      "offers",
       "company-reports",
-      "multiple-offers",
-      "departments",
-      "students",
-      "categories",
-      "ranking",
+      "batch",
       "tests",
-      "points",
-      "github",
-      "domain",
-      "talent",
     ]) {
       await page.goto(origin + "/placement/" + section);
       await page.locator("h1").waitFor();
@@ -353,12 +346,11 @@ const css =
       JSON.stringify({
         passed: true,
         checks: [
-          "16 reports",
+          "6 reports",
           "responsive overflow",
-          "sidebar collapse",
+          "sidebar collapses to icons",
           "theme",
-          "cohort drilldown",
-          "sorting",
+          "branch names without drill-down links",
           "ordered rounds",
           "drive form serialization",
           "mixed registration selection guard",

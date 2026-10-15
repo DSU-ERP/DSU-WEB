@@ -12,6 +12,7 @@ const result = spawnSync(
     ".qa/unit/tests/batches.test.js",
     ".qa/unit/tests/placement.test.js",
     ".qa/unit/tests/friday.test.js",
+    ".qa/unit/tests/friday-view.test.js",
   ],
   { stdio: "inherit", windowsHide: true },
 );
