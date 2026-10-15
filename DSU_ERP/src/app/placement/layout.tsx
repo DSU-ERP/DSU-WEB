@@ -3,7 +3,7 @@ import { officerSession } from "@/lib/placement/server";
 import { CampusError } from "@/lib/campus-response";
 import { Workspace } from "@/components/placement/Workspace";
 import { signOut } from "../login/actions";
-import "../portal/portal.css";
+import "../workspace.css";
 import "./placement.css";
 export const dynamic = "force-dynamic";
 export default async function PlacementLayout({

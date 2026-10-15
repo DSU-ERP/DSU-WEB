@@ -88,8 +88,7 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
       <p className="portal-description">Connect to your digital campus environment.</p>
       <p className="portal-index">02 / PORTAL GATEWAY</p>
       <div className="portal-actions">
-        <Link href="/login?portal=placement-officer" className="portal-button portal-button-primary" aria-label="Sign in to the Placement Officer portal">SIGN IN · PLACEMENT OFFICER</Link>
-        <Link href="/login" className="portal-button">LOG IN</Link>
+        <Link href="/login" className="portal-button portal-button-primary" aria-label="Sign in to the Placement Officer portal">SIGN IN · PLACEMENT OFFICER</Link>
       </div>
     </section>
     <div className="campus-caption"><p>An intelligent operating system<br/>for the modern university.</p><span>ONE INSTITUTION.<br/>EVERY POSSIBILITY.</span></div>

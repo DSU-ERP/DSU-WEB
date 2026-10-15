@@ -63,7 +63,7 @@ const mock = {
 const css =
   "*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inherit;text-decoration:none}button{cursor:pointer}" +
   fs.readFileSync("src/app/globals.css", "utf8").replace('@import "tailwindcss";', "") +
-  fs.readFileSync("src/app/portal/portal.css", "utf8") +
+  fs.readFileSync("src/app/workspace.css", "utf8") +
   fs.readFileSync("src/app/placement/placement.css", "utf8") +
   fs.readFileSync("src/app/placement/friday.css", "utf8");
 
@@ -140,8 +140,18 @@ const fakeSpeech = () => {
           let body = "";
           req.on("data", (c) => (body += c));
           req.on("end", () => {
-            deleted.push(JSON.parse(body).id);
-            res.end(JSON.stringify({ data: { id: JSON.parse(body).id } }));
+            const input = JSON.parse(body);
+            if (input.operation === "rename") {
+              if (input.title === "Simulate failure") {
+                res.statusCode = 503;
+                return res.end(JSON.stringify({ error: "Rename temporarily unavailable." }));
+              }
+              const row = history.find((h) => h.id === input.id);
+              row.title = input.title.trim();
+              return res.end(JSON.stringify({ data: row }));
+            }
+            deleted.push(input.id);
+            res.end(JSON.stringify({ data: { id: input.id } }));
           });
           return;
         }
@@ -216,13 +226,14 @@ const fakeSpeech = () => {
       return { height: Math.round(el.getBoundingClientRect().height), resize: cs.resize };
     });
     assert.ok(hero.height <= 44 && hero.resize === "none", "single-row welcome input: " + JSON.stringify(hero));
+    const openingComposer = await page.locator(".fr-composer").boundingBox();
     await shot("1-welcome-desktop");
 
     // 2. Ask a starter question and watch the stream.
     await page.locator(".fr-starter").first().click();
     await page.getByText("Retrieving batch figures").first().waitFor();
     await shot("2a-streaming-desktop");
-    await page.getByText(/Answered in \d+\.\d s/).waitFor({ timeout: 15000 });
+    await page.getByRole("button", { name: "Copy text" }).waitFor({ timeout: 15000 });
     assert.equal(await page.locator(".fr-answer table tbody tr").count(), 4, "table rows");
     assert.equal(await page.locator(".fr-answer ul li").count(), 2, "list items");
     assert.equal(await page.locator('.fr-answer a[href^="/placement/students/"]').count(), 1, "internal link");
@@ -234,18 +245,31 @@ const fakeSpeech = () => {
     assert.equal(await color(".fr-answer"), "rgb(10, 10, 10)", "reply in near-black");
     assert.equal(await color(".fr-turn--assistant .fr-turn-who"), "rgb(217, 37, 42)");
     assert.equal(await color(".fr-question"), "rgb(23, 23, 23)", "officer message in black");
-    assert.match(await page.locator(".fr-turn-tokens").innerText(), /2,340 tokens/i);
+    assert.equal(await page.locator(".fr-strip, .fr-composer-status, .fr-turn-tokens, .fr-turn-facts").count(), 0, "no dashboard metadata appears after sending");
+    assert.equal(await page.getByRole("heading", { name: "What would you like to know?" }).count(), 0, "welcome heading gives way to the conversation");
+    assert.equal(await page.locator(".fr-composer").count(), 1, "one reply input");
+    assert.equal(await page.locator(".fr-dock .fr-composer").count(), 1, "reply input sits below the conversation");
+    const conversationComposer = await page.locator(".fr-composer").boundingBox();
+    assert.ok(Math.abs(openingComposer.width - conversationComposer.width) <= 1, "same input width after sending: " + JSON.stringify({ openingComposer, conversationComposer }));
+    assert.ok(Math.abs(openingComposer.height - conversationComposer.height) <= 1, "same compact input height after sending");
+    const replyBox = await page.locator(".fr-turn--assistant").last().boundingBox();
+    assert.ok(replyBox.y + replyBox.height <= conversationComposer.y + 1, "answer ends above the reply input");
+    assert.ok(conversationComposer.y + conversationComposer.height <= 900, "reply input stays in the viewport");
+    const replySurface = await page.locator(".fr-reply").evaluate((el) => {
+      const cs = getComputedStyle(el);
+      return { background: cs.backgroundColor, border: cs.borderTopWidth, shadow: cs.boxShadow };
+    });
+    assert.deepEqual(replySurface, { background: "rgba(0, 0, 0, 0)", border: "0px", shadow: "none" }, "reply stays on the opening canvas");
     await page.getByRole("button", { name: "Copy text" }).waitFor();
     await page.getByRole("button", { name: "Replay answer" }).waitFor();
-    assert.equal(await page.locator(".fr-chip").count(), 3, "follow-ups");
-    assert.equal(await page.locator(".fr-state").innerText(), "READY");
     await noOverflow("conversation");
     f = await fits();
     assert.ok(f.page <= 0, "the page itself never scrolls: " + JSON.stringify(f));
     await shot("2b-answer-desktop");
-    for (const chip of ["Break this down by branch", "Show the top 20 students by CGPA"]) {
+    for (const question of ["Break this down by branch", "Show the top 20 students by CGPA"]) {
       const before = await page.locator(".fr-turn--assistant .fr-turn-actions").count();
-      await page.getByRole("button", { name: chip }).click();
+      await page.getByRole("textbox", { name: "Ask F.R.I.D.A.Y." }).fill(question);
+      await page.getByRole("button", { name: "Send", exact: true }).click();
       await page.waitForFunction(
         (n) => document.querySelectorAll(".fr-turn--assistant .fr-turn-actions").length > n,
         before,
@@ -267,11 +291,11 @@ const fakeSpeech = () => {
     await page.getByRole("button", { name: "Use dark theme" }).click();
     await page.waitForTimeout(150);
     assert.equal(await color(".fr-answer"), "rgb(232, 236, 227)", "dark reply in light ink");
-    assert.equal(await color(".fr-question"), "rgb(23, 23, 23)", "dark officer message black");
+    assert.equal(await color(".fr-question"), "rgb(232, 236, 227)", "dark officer message stays readable on the canvas");
     assert.equal(
       await page.locator(".fr-question").first().evaluate((el) => getComputedStyle(el).backgroundColor),
-      "rgb(238, 240, 234)",
-      "black text sits on a light bubble in dark mode",
+      "rgba(0, 0, 0, 0)",
+      "no separate message panel in dark mode",
     );
     await shot("3-conversation-dark");
     await page.getByRole("button", { name: "Use light theme" }).click();
@@ -284,6 +308,28 @@ const fakeSpeech = () => {
     assert.deepEqual(groups.map((g) => g.toUpperCase()), ["TODAY", "YESTERDAY", "OLDER"]);
     await page.waitForTimeout(260);
     await shot("4a-history-drawer");
+    await drawer.getByRole("button", { name: "Rename conversation: Batch 2026 eligibility by branch" }).click();
+    const renameDialog = page.getByRole("dialog", { name: "Rename conversation", exact: true });
+    const nameInput = renameDialog.getByLabel("Conversation name");
+    await nameInput.fill("   ");
+    assert.equal(await renameDialog.getByRole("button", { name: "Save name" }).isDisabled(), true);
+    await nameInput.fill("Simulate failure");
+    await renameDialog.getByRole("button", { name: "Save name" }).click();
+    await renameDialog.getByRole("alert").waitFor();
+    // Chromium reports the deliberately simulated 503 to its console as well.
+    const expectedError = errors.findIndex((e) => e.includes('503 (Service Unavailable)'));
+    if (expectedError !== -1) errors.splice(expectedError, 1);
+    assert.equal(await nameInput.inputValue(), "Simulate failure");
+    await nameInput.fill("2026 follow-ups");
+    await nameInput.press("Enter");
+    await renameDialog.waitFor({ state: "hidden" });
+    await drawer.getByRole("button", { name: "Rename conversation: 2026 follow-ups" }).waitFor();
+    assert.equal(history[0].title, "2026 follow-ups", "rename saved at server boundary");
+    await drawer.getByRole("button", { name: "Rename conversation: 2026 follow-ups" }).click();
+    await nameInput.fill("Cancelled name");
+    await nameInput.press("Escape");
+    await renameDialog.waitFor({ state: "hidden" });
+    assert.equal(history[0].title, "2026 follow-ups", "cancel leaves saved name intact");
     await drawer.getByRole("button", { name: "Delete conversation: Top 20 students in CSE by CGPA" }).click();
     const confirm = page.getByRole("alertdialog");
     await confirm.getByRole("heading", { name: "Delete this conversation?" }).waitFor();
@@ -360,7 +406,7 @@ const fakeSpeech = () => {
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     await settle();
     assert.equal(await sidebarWidth(), 76, "collapsed rail");
-    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 8, "icons remain when collapsed");
+    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 9, "icons remain when collapsed");
     assert.equal(await page.getByRole("link", { name: "F.R.I.D.A.Y." }).count(), 1, "links keep their names");
     assert.equal(await page.locator("#placement-nav a").first().getAttribute("title"), "Placement overview", "tooltip");
     assert.equal(await page.getByRole("separator", { name: "Resize sidebar" }).count(), 0, "no resize when collapsed");
@@ -385,10 +431,10 @@ const fakeSpeech = () => {
     await noOverflow("mobile welcome");
     await shot("8a-welcome-mobile");
     await page.locator(".fr-starter").nth(1).click();
-    await page.getByText(/Answered in/).waitFor({ timeout: 15000 });
+    await page.getByRole("button", { name: "Copy text" }).waitFor({ timeout: 15000 });
     await noOverflow("mobile conversation");
-    const dock = await page.locator(".fr-dock").boundingBox();
-    assert.ok(dock && dock.height < 844 * 0.34, "pinned dock should leave room for the answer, got " + dock?.height);
+    const prompt = await page.locator(".fr-prompt").boundingBox();
+    assert.ok(prompt && prompt.height < 844 * 0.34, "compact prompt leaves room for the answer, got " + prompt?.height);
     await page.locator(".fr-turn--assistant").evaluate((el) => el.scrollIntoView({ block: "start" }));
     await page.waitForTimeout(100);
     await shot("8b-conversation-mobile");

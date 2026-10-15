@@ -145,7 +145,7 @@ const css =
   fs
     .readFileSync("src/app/globals.css", "utf8")
     .replace('@import "tailwindcss";', "") +
-  fs.readFileSync("src/app/portal/portal.css", "utf8") +
+  fs.readFileSync("src/app/workspace.css", "utf8") +
   fs.readFileSync("src/app/placement/placement.css", "utf8");
 (async () => {
   let browser, server;
@@ -243,7 +243,8 @@ const css =
     // every link keeps its accessible name.
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     assert.equal(await page.locator("#placement-nav").isVisible(), true);
-    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 8);
+    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 9);
+    await page.getByRole("link", { name: "Data imports" }).waitFor();
     await page.getByRole("link", { name: "Batch analytics" }).waitFor();
     await page.getByRole("button", { name: "Expand sidebar" }).click();
     await page.getByRole("button", { name: "Use dark theme" }).click();

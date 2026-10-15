@@ -7,7 +7,6 @@ import {
   Check,
   CircleAlert,
   Copy,
-  CornerDownLeft,
   History as HistoryIcon,
   Info,
   Keyboard,
@@ -20,7 +19,6 @@ import {
 } from "lucide-react";
 import type { Row } from "@/lib/placement/types";
 import { speakable, sentences } from "@/lib/friday/protocol";
-import { formatDuration } from "@/lib/friday/view";
 import { Answer } from "./friday/Answer";
 import { History } from "./friday/History";
 
@@ -55,12 +53,6 @@ const STATE_LABEL: Record<string, string> = {
   interrupted: "Connection interrupted",
 };
 
-const FOLLOW_UPS = [
-  "Break this down by branch",
-  "Show the top 20 students by CGPA",
-  "Which drives are open right now?",
-];
-
 const BARS = 28;
 
 type SpeechRecognitionLike = {
@@ -83,14 +75,6 @@ function recognitionCtor(): (new () => SpeechRecognitionLike) | null {
     ? (ctor as new () => SpeechRecognitionLike)
     : null;
 }
-
-const clock = (ms: number | null) =>
-  ms === null
-    ? ""
-    : new Date(ms).toLocaleTimeString("en-IN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
 
 function starters(batch: string | null) {
   const b = batch ? `Batch ${batch}` : "the current batch";
@@ -143,7 +127,6 @@ export function FridayChat({
   const [speaking, setSpeaking] = useState(false);
   const [copied, setCopied] = useState<string>();
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [lastTokens, setLastTokens] = useState<number | null>(null);
   const caps = initialCapabilities;
 
   const abort = useRef<AbortController | null>(null);
@@ -203,11 +186,20 @@ export function FridayChat({
     [releaseMic],
   );
 
-  // Also re-run when busy flips, because the follow-up suggestions appear or
-  // disappear then and change the height of the chat area.
+  // Follow the full scroll region, including its breathing room below replies.
+  // The page itself only scrolls on smaller screens.
   useEffect(() => {
-    if (stick.current) logEnd.current?.scrollIntoView({ block: "end" });
+    if (!stick.current || !turns.length) return;
+    if (window.matchMedia("(min-width: 1001px)").matches && main.current) {
+      main.current.scrollTop = main.current.scrollHeight;
+    } else {
+      logEnd.current?.scrollIntoView({ block: "end" });
+    }
   }, [turns, listening, busy]);
+
+  useEffect(() => {
+    if (!draft && input.current) input.current.style.height = "auto";
+  }, [draft]);
 
   /**
    * Speak an answer. `force` is used by Replay, which must work even when
@@ -510,7 +502,6 @@ export function FridayChat({
             const u = event.usage as { totalTokens?: unknown } | undefined;
             const total =
               typeof u?.totalTokens === "number" ? u.totalTokens : null;
-            setLastTokens(total);
             patchTurn(answerId, (t) => ({ ...t, tokens: total }));
           } else if (event.type === "text_delta") {
             text += String(event.text ?? "");
@@ -588,7 +579,6 @@ export function FridayChat({
     setError("");
     setBusy(false);
     setState("ready");
-    setLastTokens(null);
     try {
       const res = await fetch(
         `/placement/assistant-api?assistant=friday&id=${encodeURIComponent(id)}`,
@@ -622,6 +612,21 @@ export function FridayChat({
           : "That conversation could not be opened.",
       );
     }
+  }
+
+  /** Throws on failure so the confirmation dialog can show the reason. */
+  async function rename(id: string, title: string) {
+    const res = await fetch("/placement/assistant-api", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ operation: "rename", id, title, requestId: crypto.randomUUID() }),
+    });
+    const body = (res.headers.get("content-type") ?? "").includes("json")
+      ? await res.json().catch(() => null) : null;
+    if (!res.ok || typeof body?.data?.title !== "string")
+      throw new Error(typeof body?.error === "string" ? body.error : "That conversation could not be renamed. Please try again.");
+    setHistory((rows) => rows.map((row) => String(row.id) === id ? { ...row, ...body.data } : row));
+    setAnnounce("Conversation renamed.");
   }
 
   /** Throws on failure so the confirmation dialog can show the reason. */
@@ -666,7 +671,6 @@ export function FridayChat({
     setToolNote("");
     setState("ready");
     setBusy(false);
-    setLastTokens(null);
     input.current?.focus();
   }
 
@@ -685,18 +689,6 @@ export function FridayChat({
   const activeLabel = speaking
     ? STATE_LABEL.speaking
     : toolNote || STATE_LABEL[state] || STATE_LABEL.ready;
-  const tone =
-    state === "interrupted"
-      ? "error"
-      : busy || listening || speaking
-        ? "active"
-        : "ready";
-  const title = history.find((h) => String(h.id) === conversation)?.title;
-  const lastAssistant = [...turns]
-    .reverse()
-    .find((t) => t.role === "assistant");
-  const showFollowUps =
-    !busy && !listening && lastAssistant?.state === "complete";
 
   // The voice sequence is only drawn while a spoken question is in progress,
   // and a step is only marked current while that operation is actually
@@ -842,45 +834,15 @@ export function FridayChat({
     </div>
   );
 
-  // The welcome screen uses a compact one-row input centred under the
-  // question; in a conversation the full composer sits at the bottom.
-  const composerEl = (hero: boolean) => (
+  // Keep the same compact composer before and after the first question.
+  const composerEl = (
     <form
-      className={`fr-composer${hero ? " fr-composer--hero" : ""}`}
+      className="fr-composer fr-composer--hero"
       onSubmit={(e) => {
         e.preventDefault();
         void send(draft);
       }}
     >
-      {!hero && (
-        <div className="fr-composer-status">
-          <span className={`fr-state fr-state--${tone}`} role="status">
-            <span className="fr-state-dot" aria-hidden="true" />
-            {activeLabel}
-          </span>
-          {speaking ? (
-            <button type="button" className="fr-link-btn" onClick={stopAudio}>
-              <Square size={12} aria-hidden="true" />
-              Stop speaking
-            </button>
-          ) : (
-            voiceOut && (
-              <span className="fr-composer-fact">
-                <Volume2 size={13} aria-hidden="true" />
-                Speak replies on
-              </span>
-            )
-          )}
-          {lastTokens !== null && (
-            <span className="fr-composer-fact fr-hide-narrow">
-              Last reply {lastTokens.toLocaleString("en-IN")} tokens
-            </span>
-          )}
-          <span className="fr-composer-fact fr-composer-model fr-hide-narrow">
-            Model {caps.model}
-          </span>
-        </div>
-      )}
       <label htmlFor="friday-input" className="fr-sr">
         Ask F.R.I.D.A.Y.
       </label>
@@ -889,15 +851,11 @@ export function FridayChat({
         ref={input}
         value={draft}
         maxLength={1000}
-        rows={hero ? 1 : 2}
-        placeholder={
-          hero
-            ? "Ask F.R.I.D.A.Y."
-            : "Ask a follow-up, break it down by branch, or list students."
-        }
+        rows={1}
+        placeholder="Ask F.R.I.D.A.Y."
         onChange={(e) => {
           setDraft(e.target.value);
-          if (hero) grow(e.currentTarget);
+          grow(e.currentTarget);
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter" && !e.shiftKey) {
@@ -907,58 +865,38 @@ export function FridayChat({
         }}
       />
       <div className="fr-composer-foot">
-        {!hero && speakToggle("fr-show-narrow")}
-        {!hero && (
-          <span className="fr-hint fr-hide-narrow">
-            <CornerDownLeft size={13} aria-hidden="true" />
-            Enter to send, Shift + Enter for a new line
-          </span>
-        )}
         <span className="fr-composer-buttons">
           {(sttAvailable || !speech) && (
             <button
               type="button"
-              className={`fr-btn fr-btn--outline${hero ? " fr-btn--icon" : ""}`}
+              className="fr-btn fr-btn--outline fr-btn--icon"
               onClick={() => void startListening()}
               disabled={busy || !speech}
-              title={hero ? "Voice input" : undefined}
+              title="Voice input"
             >
-              <Mic size={hero ? 17 : 15} aria-hidden="true" />
-              {hero ? (
-                <span className="fr-sr">Voice input</span>
-              ) : (
-                <>
-                  <span className="fr-hide-narrow">Voice input</span>
-                  <span className="fr-show-narrow fr-sr">Voice input</span>
-                </>
-              )}
+              <Mic size={17} aria-hidden="true" />
+              <span className="fr-sr">Voice input</span>
             </button>
           )}
           {busy ? (
             <button
               type="button"
-              className="fr-btn fr-btn--outline"
+              className="fr-btn fr-btn--outline fr-btn--icon"
               onClick={stopGenerating}
+              title="Stop generating"
             >
               <Square size={13} aria-hidden="true" />
-              Stop
+              <span className="fr-sr">Stop generating</span>
             </button>
           ) : (
             <button
               type="submit"
-              className={`fr-btn fr-btn--primary${hero ? " fr-btn--icon" : ""}`}
+              className="fr-btn fr-btn--primary fr-btn--icon"
               disabled={!draft.trim()}
-              title={hero ? "Send" : undefined}
+              title="Send"
             >
-              {hero ? (
-                <span className="fr-sr">Send</span>
-              ) : (
-                <>
-                  <span className="fr-hide-narrow">Send</span>
-                  <span className="fr-show-narrow fr-sr">Send</span>
-                </>
-              )}
-              <ArrowUp size={hero ? 17 : 15} aria-hidden="true" />
+              <span className="fr-sr">Send</span>
+              <ArrowUp size={17} aria-hidden="true" />
             </button>
           )}
         </span>
@@ -969,6 +907,29 @@ export function FridayChat({
         </p>
       )}
     </form>
+  );
+
+  const promptEl = (
+    <div className="fr-prompt">
+      {turns.length === 0 && (
+        <h2 id="fr-welcome-title">What would you like to know?</h2>
+      )}
+      {liveEl}
+      {stepsEl}
+      {errorEl}
+      {listening ? recorderEl : composerEl}
+      {(busy || speaking) && (
+        <div className="fr-activity">
+          <span role="status">{activeLabel}</span>
+          {speaking && (
+            <button type="button" className="fr-link-btn" onClick={stopAudio}>
+              <Square size={12} aria-hidden="true" /> Stop speaking
+            </button>
+          )}
+        </div>
+      )}
+      {speakToggle("fr-show-narrow fr-hero-toggle")}
+    </div>
   );
 
   return (
@@ -1004,21 +965,6 @@ export function FridayChat({
       </header>
 
       <div className="fr-column">
-        {turns.length > 0 && (
-          <div className="fr-strip">
-            <span className="fr-strip-item fr-strip-strong">
-              <span className="fr-marker" aria-hidden="true" />
-              {String(title ?? "Current conversation")}
-            </span>
-            <span className="fr-strip-item">
-              {turns.length} {turns.length === 1 ? "message" : "messages"}
-            </span>
-            <span className="fr-strip-item fr-strip-end">
-              <ShieldCheck size={13} aria-hidden="true" /> Placement officer
-              session
-            </span>
-          </div>
-        )}
 
         {!caps.chat && (
           <p className="fr-notice fr-notice--error" role="alert">
@@ -1045,17 +991,14 @@ export function FridayChat({
           }}
         >
           <div className="fr-main-inner">
-            {turns.length === 0 ? (
-              <section
-                className="fr-welcome"
-                aria-labelledby="fr-welcome-title"
-              >
-                <h2 id="fr-welcome-title">What would you like to know?</h2>
-                {liveEl}
-                {stepsEl}
-                {errorEl}
-                {listening ? recorderEl : composerEl(true)}
-                {!listening && (
+            <section
+              className={turns.length === 0 ? "fr-welcome" : "fr-conversation"}
+              aria-label={turns.length > 0 ? "Conversation" : undefined}
+              aria-labelledby={turns.length === 0 ? "fr-welcome-title" : undefined}
+            >
+              {turns.length === 0 && promptEl}
+              {turns.length === 0 ? (
+                !listening && (
                   <ul className="fr-starters" aria-label="Suggested questions">
                     {starters(focusBatch).map(({ label, prompt, Icon }) => (
                       <li key={label}>
@@ -1071,11 +1014,9 @@ export function FridayChat({
                       </li>
                     ))}
                   </ul>
-                )}
-                {speakToggle("fr-show-narrow fr-hero-toggle")}
-              </section>
-            ) : (
-              <div className="fr-log">
+                )
+              ) : (
+              <div className="fr-log" aria-label="Conversation">
                 {turns.map((t) =>
                   t.role === "user" ? (
                     <article
@@ -1085,7 +1026,6 @@ export function FridayChat({
                     >
                       <p className="fr-turn-meta">
                         <span className="fr-turn-who">You</span>
-                        {t.at !== null && <time>{clock(t.at)}</time>}
                       </p>
                       <div className="fr-question">{t.content}</div>
                     </article>
@@ -1099,17 +1039,6 @@ export function FridayChat({
                         <span className="fr-turn-who">
                           <span className="fr-marker" aria-hidden="true" />
                           F.R.I.D.A.Y.
-                        </span>
-                        <span className="fr-turn-role">
-                          Campus records assistant
-                        </span>
-                        <span className="fr-turn-facts">
-                          {t.at !== null && <time>{clock(t.at)}</time>}
-                          {t.durationMs !== undefined && (
-                            <span>
-                              Answered in {formatDuration(t.durationMs)}
-                            </span>
-                          )}
                         </span>
                       </p>
                       <div className="fr-reply">
@@ -1160,11 +1089,6 @@ export function FridayChat({
                                 Replay answer
                               </button>
                             )}
-                            {t.tokens != null && (
-                              <span className="fr-turn-tokens">
-                                {t.tokens.toLocaleString("en-IN")} tokens
-                              </span>
-                            )}
                           </div>
                         )}
                       </div>
@@ -1174,32 +1098,13 @@ export function FridayChat({
               </div>
             )}
 
-            {turns.length > 0 && liveEl}
-            <div ref={logEnd} />
+              <div ref={logEnd} className="fr-log-end" />
+            </section>
           </div>
         </div>
 
         {turns.length > 0 && (
-          <div className="fr-dock fr-dock--sticky">
-            {stepsEl}
-            {errorEl}
-            {showFollowUps && (
-              <div className="fr-followups">
-                <span>Follow up</span>
-                {FOLLOW_UPS.map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    className="fr-chip"
-                    onClick={() => void send(f)}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-            )}
-            {listening ? recorderEl : composerEl(false)}
-          </div>
+          <div className="fr-dock fr-dock--sticky">{promptEl}</div>
         )}
 
         <footer className="fr-foot">
@@ -1230,6 +1135,7 @@ export function FridayChat({
         onOpen={(id) => void open(id)}
         onNew={reset}
         onDelete={remove}
+        onRename={rename}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase/server";
 import { CampusError } from "@/lib/campus-response";
-import type { Json, OfficerSession, Query } from "./types";
+import type { Json, OfficerSession, Query, Row } from "./types";
 
 function failure(error: { code?: string; message?: string }): never {
   const code = error.code ?? "";
@@ -53,6 +53,17 @@ export const officerSession = cache(async () => {
   if (error || !user) redirect("/login?portal=placement-officer");
   return placementRead<OfficerSession>("session");
 });
+export async function placementImportHistory<T>(): Promise<T> {
+  await officerSession();
+  const client = await supabaseServer();
+  const { data, error } = await client
+    .rpc("dsu_placement_imports")
+    .abortSignal(AbortSignal.timeout(15000));
+  if (error) failure(error);
+  if (!data || !Array.isArray(data.data))
+    throw new CampusError(502, "The import history response is incomplete.");
+  return data.data as T;
+}
 export async function placementMutate<T>(
   action: string,
   payload: Record<string, Json>,
@@ -67,4 +78,15 @@ export async function placementMutate<T>(
   if (!data || !("data" in data))
     throw new CampusError(502, "The placement response is incomplete.");
   return data.data as T;
+}
+
+export async function renameFridayConversation(id: string, title: string): Promise<Row> {
+  await officerSession();
+  const client = await supabaseServer();
+  const { data, error } = await client.rpc("dsu_friday_rename", {
+    conversation_id: id, new_title: title,
+  }).abortSignal(AbortSignal.timeout(15000));
+  if (error) failure(error);
+  if (!data?.data) throw new CampusError(502, "The rename response is incomplete.");
+  return data.data as Row;
 }

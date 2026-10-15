@@ -3,6 +3,7 @@ import {
   officerSession,
   placementRead,
   placementMutate,
+  renameFridayConversation,
 } from "@/lib/placement/server";
 import {
   answer,
@@ -81,6 +82,12 @@ export async function POST(req: NextRequest) {
       return reply({ error: "Invalid request." }, 400);
     const id = input.id;
     if (id && !uuid(id)) return reply({ error: "Invalid record." }, 400);
+    if (input.operation === "rename") {
+      if (!uuid(id) || typeof input.title !== "string" || !input.title.trim() ||
+          input.title.trim().length > 120 || /[\u0000-\u001f\u007f]/.test(input.title))
+        return reply({ error: "Enter a conversation name of 1–120 characters on one line." }, 400);
+      return reply({ data: await renameFridayConversation(id, input.title.trim()) });
+    }
     await placementMutate("assistant.request", {}, input.requestId);
     if (input.operation === "delete")
       return reply(

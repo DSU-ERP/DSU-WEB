@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import type { Row } from "@/lib/placement/types";
 import { groupConversations } from "@/lib/friday/view";
 
@@ -24,6 +24,7 @@ export function History({
   onOpen,
   onNew,
   onDelete,
+  onRename,
 }: {
   open: boolean;
   onClose: () => void;
@@ -32,12 +33,43 @@ export function History({
   onOpen: (id: string) => void;
   onNew: () => void;
   onDelete: (id: string) => Promise<void>;
+  onRename: (id: string, title: string) => Promise<void>;
 }) {
   const drawer = useRef<HTMLDialogElement>(null);
   const confirm = useRef<HTMLDialogElement>(null);
   const [pending, setPending] = useState<Row | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState("");
+  const renameDialog = useRef<HTMLDialogElement>(null);
+  const renameInput = useRef<HTMLInputElement>(null);
+  const [editing, setEditing] = useState<Row | null>(null);
+  const [title, setTitle] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [renameError, setRenameError] = useState("");
+
+  useEffect(() => {
+    const d = renameDialog.current;
+    if (!d) return;
+    if (editing && !d.open) {
+      d.showModal();
+      renameInput.current?.select();
+    }
+    if (!editing && d.open) d.close();
+  }, [editing]);
+
+  async function saveName() {
+    if (!editing || saving || !title.trim()) return;
+    setSaving(true);
+    setRenameError("");
+    try {
+      await onRename(String(editing.id), title.trim());
+      setEditing(null);
+    } catch (e) {
+      setRenameError(e instanceof Error ? e.message : "That conversation could not be renamed.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   useEffect(() => {
     const d = drawer.current;
@@ -142,6 +174,18 @@ export function History({
                           </button>
                           <button
                             type="button"
+                            className="fr-icon-btn"
+                            aria-label={`Rename conversation: ${title}`}
+                            onClick={() => {
+                              setTitle(title);
+                              setRenameError("");
+                              setEditing(c);
+                            }}
+                          >
+                            <Pencil size={15} aria-hidden="true" />
+                          </button>
+                          <button
+                            type="button"
                             className="fr-icon-btn fr-history-delete"
                             aria-label={`Delete conversation: ${title}`}
                             onClick={() => {
@@ -164,6 +208,38 @@ export function History({
               </p>
             )}
           </div>
+        )}
+      </dialog>
+
+      <dialog
+        ref={renameDialog}
+        className="fr-confirm"
+        aria-labelledby="fr-rename-title"
+        onCancel={(e) => { if (saving) e.preventDefault(); }}
+        onClose={() => { if (!saving) setEditing(null); }}
+      >
+        {editing && (
+          <form className="fr-confirm-body" onSubmit={(e) => { e.preventDefault(); void saveName(); }}>
+            <h2 id="fr-rename-title">Rename conversation</h2>
+            <label className="fr-rename-label" htmlFor="fr-conversation-name">Conversation name</label>
+            <input
+              ref={renameInput}
+              id="fr-conversation-name"
+              className="fr-rename-input"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              maxLength={120}
+              required
+              disabled={saving}
+              autoFocus
+              aria-describedby={renameError ? "fr-rename-error" : undefined}
+            />
+            {renameError && <p id="fr-rename-error" className="fr-error" role="alert">{renameError}</p>}
+            <div className="fr-confirm-actions">
+              <button type="button" className="fr-btn fr-btn--outline" disabled={saving} onClick={() => setEditing(null)}>Cancel</button>
+              <button type="submit" className="fr-btn fr-btn--primary" disabled={saving || !title.trim()}>{saving ? "Saving" : "Save name"}</button>
+            </div>
+          </form>
         )}
       </dialog>
 

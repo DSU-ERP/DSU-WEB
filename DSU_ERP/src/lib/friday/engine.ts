@@ -21,7 +21,9 @@ import {
 } from "./protocol";
 
 export const MAX_TOOL_ITERATIONS = 4;
-const MAX_OUTPUT_TOKENS = 1200;
+// A complete academic/admission/contact profile needs room for every field.
+// This is a ceiling; the prompt still keeps narrow answers concise.
+const MAX_OUTPUT_TOKENS = 4096;
 
 export type { Usage };
 

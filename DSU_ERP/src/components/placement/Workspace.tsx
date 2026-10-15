@@ -12,6 +12,7 @@ import {
   ListChecks,
   LogOut,
   Users,
+  Upload,
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS } from "@/lib/placement/types";
@@ -102,6 +103,12 @@ export function Workspace({ children }: { children: React.ReactNode }) {
       label: "Student analytics",
       Icon: Users,
       current: path === "/placement/student-analytics",
+    },
+    {
+      href: "/placement/imports",
+      label: "Data imports",
+      Icon: Upload,
+      current: path === "/placement/imports",
     },
     {
       href: "/placement/assistants/friday",

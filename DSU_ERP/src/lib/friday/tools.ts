@@ -23,9 +23,10 @@ function limit(v: unknown, fallback: number, max: number): string {
   return String(Math.min(Math.floor(n), max));
 }
 
-/** Drop fields the officer has no reason to see in a chat answer. */
+/** Keep search results compact; contact information requires a detail lookup. */
 function slimStudent(r: Row) {
   return {
+    id: r.id,
     usn: r.usn,
     name: r.name,
     department: r.department,
@@ -106,7 +107,7 @@ export const FRIDAY_TOOLS = [
     function: {
       name: "student_detail",
       description:
-        "Full recorded profile for one student: academics, eligibility, drive registrations, offers and recorded points. Requires the student UUID returned by find_students or rank_students.",
+        "Full student profile as available to the officer on the student records page: all academic and admission fields, contact and family fields (email, student/parent phone numbers, WhatsApp, gender, language and location), timestamps, eligibility, drive registrations, offers and recorded points. Use for full details or any field missing from search/ranking summaries. Requires the student UUID returned by find_students or rank_students.",
       parameters: {
         type: "object",
         properties: { id: { type: "string", description: "Student UUID" } },
@@ -308,6 +309,14 @@ export async function runTool(
         if (!id || !UUID.test(id))
           return { ok: false, error: "A student UUID from a previous search is required." };
         const s = await withTimeout(placementRead<Row>("student", { id }));
+        // Same source as StudentProfile's contact section. Keep the student's
+        // number as text and never substitute a parent's or WhatsApp number.
+        const contact = s.contact && typeof s.contact === "object" && !Array.isArray(s.contact)
+          ? s.contact as Row
+          : null;
+        const mobile = typeof contact?.phoneStudent1 === "string" && contact.phoneStudent1.trim()
+          ? contact.phoneStudent1
+          : null;
         const offers = Array.isArray(s.offers) ? (s.offers as Row[]) : [];
         const registrations = Array.isArray(s.registrations)
           ? (s.registrations as Row[])
@@ -316,7 +325,14 @@ export async function runTool(
           ok: true,
           data: {
             ...slimStudent(s),
-            academic: s.academic,
+            // Forward the same authorized sections used by StudentProfile,
+            // rather than silently dropping admission and family fields.
+            profile: s.profile ?? null,
+            academic: s.academic ?? null,
+            contact: { ...contact, mobile },
+            baseline_eligibility: s.eligible == null
+              ? "Unclassified"
+              : s.eligible ? "Eligible" : "Not Eligible",
             offers: offers.slice(0, 20),
             registrations: registrations.slice(0, 20).map((r) => ({
               drive: r.drive,
@@ -325,8 +341,6 @@ export async function runTool(
               current_round: r.current_round,
             })),
             points: s.points ?? null,
-            // Contact and family details are deliberately withheld from the
-            // model; they are visible on the profile page to the officer.
           },
         };
       }

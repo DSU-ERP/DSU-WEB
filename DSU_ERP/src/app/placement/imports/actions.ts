@@ -1,6 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { campusApi, membership, CampusError } from "@/lib/campus-api";
+import { campusApi, CampusError } from "@/lib/campus-api";
+import { officerSession } from "@/lib/placement/server";
 export type ImportSummary = {
   id: string;
   total: number;
@@ -17,9 +18,7 @@ export async function importCsv(
   _previous: ImportState,
   form: FormData,
 ): Promise<ImportState> {
-  const access = await membership();
-  if (access.role !== "admin")
-    return { error: "Administrator access is required.", summary: null };
+  await officerSession();
   const file = form.get("file");
   const batch = String(form.get("batch") || "");
   if (
@@ -39,7 +38,7 @@ export async function importCsv(
       `/imports?batch=${batch}`,
       { method: "POST", body: await file.text() },
     );
-    revalidatePath("/portal", "layout");
+    revalidatePath("/placement", "layout");
     return { error: "", summary: result.data };
   } catch (e) {
     if (e instanceof CampusError) return { error: e.message, summary: null };

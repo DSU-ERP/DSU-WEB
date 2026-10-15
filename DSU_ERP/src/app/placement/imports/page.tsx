@@ -1,5 +1,4 @@
-import { redirect } from "next/navigation";
-import { campusApi, membership } from "@/lib/campus-api";
+import { officerSession, placementImportHistory } from "@/lib/placement/server";
 import { ImportForm } from "./ImportForm";
 import type { ImportSummary } from "./actions";
 type Run = {
@@ -9,9 +8,8 @@ type Run = {
   summary: ImportSummary;
 };
 export default async function ImportsPage() {
-  const access = await membership();
-  if (access.role !== "admin") redirect("/portal");
-  const { data } = await campusApi<{ data: Run[] }>("/imports");
+  await officerSession();
+  const data = await placementImportHistory<Run[]>();
   return (
     <>
       <p className="erp-eyebrow">DATA MANAGEMENT</p>
@@ -20,7 +18,7 @@ export default async function ImportsPage() {
           <h1>Keep your campus current.</h1>
           <p>Validate, import, and review official student exports.</p>
         </div>
-        <span className="erp-role">Administrator</span>
+        <span className="erp-role">Placement Officer</span>
       </div>
       <section className="erp-panel">
         <h2>Import a batch</h2>

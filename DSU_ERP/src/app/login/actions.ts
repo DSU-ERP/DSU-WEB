@@ -22,7 +22,7 @@ export async function signIn(_previous: { error: string }, form: FormData) {
   } catch {
     return { error: "Sign in is temporarily unavailable. Please try again." };
   }
-  redirect(form.get("portal") === "placement-officer" ? "/placement" : "/portal");
+  redirect("/placement");
 }
 export async function signOut() {
   const client = await supabaseServer();

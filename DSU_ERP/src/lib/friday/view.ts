@@ -76,7 +76,7 @@ export function parseAnswer(text: string): Block[] {
   let para: string[] = [];
   const flush = () => {
     if (para.length) {
-      blocks.push({ kind: "paragraph", inline: parseInline(para.join(" ")) });
+      blocks.push({ kind: "paragraph", inline: parseInline(para.join("\n")) });
       para = [];
     }
   };

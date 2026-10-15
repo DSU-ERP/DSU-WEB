@@ -69,6 +69,16 @@ test("a lone pipe line without a separator stays a paragraph", () => {
   assert.equal(parseAnswer("| not a table |")[0].kind, "paragraph");
 });
 
+test("record fields retain separate lines and decimal precision", () => {
+  const fields = "Name: Synthetic Student\nUSN: TEST-001\nCGPA: 8.499\nAttendance: 84.54%";
+  const blocks = parseAnswer(fields);
+  assert.equal(blocks.length, 1);
+  assert.ok(blocks[0].kind === "paragraph");
+  assert.deepEqual(blocks[0].inline, [{ kind: "text", text: fields }]);
+  const bullets = parseAnswer("- **Name:** Synthetic Student\n- **USN:** TEST-001\n- **CGPA:** 8.499");
+  assert.ok(bullets[0].kind === "list" && bullets[0].items.length === 3);
+});
+
 test("conversations group by day relative to now", () => {
   const now = new Date(2026, 9, 15, 12, 0, 0);
   const at = (d: number, h = 10) => new Date(2026, 9, d, h).toISOString();
