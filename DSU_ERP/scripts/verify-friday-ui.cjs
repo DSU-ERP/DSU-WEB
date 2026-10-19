@@ -14,14 +14,46 @@ const root = process.cwd(),
   dir = path.join(root, ".qa/friday-ui");
 fs.mkdirSync(dir, { recursive: true });
 
+// A tone that swells and fades, written as a WAV and played through the fake
+// microphone. The browser's default fake device is not guaranteed to make
+// sound (it is silent in some Edge releases), and the level bars need a real
+// signal to follow.
+const tone = path.join(dir, "tone.wav");
+{
+  const rate = 16000,
+    n = rate * 2,
+    data = Buffer.alloc(n * 2);
+  for (let i = 0; i < n; i++) {
+    const s = i / rate;
+    const swell = 0.15 + 0.85 * Math.abs(Math.sin(Math.PI * 1.5 * s));
+    data.writeInt16LE(Math.round(Math.sin(2 * Math.PI * 440 * s) * swell * 0.8 * 32767), i * 2);
+  }
+  const head = Buffer.alloc(44);
+  head.write("RIFF", 0);
+  head.writeUInt32LE(36 + data.length, 4);
+  head.write("WAVEfmt ", 8);
+  head.writeUInt32LE(16, 16);
+  head.writeUInt16LE(1, 20);
+  head.writeUInt16LE(1, 22);
+  head.writeUInt32LE(rate, 24);
+  head.writeUInt32LE(rate * 2, 28);
+  head.writeUInt16LE(2, 32);
+  head.writeUInt16LE(16, 34);
+  head.write("data", 36);
+  head.writeUInt32LE(data.length, 40);
+  fs.writeFileSync(tone, Buffer.concat([head, data]));
+}
+
 const now = Date.now(),
   hour = 3600e3,
   day = 24 * hour;
+// Anchored to local midnight so the date groups hold at any time of day.
+const midnight = new Date(new Date(now).setHours(0, 0, 0, 0)).getTime();
 const history = [
-  { id: "c1000000-0000-4000-8000-000000000001", title: "Batch 2026 eligibility by branch", updated_at: new Date(now - hour).toISOString() },
-  { id: "c1000000-0000-4000-8000-000000000002", title: "Open recruitment drives this month", updated_at: new Date(now - 3 * hour).toISOString() },
-  { id: "c1000000-0000-4000-8000-000000000003", title: "Top 20 students in CSE by CGPA", updated_at: new Date(now - day - hour).toISOString() },
-  { id: "c1000000-0000-4000-8000-000000000004", title: "Placement statistics for 2025", updated_at: new Date(now - 12 * day).toISOString() },
+  { id: "c1000000-0000-4000-8000-000000000001", title: "Batch 2026 eligibility by branch", updated_at: new Date(now - 60e3).toISOString() },
+  { id: "c1000000-0000-4000-8000-000000000002", title: "Open recruitment drives this month", updated_at: new Date(now - 120e3).toISOString() },
+  { id: "c1000000-0000-4000-8000-000000000003", title: "Top 20 students in CSE by CGPA", updated_at: new Date(midnight - hour).toISOString() },
+  { id: "c1000000-0000-4000-8000-000000000004", title: "Placement statistics for 2025", updated_at: new Date(midnight - 12 * day).toISOString() },
 ];
 const capabilities = { chat: true, model: "deepseek/deepseek-v4.1-flash", provider: "baseten/fp8, deepinfra/fp8", serverSpeechToText: false, serverTextToSpeech: false };
 
@@ -165,7 +197,7 @@ const fakeSpeech = () => {
 
     browser = await chromium.launch({
       headless: true,
-      args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream"],
+      args: ["--use-fake-ui-for-media-stream", "--use-fake-device-for-media-stream", "--use-file-for-fake-audio-capture=" + tone],
       ...(process.platform === "win32" ? { channel: "msedge" } : {}),
     });
     const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -349,7 +381,7 @@ const fakeSpeech = () => {
     await page.waitForTimeout(2600);
     const scales = await page.$$eval(".fr-bars span", (s) => s.map((el) => el.style.transform));
     const moving = new Set(scales).size;
-    assert.ok(moving > 3, "level bars should follow the real input signal, got " + moving + " distinct heights");
+    assert.ok(moving > 3, "level bars should follow the real input signal, got " + moving + " distinct heights: " + scales.slice(0, 6).join(","));
     assert.equal(await page.locator(".fr-steps .is-current").innerText(), "2. TRANSCRIBING →");
     await shot("5a-voice-listening");
     await page.getByRole("button", { name: "Stop recording" }).click();
@@ -387,7 +419,11 @@ const fakeSpeech = () => {
     await shot("6a-sidebar-resized");
     await page.reload();
     await page.getByRole("heading", { name: "What would you like to know?" }).waitFor();
-    await settle();
+    // The stored width is applied after mount and then animates, so wait for
+    // it rather than for a fixed time.
+    await page
+      .waitForFunction(() => Math.round(document.querySelector(".erp-sidebar").getBoundingClientRect().width) === 336, null, { timeout: 3000 })
+      .catch(() => {});
     assert.equal(await sidebarWidth(), 336, "width survives a reload");
     await handle.focus();
     await page.keyboard.press("Home");
@@ -422,6 +458,35 @@ const fakeSpeech = () => {
     f = await fits();
     assert.ok(f.page <= 0 && f.main <= 0, "welcome must fit at 1366x768: " + JSON.stringify(f));
     await shot("7-welcome-1366x768");
+
+    // 7b. Large desktop monitors (24 and 27 inch): the whole interface scales
+    // up with the display instead of staying at laptop size.
+    const rootPx = () => page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
+    assert.equal(await rootPx(), 16, "default size on a laptop screen");
+    for (const [w, h, scale] of [[1920, 1080, 1.0833], [2560, 1440, 1.25]]) {
+      await page.setViewportSize({ width: w, height: h });
+      await page.goto(origin + "/placement/assistants/friday");
+      await page.getByRole("heading", { name: "What would you like to know?" }).waitFor();
+      await page.evaluate(() => document.fonts.ready);
+      await noOverflow("welcome " + w);
+      assert.ok(Math.abs((await rootPx()) / 16 - scale) < 0.01, `scale at ${w}x${h}: ${await rootPx()}px`);
+      const sized = await page.evaluate(() => ({
+        column: document.querySelector(".fr-composer").getBoundingClientRect().width,
+        sidebar: document.querySelector(".erp-sidebar").getBoundingClientRect().width,
+        heading: parseFloat(getComputedStyle(document.querySelector(".fr-welcome h2")).fontSize),
+        icon: document.querySelector(".fr-starter svg").getBoundingClientRect().width,
+      }));
+      assert.ok(Math.abs(sized.column - 768 * scale) <= 2, "column scales: " + JSON.stringify(sized));
+      assert.ok(Math.abs(sized.sidebar - 246 * scale) <= 2, "sidebar scales: " + JSON.stringify(sized));
+      assert.ok(sized.icon > 18 * scale - 1 && sized.icon < 18 * scale + 1, "icons scale with text: " + JSON.stringify(sized));
+      f = await fits();
+      assert.ok(f.page <= 0 && f.main <= 0, `welcome must fit at ${w}x${h}: ` + JSON.stringify(f));
+      await shot(`7b-welcome-${w}x${h}`);
+      await page.locator(".fr-starter").first().click();
+      await page.getByRole("button", { name: "Copy text" }).waitFor({ timeout: 15000 });
+      await noOverflow("conversation " + w);
+      await shot(`7c-conversation-${w}x${h}`);
+    }
 
     // 8. Mobile.
     await page.setViewportSize({ width: 390, height: 844 });

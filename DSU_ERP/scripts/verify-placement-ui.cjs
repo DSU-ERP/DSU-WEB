@@ -310,6 +310,23 @@ const css =
     await page
       .getByRole("heading", { name: "Email Example Student" })
       .waitFor();
+    // A 27 inch 2560 x 1440 display scales the workspace up by 1.25.
+    await page.setViewportSize({ width: 2560, height: 1440 });
+    await page.goto(origin + "/placement/batch?batch=2028");
+    await page.getByRole("heading", { name: "Branch breakdown" }).waitFor();
+    assert.equal(
+      await page.evaluate(() =>
+        getComputedStyle(document.documentElement).fontSize,
+      ),
+      "20px",
+    );
+    assert.equal(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth > innerWidth,
+      ),
+      false,
+    );
+    await page.screenshot({ path: path.join(dir, "batch-2560.png") });
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(origin + "/placement/batch?batch=2028");
     await page.getByRole("heading", { name: "Branch breakdown" }).waitFor();

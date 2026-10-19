@@ -724,7 +724,10 @@ export function FridayChat({
 
   const grow = (el: HTMLTextAreaElement) => {
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+    // Up to 12.5rem (200px at the default text size), then the field scrolls.
+    const rem =
+      parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+    el.style.height = `${Math.min(el.scrollHeight, 12.5 * rem)}px`;
   };
 
   const stepsEl = voiceStep > 0 && (

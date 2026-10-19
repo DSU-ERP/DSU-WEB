@@ -27,10 +27,15 @@ const ICONS: Record<string, LucideIcon> = {
   tests: ListChecks,
 };
 
-// Sidebar width limits in pixels. The default matches the original design.
+// Sidebar width limits in pixels at the default text size. The default
+// matches the original design. The width is applied in rem, so it scales with
+// the rest of the interface on large displays.
 const WIDTH = { min: 200, max: 380, initial: 246, step: 16 };
 const clampWidth = (w: number) =>
   Math.min(WIDTH.max, Math.max(WIDTH.min, Math.round(w)));
+// How many screen pixels one design pixel currently takes.
+const uiScale = () =>
+  parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
 
 export function Workspace({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -38,7 +43,7 @@ export function Workspace({ children }: { children: React.ReactNode }) {
     [theme, setTheme] = useState("light"),
     [width, setWidth] = useState(WIDTH.initial),
     [resizing, setResizing] = useState(false);
-  const drag = useRef<{ x: number; w: number } | null>(null);
+  const drag = useRef<{ x: number; w: number; scale: number } | null>(null);
   const latest = useRef(width);
   useEffect(() => {
     latest.current = width;
@@ -54,7 +59,9 @@ export function Workspace({ children }: { children: React.ReactNode }) {
           : "light",
       );
       setCollapsed(localStorage.getItem("dsu-placement-collapsed") === "true");
-      const stored = Number(localStorage.getItem("dsu-placement-sidebar-width"));
+      const stored = Number(
+        localStorage.getItem("dsu-placement-sidebar-width"),
+      );
       if (Number.isFinite(stored) && stored >= WIDTH.min && stored <= WIDTH.max)
         setWidth(stored);
     } catch {}
@@ -122,7 +129,7 @@ export function Workspace({ children }: { children: React.ReactNode }) {
   return (
     <div
       className={`erp-shell po-shell po-${theme}${collapsed ? " po-collapsed" : ""}${resizing ? " po-resizing" : ""}`}
-      style={{ "--po-sidebar-w": `${width}px` } as React.CSSProperties}
+      style={{ "--po-sidebar-w": `${width / 16}rem` } as React.CSSProperties}
     >
       <a href="#placement-content" className="po-skip">
         Skip to content
@@ -175,13 +182,13 @@ export function Workspace({ children }: { children: React.ReactNode }) {
             onPointerDown={(e) => {
               if (e.button !== 0) return;
               e.preventDefault();
-              drag.current = { x: e.clientX, w: width };
+              drag.current = { x: e.clientX, w: width, scale: uiScale() };
               e.currentTarget.setPointerCapture(e.pointerId);
               setResizing(true);
             }}
             onPointerMove={(e) => {
               const d = drag.current;
-              if (d) setWidth(clampWidth(d.w + e.clientX - d.x));
+              if (d) setWidth(clampWidth(d.w + (e.clientX - d.x) / d.scale));
             }}
             onPointerUp={(e) => {
               if (!drag.current) return;
