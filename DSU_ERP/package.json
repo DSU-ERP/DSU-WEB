@@ -9,7 +9,14 @@
     "typecheck": "node node_modules/typescript/bin/tsc --noEmit",
     "test": "node scripts/test.mjs",
     "assets:validate": "node scripts/validate-assets.mjs",
-    "test:placement-ui": "node scripts/verify-placement-ui.cjs"
+    "test:placement-ui": "node scripts/verify-placement-ui.cjs",
+    "env:setup": "node scripts/setup-env.mjs",
+    "env:check": "node scripts/check-env.mjs",
+    "test:student-ui": "node scripts/verify-student-ui.cjs",
+    "test:ui": "npm run test:placement-ui && npm run test:friday-ui && npm run test:student-ui && npm run test:student-journeys && npm run test:registration-ui",
+    "test:registration-ui": "node scripts/verify-registration-ui.cjs",
+    "test:student-journeys": "node scripts/verify-student-journeys.cjs",
+    "test:friday-ui": "node scripts/verify-friday-ui.cjs"
   },
   "dependencies": {
     "@openrouter/sdk": "^1.4.25",
@@ -33,5 +40,8 @@
     "esbuild": "^0.28.2",
     "tailwindcss": "4.3.0",
     "typescript": "5.9.3"
+  },
+  "engines": {
+    "node": ">=24 <25"
   }
 }

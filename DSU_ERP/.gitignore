@@ -4,6 +4,7 @@ out/
 *.tsbuildinfo
 .env*
 !.env.example
+!.env.*.example
 test-results/
 playwright-report/
 .qa/

@@ -1,7 +1,7 @@
 "use server";
 import { revalidatePath } from "next/cache";
-import { campusApi, CampusError } from "@/lib/campus-api";
-import { officerSession } from "@/lib/placement/server";
+import { campusApi, CampusError } from "@/features/campus/lib/api";
+import { officerSession } from "@/features/placement/lib/server";
 export type ImportSummary = {
   id: string;
   total: number;

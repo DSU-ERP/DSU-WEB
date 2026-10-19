@@ -1,4 +1,4 @@
-import { officerSession, placementImportHistory } from "@/lib/placement/server";
+import { officerSession, placementImportHistory } from "@/features/placement/lib/server";
 import { ImportForm } from "./ImportForm";
 import type { ImportSummary } from "./actions";
 type Run = {

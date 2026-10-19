@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { officerSession, placementRead } from "@/lib/placement/server";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
 import {
   SECTIONS,
   queryFrom,
   type Section,
   type Report,
-} from "@/lib/placement/types";
-import { ReportBody, ReportFilters } from "@/components/placement/Reports";
-import { Refresh } from "@/components/placement/Controls";
+} from "@/features/placement/lib/types";
+import { ReportBody, ReportFilters } from "@/features/placement/components/Reports";
+import { Refresh } from "@/features/placement/components/Controls";
 export default async function PlacementSection({
   params,
   searchParams,
@@ -47,7 +47,7 @@ export default async function PlacementSection({
               Create drive +
             </Link>
           )}
-          {section === "batch" && (
+          {(section === "batch" || section === "offers") && (
             <a
               className="erp-secondary"
               href={`/placement/export/${config.resource}?${new URLSearchParams(query)}`}

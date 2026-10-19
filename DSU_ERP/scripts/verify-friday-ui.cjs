@@ -83,7 +83,7 @@ events.push([(t += 10), { type: "done", text: answer }]);
 events.push([(t += 10), { type: "saved", conversationId: "c1000000-0000-4000-8000-000000000009" }]);
 
 const entry = `import React from 'react';import {createRoot} from 'react-dom/client';
-import {Workspace} from '@/components/placement/Workspace';import {FridayChat} from '@/components/placement/FridayChat';
+import {Workspace} from '@/features/placement/components/Workspace';import {FridayChat} from '@/features/assistant/components/FridayChat';
 createRoot(document.getElementById('root')).render(<Workspace><FridayChat initialHistory={${JSON.stringify(history)}} initialCapabilities={${JSON.stringify(capabilities)}} focusBatch="2026"/></Workspace>);`;
 
 const mock = {
@@ -442,7 +442,12 @@ const fakeSpeech = () => {
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     await settle();
     assert.equal(await sidebarWidth(), 76, "collapsed rail");
-    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 9, "icons remain when collapsed");
+    // Every navigation entry keeps its icon in the collapsed rail.
+    assert.equal(
+      await page.locator("#placement-nav a svg:visible").count(),
+      await page.locator("#placement-nav a").count(),
+      "icons remain when collapsed",
+    );
     assert.equal(await page.getByRole("link", { name: "F.R.I.D.A.Y." }).count(), 1, "links keep their names");
     assert.equal(await page.locator("#placement-nav a").first().getAttribute("title"), "Placement overview", "tooltip");
     assert.equal(await page.getByRole("separator", { name: "Resize sidebar" }).count(), 0, "no resize when collapsed");

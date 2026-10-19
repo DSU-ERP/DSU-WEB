@@ -1,46 +1,30 @@
-# DSU Agentic ERP
+# DSU Web
 
-## Integrated campus portal
+Next.js 16 / React 19 app for DSU campus, student preparation and placement officers. Node 24. Hosting is a separate Render web service; all campus/student/placement data passes through DSU-Backend. Supabase provides authentication.
 
-The landing page now links to `/login` and a Supabase-authenticated campus workspace. Admin/staff can view real records and admins can import official CSV exports; students see only their explicitly linked record. See [INTEGRATION.md](INTEGRATION.md) for the three-service architecture, setup, data-quality counts, deployment steps and validation limits. An administrator Auth account still needs to be created and assigned.
+## Structure
 
-A Next.js landing page that transitions from the ONE CAMPUS introduction into an ACCESS PORTAL composition as the visitor scrolls.
+- `src/app/`: routes, layouts, same-origin handlers and route-specific styles.
+- `src/features/student/`: student UI, contracts, speech/media and data helpers.
+- `src/features/placement/`: officer reports, drive controls and StudentTools.
+- `src/features/assistant/`: officer assistant/Friday UI and orchestration.
+- `src/features/campus/`: campus analytics and report contracts.
+- `src/shared/auth/`: cookies and request-scoped session helpers.
+- `src/shared/http/`: authenticated backend transport and safe errors.
+- `src/shared/config/`: environment validation.
+- `src/components/`: landing/animation and presentation assets.
+- `scripts/`, `tests/`: setup, unit and browser checks.
 
-One GSAP ScrollTrigger timeline keeps the assembled college visible as it moves right, introduces a faint DSU seal, and reveals the portal copy and buttons on the left. Scrolling upward reverses the transition. The Vision link returns to the introduction; portal buttons lead to the authenticated workspace.
+Run `npm ci`, `npm run env:setup`, fill ignored `.env.local`, then `npm run env:check` and `npm run dev`. Backend defaults to localhost:4000. Existing local values are preserved. Public Supabase URL/key belong in NEXT_PUBLIC_*; database passwords and service-role keys never belong here.
 
-## Run locally
+Student entry: `/login?portal=student` or `/sign-up`, then `/student`. Officer entry: `/login?portal=placement-officer`, then `/placement`. Students require an operator-linked official record. Officer publishing is `/placement/student-tools`, also available in navigation.
 
-Use Node.js 20.9+.
+[Feature tracker](docs/STUDENT-IMPLEMENTATION.md), [integration](INTEGRATION.md), and [verification](VALIDATION.md) explain the delivered system. Database migrations and architecture/runbook live in DSU-Backend/docs/.
 
-    npm ci
-    npm run dev
+## Checks
 
-Open http://localhost:3000.
+`npm test`, `npm run typecheck`, `npm run test:ui`, `npm run build`, `npm audit --audit-level=high`.
 
-    npm run build
-    npm run start
+Browser checks use synthetic component fixtures and mocked transport. Backend integration separately exercises actual SQL rules using isolated PostgreSQL/PGlite. Fixtures never seed production. Real signup/account linking, deployed media, provider quality and Render concurrency require staging rehearsal.
 
-## Editing
-
-- src/app/page.tsx: asset selection and page entry point.
-- src/components/animation/CampusPortal.tsx: hero/portal copy, button responses, and scroll timeline. MORPH controls transition pacing.
-- src/app/static-campus.css: responsive opening and portal layouts and monochrome treatment.
-- src/components/layout/Navbar.tsx: the brand and Vision link.
-- src/components/animation/IllustrationView.tsx: static assembled illustration rendering.
-- src/config/illustrationChapters.ts: source masks and fixed assembled positions reused by the static artwork.
-
-The illustration is the existing assembled composition of the supplied landscape reference, including its dome and towers. It moves as one intact image. Original image files remain intact; black-and-white presentation uses CSS grayscale.
-
-Previous exploded-journey components are retained as unused source files. The active animation lives only in CampusPortal. Only static-campus.css and the base globals are imported by the layout.
-
-The design adapts to desktop and mobile. Reduced-motion and no-JavaScript visitors get sequential static landing content without pinning. Image-load errors have a text fallback. SIGN IN and LOG IN lead to the email/password login screen.
-
-The official seal comes from https://www.dsu.edu.in/images/logo_white.png, retained in public/assets/college/dsu-official-logo.png. CSS frames the circular portion of the university lockup without modifying it. This official mark differs in its lettering and shield details from the supplied mockup. See ASSETS.md for architectural source provenance.
-
-## Validation
-
-    npm run typecheck
-    npm run build
-
-See VALIDATION.md for verification notes.
-
+Landing artwork and existing officer workspace remain. Student UI follows DSU's neutral/red theme with optional dark mode. Historical direct-Supabase data-access documentation is archived and is not the current contract.

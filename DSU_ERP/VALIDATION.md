@@ -1,115 +1,33 @@
-# Validation — larger hero and individual details
+# Verification
 
-## October 13 — Supabase platform integration
+## Latest consolidation — 19 October 2026
 
-See INTEGRATION.md for the current three-service implementation and executed validation. Live import contains 5,082 student records, with 358 source rows rejected for review. Re-import added/updated zero rows. Production WEB build, 13 WEB tests, 13 API tests, 3 gateway tests, live database RLS checks and HTTP health/auth-denial checks passed. Authenticated browser sessions and responsive visual verification remain pending; no administrator account exists yet. Older entries below describe earlier frontend-only revisions.
+- Restored the latest GitHub Desktop student-workspace stash onto `testing`, preserving `9fb9951` placement display scaling, sidebar resizing and Friday layout changes. The stash remains available as a recovery copy.
+- Web unit suite: **77 passed**. All **five browser suites passed**: placement, Friday, student shell/settings, student journeys and registration. Fixtures cover verified autofill, immutable academics, draft resume, saved preferences, pending verification, role selection, media gates, assessment submission and responsive layouts. Browser suites ran outside the Windows sandbox so Edge could start.
+- Production Next.js build, TypeScript, both environment checks and asset validation passed. The existing illustration mode remains active; independent architectural layers need a reviewed manifest.
+- Backend: **79 tests passed**, including fresh migrations, restricted-role isolation, drive notices/attendance, company hiring details, student recruitment records and verified registration. The 50,000-record synthetic PGlite dataset check also passed; this is not production concurrency evidence.
+- Fixed unsafe record claiming: a typed USN alone cannot grant student access. Confirmed email matching still permits automatic linking; unmatched or ambiguous details remain pending. An additive backend migration hardens the legacy enrollment-link function without rewriting applied migrations.
+- npm audit: web **0 vulnerabilities**; backend **3 moderate**, **0 high/critical**, through `mammoth → argparse → sprintf-js` ([advisory](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)). The application uses Mammoth's extraction API; its CLI depends on argparse. npm's suggested forced fix downgrades Mammoth to an incompatible old release and was not applied.
+- Tracked/staged file scanning found no real environment files, private keys or recognized provider tokens. Only environment templates are committed. Local runtime output, browser screenshots, dependency folders and recovery bundles remain excluded.
+- This review did not apply shared database migrations, assign live accounts, deploy, push, or call paid AI providers. Database migrations remain on hold at the user's request. Supabase email delivery/callback settings and actual deployed PostgreSQL/Redis/media permissions still need staging verification.
 
-## Latest revision — hero to access portal
+## Earlier local verification — 18 October 2026
 
-- One reversible, scrubbed GSAP timeline translates/scales the same assembled artwork into a two-column portal layout. No exploded layers are animated.
-- Production build (including TypeScript) passed.
-- Desktop browser: checked opening, final portal, return to opening, and SIGN IN coming-soon feedback.
-- Mobile 390 × 844: checked portal placement, lack of horizontal overflow, and final image alignment within one pixel of its responsive target.
-- Reduced-motion uses GSAP matchMedia cleanup and sequential static content; behavior reviewed in source, system preference not changed during QA.
-- Authentication destinations remain unspecified; buttons show coming-soon feedback.
-- The locally stored seal is from the official DSU website; its details differ from the reference mockup.
+- Merged fetched backend `8867a8c` and web `d748ab9` with the student implementation. No unresolved Git conflicts; local work remains uncommitted on `codex/student-workspace` in each repository.
+- Next production build and TypeScript passed for the merged application. Windows sandbox builds encountered generated-file permission errors; the approved build outside that sandbox passed.
+- Web unit suite: **66 passed**. Backend full suite passed all checks except an expected notification count changed by a new assigned-test fixture; after correcting that expectation, the complete student integration suite passed **10 tests**, including durable written-grading recovery. The other backend checks passed in the full run.
+- Backend and web environment checks passed without printing secret values.
+- Earlier student and placement browser suites passed before this fetched integration. The latest student browser rerun could not launch Edge in the restricted sandbox; merged browser validation remains pending. Run `npm run test:ui` in a normal local terminal or CI.
+- Current dependency audit remains unverified: sandbox DNS could not reach npm, and automatic approval review could not complete the network-enabled retry because the account usage limit was reached. Run `npm audit --audit-level=high` in both repositories when available.
+- No live database migration, external AI quality test, Render deployment or production load test was performed.
 
-Entries below describe earlier revisions.
+Unit tests cover campus/placement contracts, filters, exports, assistant behavior and backend boundary. Browser suites:
 
-## Latest revision — static hero only
+- test:placement-ui: reports, responsive nav/theme, cohort drilldown, drive serialization, selection guards and officer assistant/Friday fixtures.
+- test:friday-ui: fetched Friday design, safe rendering, history/renaming, speech fixtures and responsive layout.
+- test:student-ui: shell/search/themes, five-step onboarding, profile serialization, immutable official fields and mobile navigation.
+- test:student-journeys: chat/card, library/list/filter, manual interview creation, StrictMode answer/coaching, proctored permission gate, code instructions, confirmed application, MCQ/written autosave, review flags, submit/results and desktop/mobile overflow.
 
-- The active page now renders only the brand header, ONE CAMPUS heading, assembled monochrome university, and supporting caption. Journey, exploded sections, platform, impact, demo form, footer, chapter navigation and scroll prompts are no longer mounted.
-- The page does not import either animation experience or a GSAP timeline. Static styles replace the journey stylesheet. All remaining links resolve to the main introduction.
-- Production build and its TypeScript check passed.
-- Browser checked at 1280 × 720 and 390 × 844: page height equals viewport height, no pinned stage, no extra content sections, and no mobile horizontal overflow.
-- Captures: .qa/static-hero/desktop.png and mobile.png. Viewport overrides reset after testing.
+Backend student.integration.test.js exercises isolated SQL migrations and dsu_api RLS: separate-student denials, profile conflicts, document ownership, career/chat storage, interview order/retry/outage recovery, proctored privacy/warnings, assessment keys/revisions/deadlines/immutable results, practice unlocks, code/cohort/window checks, officer publishing, applications and calendar/read receipts. AI is deterministic fixture output, not a live quality evaluation.
 
-All following entries describe earlier versions, not the current single-screen page.
-
-## Current revision — new landscape artwork, roof and monochrome treatment
-
-- Replaced the specialized journey's portrait source with the supplied 1672 × 941 landscape reference and validated its 2×/4× derivatives. The original file remains unchanged.
-- Seven chapters now include separate facade, two interiors, foundation, and roof/dome sections. The five-part merge uses the same final offsets as the hero and closing view. Roof caps settle last.
-- Removed white-paper overlap with SVG alpha compositing. All architectural images display with grayscale(1), including the merge, hero, individual sections and final composition. Red interface accents remain.
-- TypeScript and 13 unit checks pass. The production build passes. The additional asset test rejects derivatives with dimensions belonging to the previous drawing.
-- Desktop browser inspection at 1900 × 1000 covered the new interior, foundation, roof, and final views. The completed merge reaches the configured floor and roof-cap transforms exactly; the final view uses that same recipe.
-- Screenshots for this revision are in .qa/grand-building/. The earlier sections below are historical validation of the previous portrait artwork.
-- At 390 × 844, confirmed the final monochrome view, all image filters set to grayscale(1), no horizontal overflow, and no recorded browser errors. Temporary viewport overrides were reset.
-
-This remains a masked 2D source-image composition. Baked-in guides and source perspective inconsistencies remain; no independently exported 3D layers are claimed.
-
-## October 12 — larger and slower image merge
-
-- The merge uses the available stage height, with the heading beside it on desktop and above it on smaller screens. Its shared SVG camera fits the measured container and recalculates on resize.
-- The merge interval now has exactly twice its original scroll distance. Other chapter intervals retain their original pacing; chapter navigation and accessibility use the same remapping.
-- TypeScript, all 12 unit checks, and the production build pass. The new timing check verifies doubled merge distance, unchanged surrounding intervals, and inverse progress mapping.
-- At 1280 × 720, inspected separated layers, partial convergence, and the compact stack. Reverse scrolling to the same offset reproduced all three image translations exactly.
-- Resizing to 1900 × 900 refreshed the camera to the larger diagram container. The heading and artwork stay separate and all three layers remain visible.
-- At 390 × 844, verified the larger three-layer composition, no horizontal overflow, and the final chapter link revealing only the connected-campus panel. No browser runtime errors were recorded. Temporary viewport overrides were reset.
-- Captures for this revision are in `.qa/larger-slower-merge/`.
-
-## October 12 — actual architectural views merge
-
-The user refined the request to use the three existing architectural image views. The symbolic polygons have been removed. The upper interior, lower interior, and foundation now use the same 2×/4× source and masks as their individual sections; they translate vertically into a compact stack, with a shared camera and unchanged proportions.
-
-Current validation:
-
-- TypeScript and all 11 unit checks pass. Production build passes.
-- The current development server at port 3000 is reachable and serves three image-layer groups with no symbolic plane elements.
-- At 1280 × 720, inspected the three separated architectural views, their intermediate overlap, the compact stack, and the final exterior reveal. Native scrolling advances through the sequence.
-- Reversing native scroll from the final exterior to the same intermediate offset reproduced the three image translations exactly.
-- At 390 × 844, inspected the three stacked source views. All three select the 1882px-wide image, and the page has no horizontal overflow.
-- The final exterior and CTAs remain centered. The full four-part overview remains absent.
-- Current captures are in `.qa/actual-layer-merge/`.
-
-These are animated masked views of a flat image, not newly exported or verified 3D building components. Reduced-motion/no-JavaScript markup presents a static compact stack and legend.
-
-## Earlier October 12 — symbolic transition (superseded)
-
-- Added a reversible, scroll-controlled three-plane convergence immediately before the final college view. All symbolic planes converge to the same SVG coordinates; only the conceptual diagram moves independently.
-- Three architectural details now use a common magnification and horizontal center. Final heading, illustration, support copy, and both CTAs use a centered composition.
-- Production build and TypeScript passed; all 11 existing unit checks passed.
-- The local preview at port 3000 continued to serve the preceding build. A fresh development server started successfully on port 3030, but the in-app browser could not connect to it. Current browser visual verification is therefore incomplete; the captures and browser results below describe the October 11 revision.
-- Reduced-motion and no-JavaScript markup include a static unified diagram and the three-layer legend. Live reduced-motion switching has not been rechecked for this revision.
-
-Restart the local server from this checkout with `npm run dev` to view the changes. For production preview, the updated build is ready for `npm run start`.
-
-Updated October 11, 2026. Current browser checks use the Codex in-app browser against the running local development server. Earlier iteration checks are distinguished below.
-
-## Build and checks
-
-| Check | Result |
-| --- | --- |
-| Production Next.js build | Passed; static App Router page generated |
-| TypeScript | Passed |
-| Unit checks | 11 passed |
-| Asset handling | Supported illustration mode; no independent layers claimed |
-| Original PNG integrity | Original retained; source SHA-256 recorded in quality-manifest.json |
-| Browser runtime errors | None observed in the current desktop journey |
-
-The focused checks cover phase boundaries, registered layer timing and anchors, corrupt/missing images, unreviewed manifests, transparency requirements, the five-chapter view sequence, reading intervals, and responsive camera fitting.
-
-The Next.js configuration uses native ESM (next.config.mjs), avoiding an unnecessary SWC TypeScript config-loading step that failed under the local filesystem restrictions. The application itself remains TypeScript.
-
-## Current revision checks
-
-- Inspected the enlarged complete exterior, first interior, second interior, and foundation at 1440 × 900. The dome and both wings remain visible.
-- Confirmed five story sections and no combined exploded overview element. Each detail has its own semantic section and component.
-- Desktop image requests select the 3764 × 6688 derivative. At 390 × 844 the browser selects the 1882 × 3344 derivative; no horizontal overflow. Inspected the mobile hero and first interior.
-- Direct chapter links select the corresponding accessible section and illustration view. The lower interior stop contains only the lower view; the complete diagram is never used as a transition frame.
-- Native PageDown advances from the first interior to the second. PageUp reverses that transition.
-- The original source coordinates and aspect ratio remain unchanged. Derivatives are conventional interpolation with sharpening; they do not create native architectural detail.
-
-Captures are under .qa/revision-oct11/: hero.png, first-layer.png, second-layer.png, foundation.png, mobile-hero.png, and mobile-first-layer.png.
-
-## Previous iteration coverage
-
-The preceding implementation was checked for reversible GSAP camera matrices, native wheel and emulated touch input, keyboard chapter navigation, pin release, mobile/tablet sizes, reduced-motion switching, JavaScript-disabled sequential content, and image-load errors. The current revision preserves those mechanisms, but the earlier six-section screenshots and exact progress values no longer describe this five-section sequence. Current image error handling observes the actual responsive images rather than downloading a separate probe.
-
-The latest October 11 recording could not be played through the available review tools. Its accompanying screenshot and the user's explicit description supplied the evidence for removing the overview.
-
-## Remaining limits
-
-Actual transparent, registered DSU architectural exports and a matching assembled render have not been supplied. Genuine independent assemble/explode/reassemble motion is still unavailable. This implementation is a source-preserving camera and opacity tour. Registered Mode A remains behind the asset-validation gate.
-
-Physical-device Safari and hardware trackpad testing remain outstanding. No backend demo submission, ERP service, authentication, or dashboard has been built.
+Screenshots go to ignored .qa folders. Build validates TypeScript/routes; npm audit checks dependencies. Before release, rehearse actual PostgreSQL/TLS/pooler, signup/email/account linking, deployed HTTPS speech/media and concurrency on staging. Capacity evidence: DSU-Backend/docs/ARCHITECTURE.md.

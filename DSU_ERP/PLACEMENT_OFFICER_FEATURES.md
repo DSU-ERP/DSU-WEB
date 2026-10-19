@@ -17,19 +17,21 @@ This document lists the placement officer features and what each one does.
 ## 2. Company Management
 
 - Add recruiting companies.
-- Record company name, short name, industry, and website.
+- Record company name, short name, industry, headquarters, website, the roles they hire for, job categories, and an about/notes field.
 - Maintain HR contact name, email, and phone number.
 - Search companies and filter by industry.
 - Edit company information.
 - Mark companies active or inactive.
-- View company drive and offer counts.
+- View company drive, opening, selection and offer counts, and every drive scheduled for the company.
 - Delete companies and their associated placement records after confirmation.
 
 ## 3. Placement Drive Management
 
 - Create a drive for a selected company.
-- Specify the job role, description, salary package, academic year, and passing-out batch.
-- Set minimum CGPA, maximum backlogs, and permitted branches.
+- Specify the job role, job category, employment type (full-time, internship, internship + PPO, contract), number of openings, description, salary package, academic year, and passing-out batch.
+- Set minimum CGPA, maximum backlogs, permitted branches, and an optional minimum attendance.
+- Publishing notifies only linked students who meet every requirement; relaxing a requirement later notifies only the newly eligible students.
+- Track hiring progress: openings filled, rounds conducted, selections and active offers.
 - Set the drive date and registration deadline.
 - Add, remove, and arrange recruitment rounds.
 - Search drives and filter by status or package category.

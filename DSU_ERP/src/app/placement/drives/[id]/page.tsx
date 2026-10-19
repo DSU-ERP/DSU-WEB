@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { officerSession, placementRead } from "@/lib/placement/server";
-import { queryFrom, text, type Report, type Row } from "@/lib/placement/types";
-import { DriveEditor } from "@/components/placement/DriveEditor";
-import { DriveCandidates } from "@/components/placement/DriveCandidates";
-import { DeleteRecord } from "@/components/placement/Controls";
-import { Metrics, Filters, Pagination } from "@/components/placement/UI";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
+import { queryFrom, text, type Report, type Row } from "@/features/placement/lib/types";
+import { DriveEditor } from "@/features/placement/components/DriveEditor";
+import { DriveCandidates } from "@/features/placement/components/DriveCandidates";
+import { DeleteRecord } from "@/features/placement/components/Controls";
+import { Metrics, Filters, Pagination } from "@/features/placement/components/UI";
 export default async function DrivePage({
   params,
   searchParams,
@@ -16,7 +16,9 @@ export default async function DrivePage({
   await officerSession();
   const { id } = await params;
   if (id !== "new" && !/^[0-9a-f-]{36}$/i.test(id)) notFound();
-  const query = queryFrom(await searchParams);
+  const raw = await searchParams;
+  const query = queryFrom(raw);
+  const preselected = typeof raw.company === "string" && /^[0-9a-f-]{36}$/i.test(raw.company) ? raw.company : undefined;
   const companies = await placementRead<Report>("companies", {
     active: "true",
     limit: "100",
@@ -45,6 +47,7 @@ export default async function DrivePage({
             <DriveEditor
               companies={companies.rows}
               options={companies.options}
+              defaultCompany={preselected}
             />
           </section>
         ) : (
@@ -72,16 +75,42 @@ export default async function DrivePage({
       <p className="erp-muted">
         Batch {text(drive.batch)} · {text(drive.package_lpa)} LPA ·{" "}
         {text(drive.status)}
+        {drive.job_category ? ` · ${text(drive.job_category)}` : ""}
+        {drive.employment_type ? ` · ${drive.employment_type === "internship-ppo" ? "Internship + PPO" : text(drive.employment_type)}` : ""}
       </p>
+      {(() => {
+        const counts = report.counts as Row;
+        const openings = Number(counts.openings) || 0;
+        const hired = Number(counts.placed) || 0;
+        const rounds = Array.isArray(drive.rounds) ? drive.rounds.length : 0;
+        return (
+          <section className="erp-panel po-hiring">
+            <h2>Hiring progress</h2>
+            <p className="erp-muted">
+              {openings
+                ? `${hired} of ${openings} openings filled`
+                : `${hired} placed · no opening count recorded`}
+              {` · ${Number(counts.rounds_conducted) || 0} of ${rounds} rounds conducted`}
+              {` · ${Number(counts.selected) || 0} selected · ${Number(counts.active_offers) || 0} active offers`}
+            </p>
+            {openings > 0 && (
+              <progress max={openings} value={Math.min(hired, openings)} aria-label="Openings filled" />
+            )}
+          </section>
+        );
+      })()}
       <Metrics
         data={report.counts as Row}
         keys={[
           "eligible",
+          "notified",
           "invited",
           "interested",
           "not-interested",
           "registered",
           "selected",
+          "placed",
+          "openings",
         ]}
       />
       <details className="erp-panel">

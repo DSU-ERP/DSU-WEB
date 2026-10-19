@@ -11,8 +11,8 @@ import {
   explainUpstream,
   upstreamFailure,
   type ToolCallFragment,
-} from "../src/lib/friday/protocol";
-import { sameOrigin } from "../src/lib/placement/request";
+} from "../src/features/assistant/lib/protocol";
+import { sameOrigin } from "../src/features/placement/lib/request";
 
 const req = (headers: Record<string, string>) => ({
   headers: { get: (n: string) => headers[n.toLowerCase()] ?? null },

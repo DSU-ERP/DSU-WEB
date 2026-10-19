@@ -5,7 +5,7 @@ import {
   filterQuery,
   selectedPage,
   formatCgpa,
-} from "../src/lib/analytics/filters";
+} from "../src/features/campus/lib/filters";
 
 test("batch, department and name/USN filters survive category and pagination links", () => {
   const filters = analyticsFilters({

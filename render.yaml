@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: dsu-web
+    runtime: node
+    plan: starter
+    region: singapore
+    rootDir: DSU_ERP
+    buildCommand: npm ci && npm run env:check && npm run build
+    startCommand: npm start -- --hostname 0.0.0.0 --port $PORT
+    healthCheckPath: /health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24
+      - key: NEXT_TELEMETRY_DISABLED
+        value: 1
+      - key: NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
+        generateValue: true
+      - key: NEXT_PUBLIC_SUPABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: DSU_BACKEND_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false

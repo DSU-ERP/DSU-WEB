@@ -3,18 +3,18 @@ import {
   officerSession,
   placementRead,
   placementMutate,
-} from "@/lib/placement/server";
+} from "@/features/placement/lib/server";
 import {
   runFriday,
   describeError,
   probeModel,
   FridayConfigError,
   type FridayEvent,
-} from "@/lib/friday/engine";
-import { fridayCapabilities } from "@/lib/friday/config";
-import { CampusError } from "@/lib/campus-response";
-import { sameOrigin } from "@/lib/placement/request";
-import type { Row } from "@/lib/placement/types";
+} from "@/features/assistant/lib/engine";
+import { fridayCapabilities } from "@/features/assistant/lib/config";
+import { CampusError } from "@/shared/http/errors";
+import { sameOrigin } from "@/features/placement/lib/request";
+import type { Row } from "@/features/placement/lib/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -99,7 +99,8 @@ export async function POST(req: NextRequest) {
       );
 
     // Per-user rate limit, reusing the existing assistant limiter.
-    await placementMutate("assistant.request", {}, requestId);
+    // A fresh id per call: replaying a client id must not bypass the rate limit.
+    await placementMutate("assistant.request", {}, crypto.randomUUID());
 
     // Conversation context. The browser sends the turns currently on screen,
     // so a brand-new conversation is contextual from the second message
