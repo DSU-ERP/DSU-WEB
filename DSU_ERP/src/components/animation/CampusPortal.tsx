@@ -71,6 +71,10 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
         <p className="eyebrow"><span className="eyebrow-square"/>[ INTRODUCING DSU AGENTIC ERP ]</p>
         <h1>ONE CAMPUS.</h1>
         <p className="campus-tagline">INFINITE POSSIBILITIES.</p>
+        <nav className="campus-sign-in" aria-label="Campus sign in">
+          <Link href="/login?portal=student">Student sign in <span aria-hidden="true">↗</span></Link>
+          <Link href="/login?portal=placement-officer">Placement Officer sign in <span aria-hidden="true">↗</span></Link>
+        </nav>
       </header>
       <figure className="campus-artwork" ref={artwork}>
         {src ? <IllustrationView src={src}/> : <p className="drawing-unavailable">College illustration unavailable.</p>}
@@ -88,7 +92,8 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
       <p className="portal-description">Connect to your digital campus environment.</p>
       <p className="portal-index">02 / PORTAL GATEWAY</p>
       <div className="portal-actions">
-        <Link href="/login" className="portal-button portal-button-primary" aria-label="Sign in to the Placement Officer portal">SIGN IN · PLACEMENT OFFICER</Link>
+        <Link href="/login?portal=student" className="portal-button portal-button-primary">STUDENT SIGN IN</Link>
+        <Link href="/login?portal=placement-officer" className="portal-button">PLACEMENT OFFICER SIGN IN</Link>
       </div>
     </section>
     <div className="campus-caption"><p>An intelligent operating system<br/>for the modern university.</p><span>ONE INSTITUTION.<br/>EVERY POSSIBILITY.</span></div>

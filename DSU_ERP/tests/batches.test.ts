@@ -1,12 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { quotaCounts, placementStatus } from "../src/lib/analytics/placement";
+import { quotaCounts, placementStatus } from "../src/features/campus/lib/placement";
 import {
   batchFilters,
   batchQuery,
   batchCsv,
   type BatchView,
-} from "../src/lib/analytics/batches";
+} from "../src/features/campus/lib/batches";
 test("batch drill-down preserves filters and resets expanded students when sorting", () => {
   const filters = batchFilters({
     batch: "2026",

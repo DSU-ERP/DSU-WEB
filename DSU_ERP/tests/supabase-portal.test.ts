@@ -1,8 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { exportCsv, portalRequest, supabaseReadError } from "../src/lib/supabase/portal-contract";
-import type { CategoryData } from "../src/lib/analytics/types";
+import { exportCsv, portalRequest, supabaseReadError } from "../src/features/campus/lib/portal-contract";
+import type { CategoryData } from "../src/features/campus/lib/types";
 
 test("portal paths become Supabase RPC arguments with literal filter values", () => {
   assert.deepEqual(portalRequest("/analytics?search=A%26B%25&batch=2023"), {
@@ -32,11 +32,12 @@ test("Supabase exports preserve exact CGPA strings and neutralize spreadsheet fo
   assert.match(result.content,/"Eligible"/);
 });
 
-test("portal GETs use Supabase before any Render configuration is consulted", () => {
-  const source = readFileSync("src/lib/campus-api.ts","utf8");
-  assert.ok(source.indexOf("return await readSupabasePortal<T>(path)") < source.indexOf("const origin = process.env.DSU_BACKEND_URL"));
-  const adapter = readFileSync("src/lib/supabase/portal-read.ts","utf8");
-  assert.match(adapter,/client\s*\.rpc\(rpc, request\)/);
-  assert.match(adapter,/"dsu_batch_read"\s*:\s*"dsu_portal_read"/);
-  assert.doesNotMatch(adapter,/process\.env\.(SERVICE_ROLE|DATABASE|DSU_BACKEND)/);
+test("campus, placement and student data use the authenticated backend boundary",()=>{
+ const campus=readFileSync('src/features/campus/lib/api.ts','utf8');
+ const placement=readFileSync('src/features/placement/lib/server.ts','utf8');
+ const student=readFileSync('src/features/student/lib/server.ts','utf8');
+ for(const source of [campus,placement,student]){assert.match(source,/backendApi/);assert.doesNotMatch(source,/\.rpc\(/);}
+ const backend=readFileSync('src/shared/http/backend.ts','utf8');
+ assert.match(backend,/Bearer/);assert.match(backend,/no-store/);
+ assert.doesNotMatch(backend,/DATABASE_URL|SERVICE_ROLE/);
 });

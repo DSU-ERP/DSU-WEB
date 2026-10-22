@@ -1,6 +1,7 @@
 "use server";
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/lib/supabase/server";
+import { supabaseServer } from "@/shared/auth/supabase";
+import { workspaceDestination } from "@/shared/auth/portal";
 export async function signIn(_previous: { error: string }, form: FormData) {
   const email = String(form.get("email") || "").trim();
   const password = String(form.get("password") || "");
@@ -22,7 +23,7 @@ export async function signIn(_previous: { error: string }, form: FormData) {
   } catch {
     return { error: "Sign in is temporarily unavailable. Please try again." };
   }
-  redirect("/placement");
+  redirect(workspaceDestination(form.get("portal")));
 }
 export async function signOut() {
   const client = await supabaseServer();

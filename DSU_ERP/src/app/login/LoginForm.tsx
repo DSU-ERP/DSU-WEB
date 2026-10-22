@@ -1,10 +1,12 @@
 "use client";
 import { useActionState } from "react";
 import { signIn } from "./actions";
-export function LoginForm() {
+import type { Portal } from "@/shared/auth/portal";
+export function LoginForm({ portal }: { portal: Portal }) {
   const [state, action, pending] = useActionState(signIn, { error: "" });
   return (
     <form action={action} className="erp-form">
+      <input type="hidden" name="portal" value={portal} />
       <label htmlFor="email">University email</label>
       <input
         id="email"
@@ -28,11 +30,16 @@ export function LoginForm() {
         {state.error}
       </p>
       <button className="erp-primary" disabled={pending}>
-        {pending ? "Signing in…" : "Enter Placement Officer workspace →"}
+        {pending
+          ? "Signing in…"
+          : portal === "student"
+            ? "Enter student workspace →"
+            : "Enter placement workspace →"}
       </button>
       <p className="erp-muted">
-        Access is provided by your campus administrator. Contact them if you
-        need an account or a password reset.
+        {portal === "student"
+          ? "New here? Create a student account below. Use the email held in your university records for automatic profile matching."
+          : "Placement officer access is assigned by your campus administrator."}
       </p>
     </form>
   );

@@ -694,6 +694,10 @@
 .erp-department-table tbody th a{color:#294a26}
 .erp-department-table tbody th a:hover{text-decoration:underline}
 .erp-visually-hidden{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
+.erp-portal-options{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 32px}
+.erp-portal-options a{border:1px solid #c9cfc4;border-radius:5px;padding:12px 16px;font-size:13px}
+.erp-portal-options a[aria-current=page]{background:#243b26;border-color:#243b26;color:white}
+.erp-portal-options a:focus-visible{outline:3px solid #9b3e43;outline-offset:3px}
 @media(max-width:1200px){.erp-department-breakdown .erp-section-heading{align-items:flex-start;flex-direction:column}.erp-breakdown-actions{width:100%}}
 .erp-batch-tabs{display:flex;flex-wrap:wrap;gap:0.5rem;margin:0 0 1.5rem}
 .erp-batch-tabs a{padding:0.6875rem 1.125rem;border:1px solid var(--erp-border);border-radius:0.375rem;background:white;font-size:0.8125rem}
@@ -726,3 +730,11 @@
 .erp-student-detail-block dd{text-align:right;overflow-wrap:anywhere;min-width:0;white-space:normal}
 @media(max-width:1100px){.erp-student-detail-grid{grid-template-columns:repeat(2,minmax(12.5rem,1fr))}}
 @media(max-width:767px){.erp-batch-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.erp-batch-tabs a{padding:0.75rem 0.875rem}.erp-batch-filters label{min-width:9.0625rem}.erp-expanded-student{padding:1rem}.erp-batch-students{min-width:65.625rem}}
+.erp-access-state .erp-dev-hint {
+  font: 12px/1.6 var(--mono, monospace);
+  background: #f1f1ec;
+  border: 1px solid var(--erp-border);
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow-wrap: anywhere;
+}

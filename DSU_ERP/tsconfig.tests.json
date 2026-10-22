@@ -14,6 +14,7 @@
     "src/lib/animation/assetValidation.ts",
     "src/config/animationPhases.ts",
     "src/lib/animation/coordinateSystem.ts",
-    "src/config/architecturalLayers.ts"
+    "src/config/architecturalLayers.ts",
+    "src/features/student/lib/progress.ts"
   ]
 }

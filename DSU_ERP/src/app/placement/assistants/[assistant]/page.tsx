@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { officerSession, placementRead } from "@/lib/placement/server";
-import { diagnostics } from "@/lib/placement/assistant";
-import { AssistantChat } from "@/components/placement/AssistantChat";
-import { FridayChat } from "@/components/placement/FridayChat";
-import { fridayCapabilities } from "@/lib/friday/config";
-import { focusBatch } from "@/lib/friday/view";
-import type { Report } from "@/lib/placement/types";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
+import { diagnostics } from "@/features/placement/lib/assistant";
+import { AssistantChat } from "@/features/assistant/components/AssistantChat";
+import { FridayChat } from "@/features/assistant/components/FridayChat";
+import { fridayCapabilities } from "@/features/assistant/lib/config";
+import { focusBatch } from "@/features/assistant/lib/view";
+import type { Report } from "@/features/placement/lib/types";
 import "../../friday.css";
 export default async function AssistantPage({
   params,

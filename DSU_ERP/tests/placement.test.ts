@@ -4,8 +4,8 @@ import {
   interpret,
   validateDraft,
   safeWebUrl,
-} from "../src/lib/placement/assistantRules";
-import { csv, queryFrom, href } from "../src/lib/placement/types";
+} from "../src/features/placement/lib/assistantRules";
+import { csv, queryFrom, href } from "../src/features/placement/lib/types";
 test("assistant tools retrieve distinct requested sources", () => {
   for (const [prompt, tool] of [
     ["Batch 2028 summary", "batch"],

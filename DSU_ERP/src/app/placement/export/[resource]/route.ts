@@ -1,15 +1,16 @@
-import { officerSession, placementRead } from "@/lib/placement/server";
-import { CampusError } from "@/lib/campus-response";
-import { csv, queryFrom, type Report } from "@/lib/placement/types";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
+import { unstable_rethrow } from "next/navigation";
+import { CampusError } from "@/shared/http/errors";
+import { csv, queryFrom, type Report } from "@/features/placement/lib/types";
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ resource: string }> },
 ) {
-  await officerSession();
   const { resource } = await params;
-  if (!["batch", "students"].includes(resource))
+  if (!["batch", "students", "offers"].includes(resource))
     return Response.json({ error: "Report not found" }, { status: 404 });
   try {
+    await officerSession();
     const query = queryFrom(
       Object.fromEntries(new URL(request.url).searchParams),
     );
@@ -120,6 +121,8 @@ export async function GET(
       },
     );
   } catch (error) {
+    // Let sign-in redirects through instead of turning them into a 500.
+    unstable_rethrow(error);
     return Response.json(
       { error: error instanceof CampusError ? error.message : "Export failed" },
       {

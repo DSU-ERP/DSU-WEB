@@ -6,7 +6,7 @@ import {
   groupConversations,
   focusBatch,
   formatDuration,
-} from "../src/lib/friday/view";
+} from "../src/features/assistant/lib/view";
 
 test("inline formatting keeps only workspace links clickable", () => {
   const out = parseInline(

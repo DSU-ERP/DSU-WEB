@@ -126,7 +126,7 @@ const data = {
   readiness: [],
 };
 const entry = `import React from 'react';import {createRoot} from 'react-dom/client';
-import {Workspace} from '@/components/placement/Workspace';import {ReportBody,ReportFilters} from '@/components/placement/Reports';import {DriveEditor} from '@/components/placement/DriveEditor';import {DriveCandidates} from '@/components/placement/DriveCandidates';import {AssistantChat} from '@/components/placement/AssistantChat';import {DeleteRecord} from '@/components/placement/Controls';import {SECTIONS} from '@/lib/placement/types';
+import {Workspace} from '@/features/placement/components/Workspace';import {ReportBody,ReportFilters} from '@/features/placement/components/Reports';import {DriveEditor} from '@/features/placement/components/DriveEditor';import {DriveCandidates} from '@/features/placement/components/DriveCandidates';import {AssistantChat} from '@/features/assistant/components/AssistantChat';import {DeleteRecord} from '@/features/placement/components/Controls';import {SECTIONS} from '@/features/placement/lib/types';
 const data=${JSON.stringify(data)},student=${JSON.stringify(student)},drive=${JSON.stringify(drive)},company=${JSON.stringify(company)};
 const section=location.pathname.split('/')[2]||'batch',query=Object.fromEntries(new URLSearchParams(location.search));let content;
 if(section==='drive-editor')content=<><h1>Create a placement drive.</h1><DriveEditor companies={[company]} options={data.options}/><DeleteRecord kind='company' record={company} back='/placement/companies'/></>;
@@ -243,15 +243,20 @@ const css =
     // every link keeps its accessible name.
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     assert.equal(await page.locator("#placement-nav").isVisible(), true);
-    assert.equal(await page.locator("#placement-nav a svg:visible").count(), 9);
+    assert.equal(await page.locator("#placement-nav a svg:visible").count(), await page.locator("#placement-nav a").count());
+    await page.getByRole("link", { name: "Student tools" }).waitFor();
     await page.getByRole("link", { name: "Data imports" }).waitFor();
     await page.getByRole("link", { name: "Batch analytics" }).waitFor();
     await page.getByRole("button", { name: "Expand sidebar" }).click();
     await page.getByRole("button", { name: "Use dark theme" }).click();
     assert.ok(await page.locator(".po-dark").count());
-    // Branch names are plain text since the drill-down links into the removed
-    // department and student sections were stripped (commit 6c13f25).
-    assert.equal(await page.getByRole("link", { name: "CSE ↗", exact: true }).count(), 0);
+    // Branch links filter the retained batch view, without using retired routes.
+    await page.getByRole("link", {name:"CSE ↗",exact:true}).click();
+    assert.equal(new URL(page.url()).searchParams.get('batch'),'2028');
+    assert.equal(new URL(page.url()).searchParams.get('department'),'CSE');
+    await page.getByLabel('Search',{exact:true}).fill('Example');
+    await page.getByRole('button',{name:'Apply filters'}).click();
+    assert.equal(new URL(page.url()).searchParams.get('search'),'Example');
     await page.goto(origin + "/placement/drive-editor");
     await page.getByRole("button", { name: "Add round" }).click();
     await page
@@ -368,7 +373,7 @@ const css =
           "responsive overflow",
           "sidebar collapses to icons",
           "theme",
-          "branch names without drill-down links",
+          "branch drill-down preserves cohort filters",
           "ordered rounds",
           "drive form serialization",
           "mixed registration selection guard",

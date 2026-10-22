@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { officerSession, placementRead } from "@/lib/placement/server";
-import { StudentProfile } from "@/components/placement/StudentProfile";
-import { Table } from "@/components/placement/UI";
-import { text, type Report, type Row } from "@/lib/placement/types";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
+import { StudentProfile } from "@/features/placement/components/StudentProfile";
+import { Table } from "@/features/placement/components/UI";
+import { text, type Report, type Row } from "@/features/placement/lib/types";
 
 const UUID = /^[0-9a-f-]{36}$/i;
 const one = (value: string | string[] | undefined) =>

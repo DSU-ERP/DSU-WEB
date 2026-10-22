@@ -1,7 +1,30 @@
 import Link from "next/link";
 import { LoginForm } from "./LoginForm";
+import { redirect } from "next/navigation";
+import { userSession } from "@/shared/auth/session";
+import { CampusError } from "@/shared/http/errors";
+import { selectedPortal, workspaceDestination } from "@/shared/auth/portal";
 import "../workspace.css";
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ portal?: string; expired?: string }>;
+}) {
+  const query = await searchParams;
+  const portal = selectedPortal(query.portal) || "student";
+  // After the backend rejected the session, show the form instead of
+  // redirecting back to /workspace (which would loop).
+  const expired = query.expired === "1";
+  let signedIn = false;
+  if (!expired) {
+    try {
+      await userSession();
+      signedIn = true;
+    } catch (error) {
+      if (!(error instanceof CampusError && error.status === 401)) throw error;
+    }
+  }
+  if (signedIn) redirect(workspaceDestination(portal));
   return (
     <main id="vision" className="erp-login">
       <section className="erp-login-intro">
@@ -27,10 +50,42 @@ export default function LoginPage() {
         <Link href="/" className="erp-back">
           ← Back to campus
         </Link>
-        <p className="erp-eyebrow">PLACEMENT OFFICER PORTAL</p>
+        <nav className="erp-portal-options" aria-label="Choose sign-in portal">
+          <Link
+            href="/login?portal=student"
+            aria-current={portal === "student" ? "page" : undefined}
+          >
+            Student
+          </Link>
+          <Link
+            href="/login?portal=placement-officer"
+            aria-current={portal === "placement-officer" ? "page" : undefined}
+          >
+            Placement Officer
+          </Link>
+        </nav>
+        <p className="erp-eyebrow">
+          {portal === "student"
+            ? "STUDENT SIGN IN"
+            : "PLACEMENT OFFICER SIGN IN"}
+        </p>
         <h2>Welcome back.</h2>
-        <p className="erp-muted">Sign in with your university account.</p>
-        <LoginForm />
+        <p className="erp-muted">
+          {portal === "student"
+            ? "Your preparation, academic progress and opportunities in one workspace."
+            : "Manage student records, placement drives and campus opportunities."}
+        </p>
+        {expired && (
+          <p className="erp-form-error" role="alert">
+            Your session could not be verified. Please sign in again.
+          </p>
+        )}
+        <LoginForm portal={portal} />
+        {portal === "student" && (
+          <Link className="erp-back" href="/sign-up">
+            Create a student account ↗
+          </Link>
+        )}
       </section>
     </main>
   );

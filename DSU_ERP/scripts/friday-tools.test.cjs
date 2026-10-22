@@ -8,9 +8,9 @@ const path = require('node:path');
 // Fixtures are synthetic; these tests never access student records or the model.
 const bundle = buildSync({
   absWorkingDir: path.resolve(__dirname, '..'),
-  entryPoints: ['src/lib/friday/tools.ts'],
+  entryPoints: ['src/features/assistant/lib/tools.ts'],
   bundle: true, platform: 'node', format: 'cjs', write: false,
-  external: ['server-only', '@/lib/placement/server'],
+  external: ['server-only', '@/features/placement/lib/server'],
 }).outputFiles[0].text;
 const id = '00000000-0000-4000-8000-000000000001';
 function harness(read) {
@@ -19,7 +19,7 @@ function harness(read) {
     module, exports: module.exports, setTimeout, clearTimeout, Error,
     require(name) {
       if (name === 'server-only') return {};
-      if (name === '@/lib/placement/server') return { placementRead: read };
+      if (name === '@/features/placement/lib/server') return { placementRead: read };
       throw new Error(`Unexpected dependency: ${name}`);
     },
   });

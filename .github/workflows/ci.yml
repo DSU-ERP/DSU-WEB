@@ -15,4 +15,7 @@ jobs:
           cache-dependency-path: DSU_ERP/package-lock.json
       - run: npm ci
       - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui
       - run: npm run build
+      - run: npm audit --audit-level=high

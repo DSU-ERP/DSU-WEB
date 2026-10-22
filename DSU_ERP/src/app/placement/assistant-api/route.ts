@@ -4,20 +4,20 @@ import {
   placementRead,
   placementMutate,
   renameFridayConversation,
-} from "@/lib/placement/server";
+} from "@/features/placement/lib/server";
 import {
   answer,
   diagnostics,
   proposeEmail,
   confirmEmail,
-} from "@/lib/placement/assistant";
+} from "@/features/placement/lib/assistant";
 import {
   ASSISTANT_TOOLS,
   type AssistantTool,
-} from "@/lib/placement/assistantRules";
-import { CampusError } from "@/lib/campus-response";
-import { sameOrigin } from "@/lib/placement/request";
-import type { Row } from "@/lib/placement/types";
+} from "@/features/placement/lib/assistantRules";
+import { CampusError } from "@/shared/http/errors";
+import { sameOrigin } from "@/features/placement/lib/request";
+import type { Row } from "@/features/placement/lib/types";
 export const runtime = "nodejs";
 const reply = (data: unknown, status = 200) =>
   NextResponse.json(data, {
@@ -88,7 +88,8 @@ export async function POST(req: NextRequest) {
         return reply({ error: "Enter a conversation name of 1–120 characters on one line." }, 400);
       return reply({ data: await renameFridayConversation(id, input.title.trim()) });
     }
-    await placementMutate("assistant.request", {}, input.requestId);
+    // A fresh id per call: replaying a client id must not bypass the rate limit.
+    await placementMutate("assistant.request", {}, crypto.randomUUID());
     if (input.operation === "delete")
       return reply(
         await placementMutate(

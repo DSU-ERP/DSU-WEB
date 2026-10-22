@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { officerSession, placementRead } from "@/lib/placement/server";
-import { StudentProfile } from "@/components/placement/StudentProfile";
-import { type Row } from "@/lib/placement/types";
+import { officerSession, placementRead } from "@/features/placement/lib/server";
+import { StudentProfile } from "@/features/placement/components/StudentProfile";
+import { type Row } from "@/features/placement/lib/types";
 export default async function Journey({
   params,
 }: {
