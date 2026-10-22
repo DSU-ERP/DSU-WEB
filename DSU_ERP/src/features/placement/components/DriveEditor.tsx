@@ -6,13 +6,16 @@ export function DriveEditor({
   companies,
   options,
   defaultCompany,
+  prefill,
 }: {
   drive?: Row;
   companies: Row[];
   options: Report["options"];
   defaultCompany?: string;
+  /** Reviewable defaults for a new drive (from a drive PDF); never saved automatically. */
+  prefill?: Row;
 }) {
-  const d = drive || {},
+  const d = drive || prefill || {},
     existing = !!drive;
   return (
     <ChangeForm

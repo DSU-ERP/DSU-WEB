@@ -89,3 +89,21 @@ export const wordCount = (text: string) => (text.trim() ? text.trim().split(/\s+
 /** "in-progress" → "In progress" for status labels shown to students. */
 export const statusText = (status: string) =>
   status ? status[0].toUpperCase() + status.slice(1).replace(/-/g, " ") : "";
+
+export type ActivityDay = { day: string; count: number };
+/**
+ * A fixed window of campus days ending today (oldest first). Days without
+ * recorded activity are zero, never estimated.
+ */
+export function activitySeries(activity: ActivityDay[] | undefined, today = campusToday(), days = 14): ActivityDay[] {
+  const counts = new Map<string, number>();
+  for (const row of activity || []) {
+    const count = Number(row.count);
+    if (Number.isFinite(count) && count > 0) counts.set(String(row.day).slice(0, 10), Math.trunc(count));
+  }
+  const end = Date.UTC(+today.slice(0, 4), +today.slice(5, 7) - 1, +today.slice(8, 10));
+  return Array.from({ length: days }, (_, index) => {
+    const day = new Date(end - (days - 1 - index) * 86400000).toISOString().slice(0, 10);
+    return { day, count: counts.get(day) ?? 0 };
+  });
+}

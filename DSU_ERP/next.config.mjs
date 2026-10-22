@@ -1,5 +1,10 @@
 /** @type {import('next').NextConfig} */
 const config = {
+  // Validate production output separately while a development server is running.
+  distDir: process.env.DSU_NEXT_DIST_DIR || ".next",
+  // The desktop preview opens the app through loopback rather than localhost.
+  // Next also checks this host for development scripts and hot reload.
+  allowedDevOrigins: ["127.0.0.1"],
   deploymentId:
     process.env.DEPLOYMENT_ID || process.env.RENDER_GIT_COMMIT || undefined,
   poweredByHeader: false,

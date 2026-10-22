@@ -15,6 +15,8 @@
     "src/config/animationPhases.ts",
     "src/lib/animation/coordinateSystem.ts",
     "src/config/architecturalLayers.ts",
-    "src/features/student/lib/progress.ts"
+    "src/features/student/lib/progress.ts",
+    "src/features/student/lib/format.ts",
+    "src/features/placement/lib/driveImport.ts"
   ]
 }

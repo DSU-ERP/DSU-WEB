@@ -3,15 +3,26 @@ import { StudentShell } from "@/features/student/components/StudentShell";
 import { CampusError } from "@/shared/http/errors";
 import { describeFailure } from "@/shared/http/diagnostics";
 import { signOut } from "../login/actions";
+import { Suspense } from "react";
+import Loading from "./loading";
 import "../workspace.css";
 import "./student.css";
+import "./workspace-polish.css";
+import "./interview/interview-workspace.css";
 export const dynamic = "force-dynamic";
 
-export default async function StudentLayout({
+export default function StudentLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // The segment loading.tsx wraps pages, not this authenticated layout. Stream
+  // its fallback immediately instead of holding the entire screen for profile
+  // and workspace reads. Private content still waits for the access checks.
+  return <Suspense fallback={<Loading />}><AuthenticatedStudentLayout>{children}</AuthenticatedStudentLayout></Suspense>;
+}
+
+async function AuthenticatedStudentLayout({ children }: { children: React.ReactNode }) {
   let profile;
   try {
     profile = await studentProfile();

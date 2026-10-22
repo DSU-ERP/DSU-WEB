@@ -21,6 +21,19 @@ export type CareerContent = {
   recommendations: string[];
   missingKeywords: string[];
   formattingIssues: string[];
+  // Reports created before structured profiles were added have no profile.
+  profile?: {
+    academics: string[];
+    skills: string[];
+    projects: string[];
+    achievements: string[];
+  };
+};
+export type CareerHistoryItem = {
+  id: string;
+  target: string | null;
+  created_at: string;
+  best_fit: string | null;
 };
 export type CareerData = {
   report: {
@@ -155,7 +168,87 @@ const Items = ({ items }: { items: string[] }) =>
   ) : (
     <p className="st-muted">No findings recorded.</p>
   );
-export function CareerReport({ data }: { data: CareerData }) {
+const reportDate = (value: string) =>
+  new Date(value).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+const PROFILE_GROUPS = [
+  ["academics", "Academics"],
+  ["skills", "Skills"],
+  ["projects", "Projects"],
+  ["achievements", "Achievements"],
+] as const;
+function ProfileEvidence({ profile }: { profile: CareerContent["profile"] }) {
+  if (!profile)
+    return (
+      <p className="st-muted">
+        This report was created before resume profiles were recorded. Generate
+        a new report to see your academics, skills, projects and achievements
+        here.
+      </p>
+    );
+  return (
+    <div className="st-profile-groups">
+      {PROFILE_GROUPS.map(([key, title]) => (
+        <div key={key}>
+          <h3>{title}</h3>
+          {profile[key].length ? (
+            <ul className="st-chip-list">
+              {profile[key].map((item, index) => (
+                <li key={index} className="st-chip">
+                  {item}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="st-muted">Not found in your resume.</p>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+function HistorySelect({
+  history,
+  current,
+}: {
+  history: CareerHistoryItem[];
+  current: string;
+}) {
+  const router = useRouter();
+  if (history.length < 2) return null;
+  return (
+    <label className="st-report-history st-no-print">
+      <span>Report history</span>
+      <select
+        value={current}
+        onChange={(e) =>
+          router.push(
+            `/student/resume/prediction?report=${encodeURIComponent(e.target.value)}`,
+          )
+        }
+      >
+        {history.map((item, index) => (
+          <option key={item.id} value={item.id}>
+            {reportDate(item.created_at)} · {item.target || "No target"}
+            {index === 0 ? " (latest)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+export function CareerReport({
+  data,
+  history = [],
+  unavailable = false,
+}: {
+  data: CareerData;
+  history?: CareerHistoryItem[];
+  unavailable?: boolean;
+}) {
   if (!data.report)
     return (
       <>
@@ -183,6 +276,7 @@ export function CareerReport({ data }: { data: CareerData }) {
         description={`Prepared for ${data.report.target} · ${new Date(data.report.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium" })}`}
         action={
           <div className="st-actions st-no-print">
+            <HistorySelect history={history} current={data.report.id} />
             <button
               type="button"
               className="st-button st-button-secondary"
@@ -199,6 +293,11 @@ export function CareerReport({ data }: { data: CareerData }) {
           </div>
         }
       />
+      {unavailable && (
+        <p className="st-error" role="alert">
+          That report is not available. Showing your latest report instead.
+        </p>
+      )}
       <div className="st-metrics">
         <Metric
           label="Role alignment estimate"
@@ -232,6 +331,12 @@ export function CareerReport({ data }: { data: CareerData }) {
           AI guidance is advisory. Fit estimates do not guarantee a placement,
           salary or employer decision.
         </p>
+      </Panel>
+      <Panel
+        title="Your profile, as your resume shows it"
+        subtitle="Only what the resume states. Missing items are left empty."
+      >
+        <ProfileEvidence profile={report.profile} />
       </Panel>
       <div className="st-two-col">
         <Panel title="Strengths worth building on">

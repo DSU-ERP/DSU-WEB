@@ -25,6 +25,7 @@ import {
 import { signOut } from "@/app/login/actions";
 import { STUDENT_MODULES, type Notice } from "../lib/types";
 import { studentFetch } from "../lib/client";
+import { InterviewShell } from "./InterviewShell";
 const icons = {
   dashboard: LayoutDashboard,
   chart: ChartNoAxesCombined,
@@ -53,6 +54,7 @@ export function StudentShell({
     [collapsed, setCollapsed] = useState(false),
     [term, setTerm] = useState(""),
     [notices, setNotices] = useState<Notice[]>([]),
+    [noticeLoading, setNoticeLoading] = useState(false),
     [noticeError, setNoticeError] = useState("");
   const command = useRef<HTMLDialogElement>(null);
   const current = [...STUDENT_MODULES]
@@ -93,17 +95,34 @@ export function StudentShell({
     } catch {}
   };
   const loadNotices = async () => {
+    setNoticeLoading(true);
     try {
       setNotices(await studentFetch<Notice[]>("notifications"));
       setNoticeError("");
     } catch (error) {
       setNoticeError((error as Error).message);
+    } finally {
+      setNoticeLoading(false);
     }
   };
   const focus = /\/test$|\/session\//.test(path);
+  if (path === "/student/interview" || path.startsWith("/student/interview/")) {
+    return <div className={`st-app st-${theme} st-interview-app`}><InterviewShell theme={theme} onTheme={changeTheme}>{children}</InterviewShell></div>;
+  }
+  // Haki is its own workspace. Keep the authenticated student layout and
+  // theme, while rendering none of the dashboard navigation or page frame.
+  if (path === "/student/observation-haki") {
+    return (
+      <div className={`st-app st-${theme} st-standalone`}>
+        <main id="student-content" className="st-standalone-content" tabIndex={-1}>
+          {children}
+        </main>
+      </div>
+    );
+  }
   return (
     <div
-      className={`st-app st-${theme}${collapsed ? " st-collapsed" : ""}${focus ? " st-focused" : ""}`}
+      className={`st-app st-calm-shell st-${theme}${collapsed ? " st-collapsed" : ""}${focus ? " st-focused" : ""}`}
     >
       <a className="st-skip" href="#student-content">
         Skip to content
@@ -127,20 +146,7 @@ export function StudentShell({
             DSU <small>/ STUDENT</small>
           </span>
         </Link>
-        <div className="st-identity">
-          <span className="st-avatar">
-            {name
-              .split(" ")
-              .map((word) => word[0])
-              .slice(0, 2)
-              .join("")}
-          </span>
-          <div>
-            <strong>{name}</strong>
-            <small>{usn}</small>
-          </div>
-        </div>
-        <nav>
+        <nav aria-label="Student modules" tabIndex={0}>
           {["Workspace", "Placement kit", "Campus", "Account"].map((group) => (
             <div className="st-nav-group" key={group}>
               <p>{group}</p>
@@ -156,9 +162,8 @@ export function StudentShell({
                       aria-current={active ? "page" : undefined}
                       onClick={() => setDrawer(false)}
                     >
-                      <Icon size={18} />
+                      <Icon size={18} strokeWidth={1.6} />
                       <span>{item.label}</span>
-                      {active && <i />}
                     </Link>
                   );
                 },
@@ -167,7 +172,19 @@ export function StudentShell({
           ))}
         </nav>
         <div className="st-sidebar-footer">
-          <span className="st-online-dot" />A little better, every day.
+          <div className="st-identity">
+          <span className="st-avatar">
+            {name
+              .split(" ")
+              .map((word) => word[0])
+              .slice(0, 2)
+              .join("")}
+          </span>
+          <div>
+            <strong>{name}</strong>
+            <small>{usn}</small>
+          </div>
+        </div>
           <button
             onClick={toggleNav}
             aria-label={collapsed ? "Expand navigation" : "Collapse navigation"}
@@ -195,8 +212,6 @@ export function StudentShell({
             >
               <PanelLeftClose size={18} />
             </button>
-            <span>Student workspace</span>
-            <span>/</span>
             <strong>{current?.label || "Your workspace"}</strong>
           </div>
           <div className="st-top-actions">
@@ -206,8 +221,8 @@ export function StudentShell({
               aria-label="Search modules"
             >
               <Search size={16} />
-              <span>Search anything</span>
-              <kbd>⌘ K</kbd>
+              <span>Search workspace</span>
+              <kbd>Ctrl K</kbd>
             </button>
             <button
               className="st-icon-button"
@@ -247,7 +262,9 @@ export function StudentShell({
                     Mark all as read
                   </button>
                 )}
-                {noticeError ? (
+                {noticeLoading ? (
+                  <p role="status">Loading your updates…</p>
+                ) : noticeError ? (
                   <p role="alert">{noticeError}</p>
                 ) : notices.length ? (
                   notices.map((item) => (

@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import type { Row } from "@/features/placement/lib/types";
 import { speakable, sentences } from "@/features/assistant/lib/protocol";
+import { pickVoice } from "@/shared/speech/voice";
 import { Answer } from "./friday/Answer";
 import { History } from "./friday/History";
 
@@ -214,10 +215,8 @@ export function FridayChat({
     window.speechSynthesis.cancel();
     // Queue complete sentences so playback stays in order.
     const parts = sentences(body);
-    const voices = window.speechSynthesis.getVoices();
-    const british =
-      voices.find((v) => v.lang === "en-GB") ??
-      voices.find((v) => v.lang?.startsWith("en-GB"));
+    // Shared choice: a British voice, preferring natural/neural ones.
+    const british = pickVoice("en-GB");
     parts.forEach((sentence, i) => {
       const u = new SpeechSynthesisUtterance(sentence.trim());
       if (british) u.voice = british;

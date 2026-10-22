@@ -1,11 +1,15 @@
 "use client";
 import { useRef, useState } from "react";
-import { Upload, FileCheck2 } from "lucide-react";
+import { Upload, FileCheck2, TriangleAlert } from "lucide-react";
 import { studentFetch } from "../lib/client";
 export type UploadedDocument = {
   id: string;
   filename: string;
   content: string;
+  pageCount?: number | null;
+  chars?: number;
+  truncated?: boolean;
+  lowText?: boolean;
 };
 export function DocumentUpload({
   kind,
@@ -20,7 +24,8 @@ export function DocumentUpload({
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [name, setName] = useState(""),
-    [drag, setDrag] = useState(false);
+    [drag, setDrag] = useState(false),
+    [ready, setReady] = useState<UploadedDocument | null>(null);
   const read = async (file: File) => {
     if (
       !/\.(pdf|docx|txt|md)$/i.test(file.name) ||
@@ -32,6 +37,7 @@ export function DocumentUpload({
     }
     setBusy(true);
     setError("");
+    setReady(null);
     setName(file.name);
     try {
       const data = await new Promise<string>((resolve, reject) => {
@@ -44,6 +50,7 @@ export function DocumentUpload({
         method: "POST",
         body: { filename: file.name, kind, data },
       });
+      setReady(document);
       onReady(document);
     } catch (e) {
       setError((e as Error).message);
@@ -87,7 +94,10 @@ export function DocumentUpload({
           accept=".pdf,.docx,.txt,.md"
           hidden
           onChange={(e) => {
-            if (e.target.files?.[0]) void read(e.target.files[0]);
+            const file = e.target.files?.[0];
+            // Cleared so the same file can be chosen again after an error.
+            e.target.value = "";
+            if (file) void read(file);
           }}
         />
       </div>
@@ -95,6 +105,34 @@ export function DocumentUpload({
         <p className="st-error" role="alert">
           {error}
         </p>
+      )}
+      {ready && !busy && (
+        <div role="status" className="st-upload-result">
+          {ready.lowText ? (
+            <p className="st-upload-warning">
+              <TriangleAlert size={14} aria-hidden="true" />
+              <span>
+                This PDF looks scanned: very little text could be read
+                {ready.pageCount ? ` from ${ready.pageCount} page${ready.pageCount === 1 ? "" : "s"}` : ""}.
+                Paste the text instead so the analysis uses your real content.
+              </span>
+            </p>
+          ) : (
+            <p className="st-muted">
+              Read {ready.pageCount ? `${ready.pageCount} page${ready.pageCount === 1 ? "" : "s"} · ` : ""}
+              {(ready.chars ?? ready.content.length).toLocaleString("en-IN")} characters
+            </p>
+          )}
+          {ready.truncated && (
+            <p className="st-upload-warning">
+              <TriangleAlert size={14} aria-hidden="true" />
+              <span>
+                This document is long, so only the first {ready.content.length.toLocaleString("en-IN")} characters
+                were kept.
+              </span>
+            </p>
+          )}
+        </div>
       )}
     </div>
   );

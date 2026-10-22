@@ -45,14 +45,25 @@ async function handle(
     }
     const result = await backendApi(
       `/student/${path.join("/")}${req.nextUrl.search}`,
-      { method: req.method as "GET" | "POST", body },
+      { method: req.method as "GET" | "POST", body,
+        // A full plan has a 60 s provider deadline plus authenticated database
+        // reads and persistence. Other AI work retains its 75 s transport.
+        timeoutMs: req.method === "POST" && path[0] === "interviews" && path.length === 1
+          ? 85000
+          : (path[0] === "conversations" && path[2] === "message") ||
+              (req.method === "POST" && path[0] === "sessions" && ["answer", "evaluate", "coach"].includes(path[2]))
+            ? 75000 : undefined,
+      },
     );
     return json(result);
   } catch (error) {
+    if (process.env.NODE_ENV === "development" && error instanceof CampusError)
+      console.warn("Student API request failed", { status: error.status, code: error.code });
     if (error instanceof Error && error.message.includes("NEXT_REDIRECT"))
       return json({ error: "Please sign in again." }, 401);
     return json(
       {
+        code: error instanceof CampusError ? error.code : undefined,
         error:
           error instanceof CampusError
             ? error.message

@@ -28,6 +28,16 @@ test("valid API data is preserved", async () => {
   assert.deepEqual(await readCampusResponse(Response.json({ data: [] })), { data: [] });
 });
 
+test("AI timeout and output-limit guidance reaches the interview draft", async () => {
+  for (const [code, status, message] of [
+    ["AI_TIMEOUT", 504, "The AI provider took too long to respond. Please retry; your draft is kept."],
+    ["AI_OUTPUT_LIMIT", 502, "The AI response stopped before the plan was complete. Your draft is kept."],
+  ] as const) {
+    await assert.rejects(readCampusResponse(Response.json({ error: { code, message } }, { status })),
+      (error: unknown) => error instanceof CampusError && error.code === code && error.status === status && error.message === message);
+  }
+});
+
 test("authorization and rate-limit responses keep their status without leaking response details", async () => {
   for (const status of [403, 429, 500]) {
     await assert.rejects(

@@ -882,3 +882,23 @@ html:has(.po-shell) {
 .po-hiring progress { width: 100%; height: 8px; margin-top: 10px; accent-color: #2f7a55; }
 .po-checks { border: 0; padding: 0; margin: 4px 0 12px; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 6px 14px; }
 .po-checks legend { font-size: 12px; margin-bottom: 6px; }
+/* ---- Assessment intelligence ---- */
+.po-tool-draft h2{display:flex;align-items:center;gap:10px}.po-tool-draft>p{margin:0;opacity:.8;font-size:13px}.po-tool-draft[aria-busy="true"]{opacity:.85}.po-tool-risk{color:#ce354b}
+/* The light-theme red is about 3:1 on dark surfaces; this keeps 4.5:1. */
+.po-dark .po-tool-risk,.po-dark .po-tool-error{color:#f06a6d}
+
+/* Drive PDF import (new drive) */
+.po-import h2 { margin: 0 0 6px; font-size: 16px; }
+.po-import-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.po-import-row input[type="file"] { font-size: 12px; max-width: 100%; }
+.po-import-row .erp-secondary { gap: 6px; }
+.po-import-review { margin-top: 10px; display: grid; gap: 10px; font-size: 13px; }
+.po-import-warnings { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
+.po-import-warnings li { display: flex; gap: 8px; align-items: flex-start; padding: 8px 10px; border-radius: 4px; border: 1px solid #e7c27a; background: #fbf3e2; color: #6f4708; font-size: 12px; line-height: 1.5; }
+.po-dark .po-import-warnings li { border-color: #6b5426; background: #2c261a; color: #e9b866; }
+.po-import-warnings svg { flex: none; margin-top: 2px; }
+.po-import-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 16px; margin: 0; }
+.po-import-fields div { padding: 8px 0; border-bottom: 1px solid var(--erp-border); min-width: 0; }
+.po-import-fields dt { font-size: 11px; color: var(--erp-muted); }
+.po-import-fields dd { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; max-height: 9em; overflow: auto; }
+.po-import-text { max-height: 260px; overflow: auto; white-space: pre-wrap; font-size: 11px; padding: 10px; background: var(--po-highlight); border-radius: 4px; }

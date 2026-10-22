@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { PageTitle, Panel, Metric, Empty, DateLabel, Progress } from "./UI";
+import { DateLabel, Progress } from "./UI";
+import { ArrowRight, ArrowUpRight, Mic, Sparkles, MessageSquare, CalendarDays, Check, FileText } from "lucide-react";
 import type { Notice, OfficialStudent } from "../lib/types";
-import { academicStanding, deadlineLabel, readinessChecklist, statusText } from "../lib/progress";
+import { academicStanding, activitySeries, deadlineLabel, readinessChecklist, statusText, type ActivityDay } from "../lib/progress";
 export type DashboardData = {
   official: OfficialStudent;
   profile: { fullName?: string };
@@ -26,6 +27,16 @@ export type DashboardData = {
   } | null;
   streak: { current: number; best: number };
   activityDates: string[];
+  // Preparation activity per campus day; older backends omit it.
+  activity?: ActivityDay[];
+  pipeline?: {
+    registered: number;
+    inProgress: number;
+    selected: number;
+    placed: number;
+    rejected: number;
+    total: number;
+  };
   schedule: {
     id: string;
     title: string;
@@ -63,370 +74,147 @@ export function ReadinessRing({ data }: { data: DashboardData }) {
     </div>
   );
 }
-export function Dashboard({ data }: { data: DashboardData }) {
-  const name = (data.profile.fullName || data.official.full_name).split(" ")[0];
-  const now = new Date(),
-    hour = Number(
-      now.toLocaleString("en-GB", {
-        hour: "2-digit",
-        hour12: false,
-        timeZone: "Asia/Kolkata",
-      }),
-    );
-  const greeting =
-    hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
-  const standing = academicStanding(data.official.cgpa);
-  const checklist = readinessChecklist({
-    onboarded: data.onboarded,
-    resume: !!data.resume,
-    sessions: data.sessions,
-    assessments: data.assessments,
-    applications: data.applications.length,
-  });
+function ActivityStrip({ activity }: { activity: ActivityDay[] }) {
+  const days = activitySeries(activity);
+  const total = days.reduce((sum, day) => sum + day.count, 0);
+  const peak = Math.max(1, ...days.map((day) => day.count));
+  const label = (day: string) =>
+    new Date(day + "T00:00:00Z").toLocaleDateString("en-IN", {
+      timeZone: "UTC",
+      day: "numeric",
+      month: "short",
+    });
   return (
-    <>
-      <section className="st-hero">
-        <div>
-          <p className="st-eyebrow">
-            <i />
-            {now.toLocaleDateString("en-IN", {
-              timeZone: "Asia/Kolkata",
-              weekday: "long",
-              month: "long",
-              day: "numeric",
-            })}
-          </p>
-          <h1>
-            {greeting}, {name}.
-          </h1>
-          <p className="st-muted">
-            Every small step is a step toward your next chapter.
-          </p>
-          <div className="st-actions">
-            <Link href="/student/interview?new=1" className="st-button">
-              Start an interview ↗
-            </Link>
-            <Link
-              href="/student/observation-haki"
-              className="st-button st-button-secondary"
-            >
-              Ask Observation Haki
-            </Link>
-            <Link
-              href="/student/ai-mock-test"
-              className="st-button st-button-secondary"
-            >
-              Take a mock test
-            </Link>
-          </div>
-        </div>
-        <div className="st-recommendation">
-          <p className="st-eyebrow">RECOMMENDED NEXT</p>
-          <h3>{data.next.title}</h3>
-          <p>{data.next.reason}</p>
-          <Link href={data.next.href} className="st-button st-button-secondary">
-            {data.next.label} →
-          </Link>
-        </div>
-      </section>
-      <div className="st-metrics">
-        <Metric
-          label="Completed interviews"
-          value={data.sessions}
-          note={`${data.plans} saved interview plans`}
-        />
-        <Metric
-          label="Completed assessments"
-          value={data.assessments}
-          note="Completed attempts, not generated tests"
-        />
-        <Metric
-          label="Preparation streak"
-          value={
-            data.streak.current ? `${data.streak.current} days` : "Start today"
-          }
-          note={`Best recorded streak: ${data.streak.best} days`}
-        />
-        <Metric
-          label="Official CGPA"
-          value={standing.value}
-          note={
-            data.academicEligibility === null && standing.eligible === null
-              ? "Academic data unavailable"
-              : standing.note
-          }
-        />
+    <div className="st-spark-wrap">
+      <div className="st-spark-head">
+        <span>Last 14 days</span>
+        <small>
+          {total
+            ? `${total} completed ${total === 1 ? "activity" : "activities"}`
+            : "No completed activity yet"}
+        </small>
       </div>
-      <div className="st-two-col">
-        <div>
-          <Panel
-            title="Your preparation, in perspective."
-            subtitle="A useful signal. A clearer next step."
+      <ol
+        className="st-spark"
+        aria-label={`Completed interviews, assessments and resume reports per day over the last 14 days: ${total} in total`}
+      >
+        {days.map((day) => (
+          <li
+            key={day.day}
+            title={`${label(day.day)}: ${day.count}`}
+            className={day.count ? "is-active" : ""}
           >
-            <div
-              className="st-two-col"
-              style={{
-                gridTemplateColumns: "170px minmax(0,1fr)",
-                alignItems: "center",
-              }}
-            >
-              <ReadinessRing data={data} />
-              <div>
-                {data.sessions ? (
-                  <>
-                    {Object.entries(data.skills)
-                      .filter(([key]) => key !== "overall")
-                      .map(([key, value]) => (
-                        <Progress
-                          key={key}
-                          label={
-                            key === "accuracy"
-                              ? "Technical & business"
-                              : key[0].toUpperCase() + key.slice(1)
-                          }
-                          value={value}
-                        />
-                      ))}
-                    <Link href="/student/readiness" className="st-muted">
-                      Explore your readiness ↗
-                    </Link>
-                  </>
-                ) : (
-                  <Empty
-                    title="Your baseline starts with one interview."
-                    href="/student/interview"
-                    label="Create your first interview"
-                  >
-                    Complete an interview to see preparation scores and useful
-                    coaching.
-                  </Empty>
-                )}
-              </div>
-            </div>
-            <p className="st-muted" style={{ marginTop: 18 }}>
-              {data.basis}
-            </p>
-          </Panel>
-          <Panel
-            title="Next 48 hours"
-            subtitle="Your real calendar, with room for preparation."
-          >
-            {data.schedule.length ? (
-              <div className="st-list">
-                {data.schedule.map((event) => (
-                  <div className="st-list-row" key={event.id}>
-                    <div>
-                      <span className="st-tag">{event.kind}</span>
-                      <p>{event.title}</p>
-                      <small>{event.location || "Location not added"}</small>
-                    </div>
-                    <small>
-                      <DateLabel value={event.starts_at} />
-                    </small>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <Empty
-                title="A little breathing room."
-                href="/student/timetable"
-                label="Plan your week"
-              >
-                No scheduled events in the next 48 hours. Add a focused
-                preparation session.
-              </Empty>
-            )}
-          </Panel>
-          <Panel
-            title="Deadline radar"
-            subtitle="Opportunities worth a closer look."
-          >
-            {data.deadlines.length ? (
-              data.deadlines.map((drive) => (
-                <div className="st-list-row" key={drive.id}>
-                  <div>
-                    <p>{drive.company}</p>
-                    <small>
-                      {drive.title} · Closes{" "}
-                      {String(drive.registration_deadline).slice(0, 10)}
-                    </small>
-                    <span
-                      className={`st-chip st-chip-${deadlineLabel(drive.registration_deadline).tone}`}
-                    >
-                      {deadlineLabel(drive.registration_deadline).text}
-                    </span>
-                  </div>
-                  <Link
-                    className="st-button st-button-secondary"
-                    href={`/student/placement?drive=${drive.id}`}
-                  >
-                    Review ↗
-                  </Link>
-                </div>
-              ))
-            ) : (
-              <Empty
-                title="No upcoming drive deadlines."
-                href="/student/placement"
-                label="Browse opportunities"
-              >
-                Published opportunities for your batch will appear here.
-              </Empty>
-            )}
-          </Panel>
-        </div>
-        <div>
-          {checklist.done < checklist.steps.length && (
-            <Panel
-              title="Get placement-ready"
-              subtitle={`${checklist.done} of ${checklist.steps.length} steps done`}
-            >
-              <progress
-                className="st-checklist-progress"
-                aria-label="Placement readiness steps completed"
-                max={100}
-                value={checklist.percent}
-              />
-              <ol className="st-checklist">
-                {checklist.steps.map((step) => (
-                  <li key={step.key} className={step.done ? "is-done" : ""}>
-                    <span aria-hidden="true">{step.done ? "✓" : ""}</span>
-                    {step.done ? (
-                      <div>
-                        <p>{step.title}</p>
-                        <small>Done</small>
-                      </div>
-                    ) : (
-                      <Link href={step.href}>
-                        <p>{step.title} ↗</p>
-                        <small>{step.hint}</small>
-                      </Link>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            </Panel>
-          )}
-          <Panel
-            title="Your placement journey"
-            subtitle={`${data.applications.length} recent applications`}
-          >
-            <div className="st-pipeline">
-              {[
-                ["Applied", ["registered"]],
-                ["In progress", ["in-progress"]],
-                ["Selected", ["selected", "placed"]],
-                ["Rejected", ["rejected"]],
-              ].map(([title, states]) => (
-                <div key={String(title)}>
-                  <strong>
-                    {
-                      data.applications.filter((item) =>
-                        (states as string[]).includes(item.status),
-                      ).length
-                    }
-                  </strong>
-                  <span>{title}</span>
-                </div>
-              ))}
-            </div>
-            {data.applications.length ? (
-              data.applications.slice(0, 5).map((item) => (
-                <Link
-                  className="st-list-row"
-                  key={item.id}
-                  href={`/student/placement?drive=${item.drive_id}`}
-                >
-                  <div>
-                    <p>{item.company}</p>
-                    <small>{item.title}</small>
-                  </div>
-                  <span className="st-tag">{statusText(item.status)}</span>
-                </Link>
-              ))
-            ) : (
-              <p className="st-muted">
-                Your applications will appear after you register for a drive.
-              </p>
-            )}
-          </Panel>
-          <Panel title="Make preparation a habit">
-            <div className="st-list">
-              {[
-                [
-                  "Interview practice",
-                  `${data.sessions} completed`,
-                  "/student/interview",
-                ],
-                [
-                  "Assessments",
-                  `${data.assessments} completed`,
-                  "/student/assessments",
-                ],
-                [
-                  "Resume intelligence",
-                  data.resume ? "Report ready" : "Ready when you are",
-                  "/student/resume",
-                ],
-              ].map(([title, note, href]) => (
-                <Link key={title} className="st-list-row" href={href}>
-                  <div>
-                    <p>{title}</p>
-                    <small>{note}</small>
-                  </div>
-                  <span>↗</span>
-                </Link>
-              ))}
-            </div>
-          </Panel>
-          <Panel title="One useful insight">
-            <span className="st-tag">OBSERVATION HAKI</span>
-            <h3 style={{ margin: "15px 0 8px" }}>{data.next.title}</h3>
-            <p className="st-muted">{data.next.reason}</p>
-            <Link
-              href={data.next.href}
-              className="st-button st-button-secondary"
-              style={{ marginTop: 15 }}
-            >
-              Take the next step ↗
-            </Link>
-          </Panel>
-          <Panel title="Campus signals">
-            {data.notifications.length ? (
-              data.notifications.map((item) => (
-                <div key={item.id} className="st-list-row">
-                  <div>
-                    {item.href ? (
-                      <Link href={item.href}>{item.title} ↗</Link>
-                    ) : (
-                      <p>{item.title}</p>
-                    )}
-                    <small>{item.body}</small>
-                  </div>
-                  {!item.read_at && <span className="st-online-dot" />}
-                </div>
-              ))
-            ) : (
-              <p className="st-muted">
-                You’re all caught up. New campus updates will appear here.
-              </p>
-            )}
-          </Panel>
-        </div>
+            <span
+              style={{ height: `${day.count ? Math.max(18, (day.count / peak) * 100) : 6}%` }}
+            />
+            <small className="st-visually-hidden">
+              {label(day.day)}: {day.count}
+            </small>
+          </li>
+        ))}
+      </ol>
+      <div className="st-spark-axis" aria-hidden="true">
+        <small>{label(days[0].day)}</small>
+        <small>Today</small>
       </div>
-      <div className="st-action-dock">
+    </div>
+  );
+}
+export function Dashboard({ data }: { data: DashboardData }) {
+  const words = (data.profile.fullName || data.official.full_name).trim().split(/\s+/);
+  const first = words.find((word) => word.replace(/\./g, "").length > 1) || words[0] || "there";
+  const name = first === first.toUpperCase() ? first[0] + first.slice(1).toLowerCase() : first;
+  const now = new Date();
+  const hour = Number(now.toLocaleString("en-GB", { hour: "2-digit", hour12: false, timeZone: "Asia/Kolkata" }));
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+  const standing = academicStanding(data.official.cgpa);
+  const checklist = readinessChecklist({ onboarded: data.onboarded, resume: !!data.resume, sessions: data.sessions, assessments: data.assessments, applications: data.pipeline?.total ?? data.applications.length });
+  const pipeline = data.pipeline ? [
+    ["Registered", data.pipeline.registered], ["In progress", data.pipeline.inProgress],
+    ["Selected", data.pipeline.selected], ["Placed", data.pipeline.placed], ["Rejected", data.pipeline.rejected],
+  ] : ["registered", "in-progress", "selected", "placed", "rejected"].map((status) => [statusText(status), data.applications.filter((item) => item.status === status).length]);
+  return (
+    <div className="st-home">
+      <header className="st-home-welcome">
+        <p className="st-home-date">{now.toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", weekday: "long", month: "long", day: "numeric" })}</p>
+        <h1>{greeting}, {name}.</h1>
+        <p>A little focus. A little practice. A step closer.</p>
+      </header>
+
+      <nav className="st-home-launcher" aria-label="Start preparing">
         {[
-          ["AI Interview", "interview"],
-          ["Career Report", "resume"],
-          ["Practice", "assessments"],
-          ["Observation Haki", "observation-haki"],
-        ].map(([label, href]) => (
-          <Link key={href} href={`/student/${href}`}>
-            {label}
-            <span>↗</span>
+          { title: "Practise an interview", note: "Build confidence in your answers", href: "/student/interview?view=create", Icon: Mic },
+          { title: "Take a mock test", note: "Give your knowledge a workout", href: "/student/ai-mock-test", Icon: Sparkles },
+          { title: "Ask Observation Haki", note: "Think through your next move", href: "/student/observation-haki", Icon: MessageSquare },
+        ].map(({ title, note, href, Icon }) => (
+          <Link key={href} href={href}>
+            <span className="st-home-launch-icon"><Icon size={20} strokeWidth={1.6} /></span>
+            <strong>{title}</strong><span>{note}</span><ArrowUpRight className="st-home-launch-arrow" size={16} />
           </Link>
         ))}
+      </nav>
+
+      <section className="st-home-next" aria-labelledby="home-next-title">
+        <span className="st-home-next-icon"><FileText size={22} strokeWidth={1.5} /></span>
+        <div><p className="st-home-kicker">A good next step</p><h2 id="home-next-title">{data.next.title}</h2><p>{data.next.reason}</p></div>
+        <Link className="st-home-primary" href={data.next.href}>{data.next.label}<ArrowRight size={16} /></Link>
+      </section>
+
+      <dl className="st-home-stats" aria-label="Your progress at a glance">
+        {[
+          { label: "Interviews completed", value: data.sessions, note: data.plans + " saved plans" },
+          { label: "Assessments completed", value: data.assessments, note: "Completed attempts" },
+          { label: "Day preparation streak", value: data.streak.current, note: `Best streak: ${data.streak.best} ${data.streak.best === 1 ? "day" : "days"}` },
+          { label: "Official CGPA", value: standing.value, note: standing.note },
+        ].map((item) => <div key={item.label} title={item.note}><dt>{item.label}</dt><dd>{item.value}</dd></div>)}
+      </dl>
+
+      <div className="st-home-columns">
+        <div className="st-home-main">
+          <section className="st-home-section" aria-labelledby="home-preparation-title">
+            <header><h2 id="home-preparation-title">Your preparation</h2><Link href="/student/readiness">View details<ArrowUpRight size={14} /></Link></header>
+            <div className="st-home-readiness">
+              <ReadinessRing data={data} />
+              <div>{data.sessions ? Object.entries(data.skills).filter(([key]) => key !== "overall").map(([key, value]) => <Progress key={key} label={key === "accuracy" ? "Technical & business" : key[0].toUpperCase() + key.slice(1)} value={value} />) : <><h3>Your baseline starts here.</h3><p>Complete an interview to see your strengths and what to work on next.</p><Link className="st-home-text-link" href="/student/interview?view=create">Create your first interview<ArrowRight size={14} /></Link></>}</div>
+            </div>
+            {data.activity && <ActivityStrip activity={data.activity} />}
+            <p className="st-home-fineprint">{data.basis}</p>
+            {checklist.done < checklist.steps.length && <details className="st-home-checklist" open={!data.onboarded}>
+              <summary><span>Make the most of your workspace</span><small>{checklist.done} of {checklist.steps.length} complete</small></summary>
+              <ol>{checklist.steps.map((step) => <li key={step.key} data-done={step.done}>
+                <span className="st-home-step-mark" aria-hidden="true">{step.done && <Check size={12} />}</span>
+                {step.done ? <span>{step.title}<small>Completed</small></span> : <Link href={step.href}>{step.title}<small>{step.hint}</small></Link>}
+                {!step.done && <ArrowUpRight size={14} aria-hidden="true" />}
+              </li>)}</ol>
+            </details>}
+          </section>
+
+          <section className="st-home-section st-home-applications" aria-labelledby="home-applications-title">
+            <header><h2 id="home-applications-title">Placement journey</h2><Link href="/student/placement">Explore drives<ArrowUpRight size={14} /></Link></header>
+            <dl className="st-home-pipeline">{pipeline.map(([label, count]) => <div key={String(label)}><dt>{label}</dt><dd>{count}</dd></div>)}</dl>
+            {data.applications.length ? <div className="st-home-rows">{data.applications.slice(0, 5).map((item) => <Link key={item.id} href={`/student/placement?drive=${item.drive_id}`}><div><strong>{item.company}</strong><span>{item.title}</span></div><small className="st-tag">{statusText(item.status)}</small></Link>)}</div> : <p className="st-home-quiet">Your applications will appear here when you register for a placement drive.</p>}
+          </section>
+        </div>
+
+        <aside className="st-home-aside" aria-label="Upcoming events and campus updates">
+          <section className="st-home-section" aria-labelledby="home-upcoming-title">
+            <header><h2 id="home-upcoming-title">Coming up</h2><Link href="/student/timetable" aria-label="View timetable"><CalendarDays size={17} strokeWidth={1.5} /></Link></header>
+            {data.schedule.length > 0 && <div className="st-home-rows">{data.schedule.slice(0, 4).map((event) => <article key={event.id}><span className="st-home-kicker">{event.kind}</span><h3>{event.title}</h3><div className="st-home-event-time"><DateLabel value={event.starts_at} /></div>{event.location && <p>{event.location}</p>}</article>)}</div>}
+            {data.deadlines.length > 0 && <div className="st-home-deadlines"><h3>Drive deadlines</h3>{data.deadlines.slice(0, 4).map((drive) => <Link key={drive.id} href={`/student/placement?drive=${drive.id}`}><div><strong>{drive.company}</strong><span>{drive.title}</span></div><span className={`st-chip st-chip-${deadlineLabel(drive.registration_deadline).tone}`}>{deadlineLabel(drive.registration_deadline).text}</span></Link>)}</div>}
+            {!data.schedule.length && !data.deadlines.length && <div className="st-home-empty"><CalendarDays size={24} strokeWidth={1.3} /><h3>A little room to focus.</h3><p>No upcoming events or drive deadlines to show. Make some time for your next practice session.</p></div>}
+            <Link className="st-home-text-link" href="/student/timetable">Plan your week<ArrowRight size={14} /></Link>
+            {(data.schedule.length > 4 || data.deadlines.length > 4) && <Link className="st-home-text-link" href="/student/placement">All placement opportunities<ArrowUpRight size={14} /></Link>}
+          </section>
+
+          <section className="st-home-section st-home-resume" aria-labelledby="home-resume-title">
+            <header><h2 id="home-resume-title">Your career toolkit</h2><FileText size={17} strokeWidth={1.5} /></header>
+            <p>{data.resume ? "Your resume report is ready. Revisit your role fit and recommended improvements." : "Bring your experience into focus with a resume and role-fit report."}</p>
+            <Link className="st-home-text-link" href="/student/resume">{data.resume ? "View career report" : "Explore career report"}<ArrowRight size={14} /></Link>
+          </section>
+
+          {data.notifications.length > 0 && <section className="st-home-section" aria-labelledby="home-updates-title"><header><h2 id="home-updates-title">Campus updates</h2></header><div className="st-home-rows">{data.notifications.map((notice) => <article key={notice.id}>{notice.href ? <Link href={notice.href}><h3>{notice.title}</h3></Link> : <h3>{notice.title}</h3>}<p>{notice.body}</p>{!notice.read_at && <span className="st-home-unread">Unread</span>}</article>)}</div></section>}
+        </aside>
       </div>
-    </>
+    </div>
   );
 }

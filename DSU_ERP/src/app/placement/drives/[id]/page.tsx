@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { officerSession, placementRead } from "@/features/placement/lib/server";
 import { queryFrom, text, type Report, type Row } from "@/features/placement/lib/types";
 import { DriveEditor } from "@/features/placement/components/DriveEditor";
+import { DriveCreator } from "@/features/placement/components/DriveImport";
 import { DriveCandidates } from "@/features/placement/components/DriveCandidates";
 import { DeleteRecord } from "@/features/placement/components/Controls";
 import { Metrics, Filters, Pagination } from "@/features/placement/components/UI";
@@ -43,13 +44,11 @@ export default async function DrivePage({
         </Link>
         <h1>Create a placement drive.</h1>
         {companies.rows.length ? (
-          <section className="erp-panel">
-            <DriveEditor
-              companies={companies.rows}
-              options={companies.options}
-              defaultCompany={preselected}
-            />
-          </section>
+          <DriveCreator
+            companies={companies.rows}
+            options={companies.options}
+            defaultCompany={preselected}
+          />
         ) : (
           <p>
             Add an active recruiting company before creating a drive.{" "}

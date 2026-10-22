@@ -1,5 +1,12 @@
 "use client";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
+import {
+  highRiskOf,
+  minutesOf,
+  resultsCsv,
+  type ResultRow,
+} from "../lib/assessment-results";
 export type AssignedTest = {
   id: string;
   title: string;
@@ -7,7 +14,12 @@ export type AssignedTest = {
   published: boolean;
   opens_at: string;
   closes_at: string;
-  config: { durationMinutes: number };
+  count?: number;
+  config: {
+    durationMinutes: number;
+    difficulty?: string;
+    revealAnswers?: "after_close" | "immediately";
+  };
 };
 export type CampusEvent = {
   id: string;
@@ -35,14 +47,14 @@ type Question = {
   marks: number;
   explanation: string;
 };
-type Result = {
-  id: string;
-  identity: { name: string; usn: string };
-  status: string;
-  started_at: string;
-  result: { percentage: number; score: number; maximum: number } | null;
-  integrity: unknown[];
-};
+type Result = ResultRow & { id: string };
+// A fixed zone renders the same text on the server and in the browser.
+const ist = (value: string) =>
+  new Date(value).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
 const blank = (): Question => ({
   section: "Placement preparation",
   type: "mcq",
@@ -64,42 +76,15 @@ async function api<T>(path: string, body?: unknown): Promise<T> {
   return json.data;
 }
 function exportResults(rows: Result[]) {
-  const cell = (v: unknown) =>
-    '"' +
-    String(v ?? "")
-      .replace(/^[=+@\t\r-]/, "'$&")
-      .replaceAll('"', '""') +
-    '"';
-  const data = [
-    [
-      "USN",
-      "Name",
-      "Status",
-      "Score",
-      "Maximum",
-      "Percentage",
-      "Browser events",
-    ],
-    ...rows.map((r) => [
-      r.identity.usn,
-      r.identity.name,
-      r.status,
-      r.result?.score,
-      r.result?.maximum,
-      r.result?.percentage,
-      r.integrity.length,
-    ]),
-  ]
-    .map((row) => row.map(cell).join(","))
-    .join("\r\n");
   const url = URL.createObjectURL(
-    new Blob([data], { type: "text/csv;charset=utf-8" }),
+    new Blob([resultsCsv(rows)], { type: "text/csv;charset=utf-8" }),
   );
   const a = document.createElement("a");
   a.href = url;
   a.download = "assigned-test-results.csv";
   a.click();
-  URL.revokeObjectURL(url);
+  // Revoking in the same task can cancel the download in some browsers.
+  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 export function StudentTools({
   initialTests,
@@ -120,7 +105,8 @@ export function StudentTools({
     [error, setError] = useState(""),
     [success, setSuccess] = useState(""),
     [results, setResults] = useState<Result[] | null>(null),
-    [resultTitle, setResultTitle] = useState("");
+    [resultTitle, setResultTitle] = useState(""),
+    [drafting, setDrafting] = useState(false);
   const change = (index: number, patch: Partial<Question>) =>
     setQuestions((rows) =>
       rows.map((q, i) => (i === index ? { ...q, ...patch } : q)),
@@ -137,6 +123,44 @@ export function StudentTools({
       setBusy(false);
     }
   };
+  // AI drafts are added to the editor below for review; nothing is saved
+  // or published until the officer saves the assessment.
+  const draftQuestions = async (form: HTMLFormElement) => {
+    const f = new FormData(form);
+    setDrafting(true);
+    setError("");
+    setSuccess("");
+    try {
+      const { questions: drafts } = await api<{ questions: Question[] }>(
+        "assessments/generate",
+        {
+          subject: f.get("subject"),
+          portions: f.get("draftPortions"),
+          topic: f.get("topic"),
+          difficulty: f.get("draftDifficulty"),
+          questionType: f.get("questionType"),
+          count: Number(f.get("count")),
+          marks: Number(f.get("marks")),
+          instructions: f.get("instructions"),
+        },
+      );
+      const keepExisting = questions.some((q) => q.question.trim());
+      if ((keepExisting ? questions.length : 0) + drafts.length > 50)
+        throw Error(
+          "Adding these drafts would exceed 50 questions. Remove some questions first.",
+        );
+      setQuestions((rows) =>
+        keepExisting ? [...rows, ...drafts] : drafts,
+      );
+      setSuccess(
+        `${drafts.length} AI-drafted questions were added below. Review each question, option, answer key and explanation before saving. Nothing is published until you save.`,
+      );
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setDrafting(false);
+    }
+  };
   const createTest = (form: HTMLFormElement) =>
     action(async () => {
       const f = new FormData(form);
@@ -150,6 +174,8 @@ export function StudentTools({
         durationMinutes: Number(f.get("durationMinutes")),
         proctored: f.get("proctored") === "on",
         published: f.get("published") === "on",
+        difficulty: f.get("difficulty"),
+        revealAnswers: f.get("revealAnswers"),
         questions: questions.map((q) => ({
           ...q,
           options: q.type === "mcq" ? q.options : [],
@@ -239,6 +265,86 @@ export function StudentTools({
       {tab === "Assessments" && (
         <>
           <form
+            className="po-tool-form po-tool-draft"
+            aria-busy={drafting}
+            onSubmit={(e) => {
+              e.preventDefault();
+              void draftQuestions(e.currentTarget);
+            }}
+          >
+            <h2>
+              <Sparkles size={18} aria-hidden="true" /> Draft questions with AI
+            </h2>
+            <p>
+              Drafts appear in the assessment editor for you to check and
+              edit. They are validated for answer keys but are not saved or
+              published until you save the assessment.
+            </p>
+            <div className="po-tool-fields">
+              <label>
+                Subject
+                <input name="subject" required minLength={2} maxLength={200} />
+              </label>
+              <label>
+                Topic
+                <input name="topic" required minLength={2} maxLength={300} />
+              </label>
+              <label>
+                Difficulty
+                <select name="draftDifficulty" defaultValue="medium">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                </select>
+              </label>
+              <label>
+                Question type
+                <select name="questionType" defaultValue="mcq">
+                  <option value="mcq">Multiple choice</option>
+                  <option value="short">Written answer</option>
+                  <option value="mixed">Mixed</option>
+                </select>
+              </label>
+              <label>
+                Number of questions (1–20)
+                <input
+                  name="count"
+                  type="number"
+                  min={1}
+                  max={20}
+                  defaultValue={5}
+                  required
+                />
+              </label>
+              <label>
+                Marks per question
+                <input
+                  name="marks"
+                  type="number"
+                  min={1}
+                  max={10}
+                  defaultValue={1}
+                  required
+                />
+              </label>
+            </div>
+            <label>
+              Portions to cover
+              <textarea name="draftPortions" maxLength={2000} />
+            </label>
+            <label>
+              Instructions for the drafts
+              <textarea
+                name="instructions"
+                maxLength={2000}
+                placeholder="For example: use Indian business contexts and avoid negative marking language."
+              />
+            </label>
+            <button className="erp-secondary" disabled={drafting || busy}>
+              {drafting ? "Drafting questions…" : "Draft questions"}
+            </button>
+          </form>
+          <form
             className="po-tool-form"
             onSubmit={(e) => {
               e.preventDefault();
@@ -283,6 +389,24 @@ export function StudentTools({
                 Closes at · local time
                 <input name="closesAt" type="datetime-local" required />
               </label>
+              <label>
+                Difficulty
+                <select name="difficulty" defaultValue="mixed">
+                  <option value="easy">Easy</option>
+                  <option value="medium">Medium</option>
+                  <option value="hard">Hard</option>
+                  <option value="mixed">Mixed</option>
+                </select>
+              </label>
+              <label>
+                Answer release
+                <select name="revealAnswers" defaultValue="after_close">
+                  <option value="after_close">
+                    After the test closes (recommended)
+                  </option>
+                  <option value="immediately">Right after each submission</option>
+                </select>
+              </label>
             </div>
             <label>
               Portions covered
@@ -305,9 +429,16 @@ export function StudentTools({
                     Answer format
                     <select
                       value={q.type}
-                      onChange={(e) =>
-                        change(i, { type: e.target.value as Question["type"] })
-                      }
+                      onChange={(e) => {
+                        const type = e.target.value as Question["type"];
+                        change(i, {
+                          type,
+                          // A written draft switched to MCQ needs option fields.
+                          ...(type === "mcq" && q.options.length < 2
+                            ? { options: ["", "", "", ""], correctIndex: 0 }
+                            : {}),
+                        });
+                      }}
                     >
                       <option value="mcq">Multiple choice</option>
                       <option value="short">Written answer</option>
@@ -437,12 +568,20 @@ export function StudentTools({
                 <div>
                   <h3>{t.title}</h3>
                   <p>
-                    Batch {t.batch} · {t.config.durationMinutes} min ·{" "}
-                    {t.published ? "Published" : "Draft"}
+                    Batch {t.batch} · {t.config.durationMinutes} min
+                    {t.count ? ` · ${t.count} questions` : ""}
+                    {t.config.difficulty && t.config.difficulty !== "assigned"
+                      ? ` · ${t.config.difficulty}`
+                      : ""}{" "}
+                    · {t.published ? "Published" : "Draft"}
+                  </p>
+                  <p>
+                    {t.config.revealAnswers === "immediately"
+                      ? "Answers shown right after submission"
+                      : "Answers released after the test closes"}
                   </p>
                   <small>
-                    {new Date(t.opens_at).toLocaleString("en-IN")} –{" "}
-                    {new Date(t.closes_at).toLocaleString("en-IN")}
+                    {ist(t.opens_at)} – {ist(t.closes_at)} IST
                   </small>
                 </div>
                 <div className="erp-actions">
@@ -512,17 +651,26 @@ export function StudentTools({
               </button>
               <p>
                 Browser events are observations, not proof of misconduct.
+                High-risk events are fullscreen exits and clipboard attempts.
                 Showing up to 100 most recent attempts.
               </p>
               <div className="erp-table-scroll">
                 <table className="erp-table">
                   <thead>
                     <tr>
-                      {["USN", "Name", "Status", "Score", "Browser events"].map(
-                        (x) => (
-                          <th key={x}>{x}</th>
-                        ),
-                      )}
+                      {[
+                        "USN",
+                        "Name",
+                        "Status",
+                        "Marks",
+                        "Duration",
+                        "Browser events",
+                        "High-risk",
+                      ].map((x) => (
+                        <th key={x} scope="col">
+                          {x}
+                        </th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody>
@@ -533,10 +681,20 @@ export function StudentTools({
                         <td>{r.status}</td>
                         <td>
                           {r.result
-                            ? r.result.score + " / " + r.result.maximum
+                            ? `${r.result.score} / ${r.result.maximum} (${r.result.percentage}%)`
                             : "Pending"}
                         </td>
+                        <td>{minutesOf(r) ? `${minutesOf(r)} min` : "—"}</td>
                         <td>{r.integrity.length}</td>
+                        <td>
+                          {highRiskOf(r) ? (
+                            <strong className="po-tool-risk">
+                              {highRiskOf(r)}
+                            </strong>
+                          ) : (
+                            0
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

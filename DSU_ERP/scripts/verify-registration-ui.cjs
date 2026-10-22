@@ -55,7 +55,7 @@ const mocks = {
     });
     const css =
       "*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}body{font-family:Arial}a{color:inherit;text-decoration:none}button,input,textarea,select{font:inherit}button{cursor:pointer}:root{--mono:monospace}" +
-      fs.readFileSync("src/app/student/student.css", "utf8");
+      fs.readFileSync("src/app/student/student.css", "utf8") + fs.readFileSync("src/app/student/workspace-polish.css", "utf8") + fs.readFileSync("src/app/student/interview/interview-workspace.css", "utf8");
     server = http.createServer((req, res) => {
       if (req.url === "/bundle.js") {
         res.setHeader("Content-Type", "text/javascript");

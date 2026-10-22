@@ -57,16 +57,18 @@ export default function PrivacyPolicy() {
       <h2>Microphone and speech</h2>
       <ul>
         <li>
-          The microphone is used only after you press the microphone button. The
-          workspace never listens in the background and never starts recording
-          on page load.
+          The microphone is used after you start voice practice, enable spoken
+          questions with listening, or press a microphone button. It stops when
+          you end recording or leave the page. Proctored interviews request
+          permissions before the session begins.
         </li>
         <li>
-          Speech recognition currently runs through your browser&rsquo;s built-in
-          speech service. Depending on your browser and operating system, that
-          service may transmit audio to the browser vendor for recognition. That
-          processing is governed by your browser vendor&rsquo;s privacy policy,
-          not by this workspace.
+          AI Interview transcribes English speech locally in your browser using
+          a bundled Whisper model. Interview audio is not sent to a transcription
+          service or uploaded to the application. Its spoken questions use
+          installed offline device voices. Other workspace microphone features
+          use the browser&rsquo;s built-in recognition service, which may send
+          audio to the browser vendor under its privacy policy.
         </li>
         <li>
           Audio recordings are not uploaded to this application and are not

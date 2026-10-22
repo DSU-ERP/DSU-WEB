@@ -27,8 +27,15 @@ export const studentRecord = cache(async () => {
 });
 export const studentProfile = cache(async () => {
   try {
-    await requireWorkspace("student");
-    return (await backendApi<{ data: ProfileState }>("/student/profile")).data;
+    // Independent authenticated reads can travel together. Access failures
+    // still take precedence, so role redirects happen before any data renders.
+    const [access, profile] = await Promise.allSettled([
+      requireWorkspace("student"),
+      backendApi<{ data: ProfileState }>("/student/profile"),
+    ]);
+    if (access.status === "rejected") throw access.reason;
+    if (profile.status === "rejected") throw profile.reason;
+    return profile.value.data;
   } catch (error) {
     if (error instanceof CampusError && error.status === 401)
       signInAgain(error);

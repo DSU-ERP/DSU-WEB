@@ -1,6 +1,8 @@
 export type InterviewMedia = {
   camera: MediaStream | null;
   screen: MediaStream | null;
+  displayChecked?: boolean;
+  displays?: EventTarget & { screens: readonly unknown[] };
 };
 const pending = new Map<
   string,
@@ -10,10 +12,10 @@ export function hasLiveInterviewMedia(media: InterviewMedia | null) {
   return (
     !!media?.camera
       ?.getVideoTracks()
-      .some((track) => track.readyState === "live") &&
+      .some((track) => track.readyState === "live" && track.enabled && !track.muted) &&
     !!media.camera
       .getAudioTracks()
-      .some((track) => track.readyState === "live") &&
+      .some((track) => track.readyState === "live" && track.enabled && !track.muted) &&
     !!media.screen
       ?.getVideoTracks()
       .some((track) => track.readyState === "live")
