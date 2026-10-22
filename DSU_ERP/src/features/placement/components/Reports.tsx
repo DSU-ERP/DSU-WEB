@@ -73,8 +73,6 @@ export function ReportFilters({
         defaultValue: section === "offers" ? "true" : "false",
       },
     );
-  if (section === "offers")
-    fields.push({ key: "department", title: "Branch", options: data.options.departments });
   if (section === "tests")
     fields.push(
       { key: "classification", options: ["Basic", "Medium", "Advanced"] },
