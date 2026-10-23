@@ -1,12 +1,20 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+// The student layout reads this request header to apply the skills onboarding
+// gate before any page renders (layouts do not receive the pathname). It is
+// always set here from the URL, so a value sent by the browser never survives.
+const PATHNAME_HEADER = "x-dsu-pathname";
+
 export async function proxy(request: NextRequest) {
+  const path = request.nextUrl.pathname;
+  if (path === "/student" || path.startsWith("/student/")) request.headers.set(PATHNAME_HEADER, path);
+  else request.headers.delete(PATHNAME_HEADER);
   let response = NextResponse.next({ request });
   // Student handlers call userSession(), which verifies the user with Supabase
   // and can refresh cookies itself. Avoid another auth round trip here before
   // every answer, caption-related request and chat message. Pages still refresh
   // in the proxy because Server Components cannot write refreshed cookies.
-  if (request.nextUrl.pathname.startsWith("/student/api/")) {
+  if (path.startsWith("/student/api/")) {
     response.headers.set("Cache-Control", "private, no-store");
     return response;
   }

@@ -22,7 +22,17 @@ await Promise.all(files.map(async (name) => {
   await rename(path + ".part", path);
 }));
 await mkdir(resolve(target, "runtime"), { recursive: true });
-for (const file of ["ort-wasm-simd-threaded.mjs", "ort-wasm-simd-threaded.wasm", "ort-wasm-simd-threaded.asyncify.mjs", "ort-wasm-simd-threaded.asyncify.wasm"])
-  await copyFile(resolve(root, "node_modules/onnxruntime-web/dist", file), resolve(target, "runtime", file));
+for (const file of ["ort-wasm-simd-threaded.mjs", "ort-wasm-simd-threaded.wasm", "ort-wasm-simd-threaded.asyncify.mjs", "ort-wasm-simd-threaded.asyncify.wasm"]) {
+  const source = resolve(root, "node_modules/onnxruntime-web/dist", file);
+  const destination = resolve(target, "runtime", file);
+  // During local development the browser may still hold the generated runtime
+  // open. Do not overwrite a file that is already the current dependency.
+  const [sourceStat, destinationStat] = await Promise.all([
+    stat(source),
+    stat(destination).catch(() => null),
+  ]);
+  if (destinationStat?.size === sourceStat.size) continue;
+  await copyFile(source, destination);
+}
 await writeFile(resolve(target, "ready.json"), JSON.stringify({ model, revision, license: "Apache-2.0", processing: "browser-local" }));
 console.log("Offline interview speech is ready. Audio is processed in the browser; no transcription API is used.");

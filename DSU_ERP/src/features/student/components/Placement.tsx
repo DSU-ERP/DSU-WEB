@@ -447,7 +447,7 @@ export function PlacementBoard({
                     )}
                   <Link
                     className="st-button st-button-secondary"
-                    href={`/student/observation-haki?drive=${selected.id}`}
+                    href={`/student/friday?drive=${selected.id}`}
                   >
                     Compare my profile with this JD ↗
                   </Link>

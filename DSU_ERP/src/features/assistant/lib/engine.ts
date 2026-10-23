@@ -8,13 +8,14 @@ import {
   openRouterKey,
 } from "./config";
 import { FRIDAY_SYSTEM_PROMPT, FRIDAY_VOICE_HINT } from "./prompt";
-import { FRIDAY_TOOLS, runTool, toolLabel } from "./tools";
+import { FRIDAY_TOOLS, createToolContext, runTool, toolLabel } from "./tools";
 import {
   assembleToolCalls,
   explainUpstream,
   upstreamFailure,
   normalizeUsage,
   parseToolArguments,
+  MAX_PROFILE_LINKS,
   providerRouting,
   type ToolCallFragment,
   type Usage,
@@ -37,6 +38,9 @@ export type FridayEvent =
       state: "running" | "done" | "failed";
     }
   | { type: "usage"; usage: Usage }
+  // A student profile resolved by a tool in this turn. The URL is built by
+  // the server from a validated UUID, never from model text.
+  | { type: "profile_link"; id: string; usn: string; name: string; url: string }
   | { type: "done"; text: string }
   | { type: "error"; message: string; recoverable: boolean };
 
@@ -82,6 +86,9 @@ export async function* runFriday(opts: {
 
   let answer = "";
   let usage: Usage | null = null;
+  // Ids returned by tools in this request and the profiles they resolved.
+  const tools = createToolContext();
+  let linked = 0;
 
   for (let iteration = 0; iteration <= MAX_TOOL_ITERATIONS; iteration++) {
     if (opts.signal.aborted) {
@@ -202,8 +209,13 @@ export async function* runFriday(opts: {
 
       const parsed = parseToolArguments(call.function.arguments);
       const result = parsed.ok
-        ? await runTool(call.function.name, parsed.args)
+        ? await runTool(call.function.name, parsed.args, tools)
         : ({ ok: false, error: "The tool arguments were not valid JSON." } as const);
+
+      while (linked < tools.profiles.length && linked < MAX_PROFILE_LINKS) {
+        const p = tools.profiles[linked++];
+        yield { type: "profile_link", id: p.id, usn: p.usn, name: p.name, url: p.url };
+      }
 
       yield {
         type: "tool_status",

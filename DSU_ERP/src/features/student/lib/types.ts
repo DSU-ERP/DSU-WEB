@@ -71,8 +71,8 @@ export const STUDENT_MODULES = [
     icon: "chart",
   },
   {
-    href: "/student/observation-haki",
-    label: "Observation Haki",
+    href: "/student/friday",
+    label: "F.R.I.D.A.Y.",
     purpose: "Your career thinking partner",
     group: "Workspace",
     icon: "chat",
@@ -111,6 +111,13 @@ export const STUDENT_MODULES = [
     purpose: "Turn your experience into a plan",
     group: "Placement kit",
     icon: "file",
+  },
+  {
+    href: "/student/connections",
+    label: "Skills profile",
+    purpose: "Platforms, projects and what officers see",
+    group: "Placement kit",
+    icon: "skills",
   },
   {
     href: "/student/placement",

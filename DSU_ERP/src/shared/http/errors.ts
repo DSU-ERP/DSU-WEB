@@ -1,13 +1,44 @@
+/**
+ * Extra, user-relevant fields some backend errors carry (skills onboarding and
+ * platform connections). Only these keys, with these types, are kept.
+ */
+export type CampusErrorDetails = {
+  missing?: string[];
+  fields?: string[];
+  revision?: number;
+  retryAfterSeconds?: number;
+};
 export class CampusError extends Error {
   constructor(
     public status: number,
     message: string,
     // Machine-readable reason (backend error code or a local diagnosis).
     public code?: string,
+    public details?: CampusErrorDetails,
   ) {
     super(message);
     this.name = "CampusError";
   }
+}
+
+const shortList = (value: unknown) =>
+  Array.isArray(value) && value.length <= 40 && value.every((v) => typeof v === "string" && /^[A-Za-z0-9_.]{1,80}$/.test(v))
+    ? (value as string[])
+    : undefined;
+const wholeNumber = (value: unknown) =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 2147483647 ? value : undefined;
+/** Picks the known extra fields from a backend error body, dropping anything else. */
+export function errorDetails(failure: unknown): CampusErrorDetails | undefined {
+  if (!failure || typeof failure !== "object") return undefined;
+  const raw = failure as Record<string, unknown>;
+  const details: CampusErrorDetails = {};
+  const missing = shortList(raw.missing), fields = shortList(raw.fields);
+  const revision = wholeNumber(raw.revision), retryAfterSeconds = wholeNumber(raw.retryAfterSeconds);
+  if (missing) details.missing = missing;
+  if (fields) details.fields = fields;
+  if (revision !== undefined) details.revision = revision;
+  if (retryAfterSeconds !== undefined) details.retryAfterSeconds = retryAfterSeconds;
+  return Object.keys(details).length ? details : undefined;
 }
 
 const unavailable =
@@ -21,6 +52,12 @@ const safe = new Set([
   "ALREADY_TAKEN", "CODE_UNAVAILABLE", "CODE_REQUIRED", "SESSION_ENDED", "RETRY_UNAVAILABLE",
   "FINISH_FIRST", "ONBOARDING_NOT_ALLOWED", "STUDENT_ACCESS_REQUIRED",
   "PT400", "PT404", "PT409", "PT413", "PT429",
+  // Student skills onboarding and platform connections (written for students).
+  "ONBOARDING_REQUIRED", "ONBOARDING_INCOMPLETE", "GITHUB_APP_NOT_CONFIGURED", "INTEGRATIONS_NOT_CONFIGURED",
+  "PROVIDER_RATE_LIMITED", "PROVIDER_UNAVAILABLE", "GITHUB_TOKEN_INVALID", "FINE_GRAINED_TOKEN_REQUIRED",
+  "OAUTH_EXCHANGE_FAILED", "OAUTH_STATE_INVALID", "GITHUB_ACCOUNT_IN_USE", "GITHUB_AUTH_REQUIRED",
+  "INVALID_PLATFORM_HANDLE", "INVALID_SUBMITTED_FIELDS", "NOT_SYNCABLE", "RECONNECT_REQUIRED", "REFRESH_LIMIT",
+  "INVALID_FEATURED", "SUMMARY_LIMIT",
 ]);
 // Status codes where the backend only sends deliberate, user-facing messages.
 const userFacingStatuses = new Set([400, 404, 409, 413, 422, 429]);
@@ -59,7 +96,7 @@ export async function readCampusResponse<T>(response: Response): Promise<T> {
       known && typeof message === "string" && message.length <= 1000 && !known.startsWith("FST_") &&
       (safe.has(known) || userFacingStatuses.has(response.status))
     )
-      throw new CampusError(response.status, message, known);
+      throw new CampusError(response.status, message, known, errorDetails(failure));
     throw new CampusError(
       response.status,
       response.status === 403

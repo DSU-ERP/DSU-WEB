@@ -175,3 +175,47 @@ export function upstreamFailure(
   if (typeof e.statusCode !== "number") return null;
   return { status: e.statusCode, body: typeof e.body === "string" ? e.body : "" };
 }
+
+const PROFILE_UUID = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i;
+
+/** A student profile the server resolved from tool output in this turn. */
+export type ProfileLink = { id: string; usn: string; name: string; url: string };
+
+/** At most this many profile buttons are shown under one answer. */
+export const MAX_PROFILE_LINKS = 3;
+
+const label = (v: unknown, max: number): string | null => {
+  if (typeof v !== "string") return null;
+  const t = v.replace(/\s+/g, " ").trim();
+  return t && t.length <= max ? t : null;
+};
+
+/**
+ * Build the profile action for a student id taken from a tool result. The URL
+ * is always constructed here from a validated UUID and never taken from model
+ * text, so the button can only open the officer's own student profile page.
+ */
+export function profileLink(input: { id: unknown; usn: unknown; name: unknown }): ProfileLink | null {
+  if (typeof input.id !== "string" || !PROFILE_UUID.test(input.id)) return null;
+  const id = input.id.toLowerCase();
+  const usn = label(input.usn, 50);
+  const name = label(input.name, 200);
+  if (!usn || !name) return null;
+  return { id, usn, name, url: `/placement/students/${id}` };
+}
+
+/**
+ * Strictly validate a profile_link stream event in the browser. Anything that
+ * is not exactly { type, id, usn, name, url } with a UUID id and the matching
+ * /placement/students/<id> URL is rejected.
+ */
+export function parseProfileLink(event: unknown): ProfileLink | null {
+  if (!event || typeof event !== "object" || Array.isArray(event)) return null;
+  const e = event as Record<string, unknown>;
+  if (e.type !== "profile_link") return null;
+  const keys = Object.keys(e).sort().join(",");
+  if (keys !== "id,name,type,url,usn") return null;
+  const link = profileLink({ id: e.id, usn: e.usn, name: e.name });
+  if (!link || e.id !== link.id || e.url !== link.url) return null;
+  return link;
+}

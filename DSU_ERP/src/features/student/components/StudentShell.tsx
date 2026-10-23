@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   PanelLeftClose,
+  CodeXml,
 } from "lucide-react";
 import { signOut } from "@/app/login/actions";
 import { STUDENT_MODULES, type Notice } from "../lib/types";
@@ -38,15 +39,20 @@ const icons = {
   briefcase: BriefcaseBusiness,
   calendar: CalendarDays,
   settings: Settings,
+  skills: CodeXml,
 };
 export function StudentShell({
   name,
   usn,
   children,
+  mode = "full",
 }: {
   name: string;
   usn: string;
   children: React.ReactNode;
+  // "onboarding": skills onboarding is still required, so only the
+  // onboarding flow is reachable and no workspace navigation is shown.
+  mode?: "full" | "onboarding";
 }) {
   const path = usePathname();
   const [theme, setTheme] = useState("light"),
@@ -106,12 +112,50 @@ export function StudentShell({
     }
   };
   const focus = /\/test$|\/session\//.test(path);
+  if (mode === "onboarding") {
+    return (
+      <div className={`st-app st-calm-shell st-${theme} st-si-frame`}>
+        <a className="st-skip" href="#student-content">
+          Skip to content
+        </a>
+        <header className="st-si-frame-bar">
+          <span className="st-brand">
+            <span className="st-brand-mark">
+              D<span />
+            </span>
+            <span>
+              DSU <small>/ STUDENT</small>
+            </span>
+          </span>
+          <div className="st-si-frame-actions">
+            <span className="st-si-frame-name">
+              <strong>{name}</strong>
+              <small>{usn}</small>
+            </span>
+            <button
+              className="st-icon-button"
+              onClick={changeTheme}
+              aria-label={theme === "light" ? "Use dark theme" : "Use light theme"}
+            >
+              {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+            </button>
+            <form action={signOut}>
+              <button className="st-button st-button-secondary">Sign out</button>
+            </form>
+          </div>
+        </header>
+        <main id="student-content" className="st-si-frame-content" tabIndex={-1}>
+          {children}
+        </main>
+      </div>
+    );
+  }
   if (path === "/student/interview" || path.startsWith("/student/interview/")) {
     return <div className={`st-app st-${theme} st-interview-app`}><InterviewShell theme={theme} onTheme={changeTheme}>{children}</InterviewShell></div>;
   }
-  // Haki is its own workspace. Keep the authenticated student layout and
+  // F.R.I.D.A.Y. is its own workspace. Keep the authenticated student layout and
   // theme, while rendering none of the dashboard navigation or page frame.
-  if (path === "/student/observation-haki") {
+  if (path === "/student/friday") {
     return (
       <div className={`st-app st-${theme} st-standalone`}>
         <main id="student-content" className="st-standalone-content" tabIndex={-1}>

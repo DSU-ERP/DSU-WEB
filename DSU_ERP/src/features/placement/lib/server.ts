@@ -4,6 +4,14 @@ import { backendApi } from "@/shared/http/backend";
 import { CampusError } from "@/shared/http/errors";
 import { signInAgain, userSession } from "@/shared/auth/session";
 import type { Json, OfficerSession, Query } from "./types";
+import type {
+  CategoriesResponse,
+  CategoryId,
+  DirectoryQuery,
+  DirectoryResponse,
+  OverviewCharts,
+  StudentIntelligence,
+} from "./intelligence";
 export async function placementRead<T>(
   resource: string,
   query: Query = {},
@@ -63,3 +71,35 @@ export async function renameFridayConversation(
     )
   ).data;
 }
+
+// ---- Student Skills Intelligence (officer reads) ----------------------------
+// Each endpoint validates its query strictly, so callers pass only the keys
+// documented for it. Path segments are always encoded.
+async function officerGet<T>(path: string, query: Record<string, string | undefined> = {}): Promise<T> {
+  const q = new URLSearchParams(
+    Object.entries(query).filter((e): e is [string, string] => !!e[1]),
+  );
+  try {
+    return (await backendApi<{ data: T }>(path + (q.size ? `?${q}` : ""))).data;
+  } catch (error) {
+    if (error instanceof CampusError && error.status === 401) signInAgain(error);
+    throw error;
+  }
+}
+export const placementCategories = (query: { batch?: string; department?: string }) =>
+  officerGet<CategoriesResponse>("/placement/categories", query);
+export const placementRankedStudents = (
+  category: CategoryId,
+  query: DirectoryQuery & { limit?: string; export?: "true" },
+) =>
+  officerGet<DirectoryResponse>(
+    "/placement/categories/" + encodeURIComponent(category) + "/students",
+    query,
+  );
+export const placementOverviewCharts = (query: { batch?: string; department?: string }) =>
+  officerGet<OverviewCharts>("/placement/overview/charts", query);
+export const placementStudentIntelligence = (id: string) =>
+  officerGet<StudentIntelligence>(
+    "/placement/students/" + encodeURIComponent(id) + "/profile",
+    { purpose: "officer" },
+  );

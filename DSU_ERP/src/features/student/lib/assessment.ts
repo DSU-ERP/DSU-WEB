@@ -145,7 +145,7 @@ export function releaseLabel(releaseAt: string | null | undefined): string {
 /** Whether a written answer counts as answered (the server ignores blank text). */
 export const isAnswered = (answer: string | undefined) => !!(answer || "").trim();
 
-/** Prompt that opens Observation Haki on one AI suggestion. */
+/** Prompt that opens student F.R.I.D.A.Y. on one AI suggestion. */
 export function insightPrompt(title: string, suggestion: string, sections: string[] = []): string {
   const focus = [...new Set(sections)].slice(0, 4).join(", ");
   return `From my "${title.slice(0, 120)}" result: ${suggestion.slice(0, 400)}${focus ? ` (sections: ${focus})` : ""}. Coach me through this with practice questions, one at a time.`;

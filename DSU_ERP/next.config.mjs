@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
+import { fileURLToPath } from "node:url";
+
+const appRoot = fileURLToPath(new URL(".", import.meta.url));
+
 const config = {
+  // There is another package-lock.json one directory above this application.
+  // Keep Next's workspace and its development lock inside this actual app.
+  turbopack: { root: appRoot },
+  outputFileTracingRoot: appRoot,
   // Validate production output separately while a development server is running.
   distDir: process.env.DSU_NEXT_DIST_DIR || ".next",
   // The desktop preview opens the app through loopback rather than localhost.

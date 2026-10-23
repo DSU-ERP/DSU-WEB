@@ -8,6 +8,18 @@ const UUID = /^[0-9a-f-]{36}$/i;
 const one = (value: string | string[] | undefined) =>
   typeof value === "string" ? value.trim() : "";
 
+// The full unified profile (academics, skills intelligence and placement
+// record) lives on its own page; the in-place view stays for quick lookups.
+function ProfileLink({ id }: { id: string }) {
+  return (
+    <div className="po-actions po-profile-link">
+      <Link className="erp-primary" href={`/placement/students/${encodeURIComponent(id)}`}>
+        View student profile
+      </Link>
+    </div>
+  );
+}
+
 function SearchBar({ term }: { term: string }) {
   return (
     <form className="po-student-search" action="/placement/student-analytics">
@@ -49,6 +61,7 @@ export default async function StudentAnalytics({
         <p className="erp-eyebrow">DSU / PLACEMENT OFFICER</p>
         <h1>Student analytics</h1>
         <SearchBar term={term} />
+        <ProfileLink id={selected} />
         <StudentProfile student={student} />
       </>
     );
@@ -85,6 +98,7 @@ export default async function StudentAnalytics({
         <p className="po-note">
           One student matches “{term}”. Showing their complete profile.
         </p>
+        <ProfileLink id={String(matches[0].id)} />
         <StudentProfile student={student} />
       </>
     );

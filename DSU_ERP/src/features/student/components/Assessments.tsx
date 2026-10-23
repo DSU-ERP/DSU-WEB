@@ -1115,7 +1115,7 @@ function Diagnosis({
             <Link
               className="st-recommendation-link"
               key={index}
-              href={`/student/observation-haki?prompt=${encodeURIComponent(insightPrompt(result.title, item.text, sectionsOf(item.questionIds)))}`}
+              href={`/student/friday?prompt=${encodeURIComponent(insightPrompt(result.title, item.text, sectionsOf(item.questionIds)))}`}
             >
               <span>
                 {item.text}{" "}
@@ -1340,7 +1340,7 @@ export function TestResults({ initial }: { initial: Attempt }) {
                     <Link
                       className="st-recommendation-link"
                       key={index}
-                      href={`/student/observation-haki?prompt=${encodeURIComponent(item)}`}
+                      href={`/student/friday?prompt=${encodeURIComponent(item)}`}
                     >
                       {item}
                       <ChevronRight size={15} aria-hidden="true" />

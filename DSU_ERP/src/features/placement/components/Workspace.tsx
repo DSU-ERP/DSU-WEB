@@ -16,6 +16,7 @@ import {
   LogOut,
   Users,
   Upload,
+  Shapes,
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS } from "@/features/placement/lib/types";
@@ -111,6 +112,14 @@ export function Workspace({ children }: { children: React.ReactNode }) {
       Icon: ICONS[key] ?? LayoutGrid,
       current: path === `/placement/${key}`,
     })),
+    {
+      href: "/placement/categories",
+      label: "Student categories",
+      Icon: Shapes,
+      current:
+        path === "/placement/categories" ||
+        path.startsWith("/placement/categories/"),
+    },
     {
       href: "/placement/student-analytics",
       label: "Student analytics",

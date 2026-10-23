@@ -1,9 +1,26 @@
 import { Facts, Metrics, Table, offerColumns } from "@/features/placement/components/UI";
 import { text, type Row } from "@/features/placement/lib/types";
 
+// Missing values are said in words rather than shown as a dash.
+const filled = (data: Row): Row =>
+  Object.fromEntries(
+    Object.entries(data || {}).map(([key, value]) => [
+      key,
+      value === null || value === undefined || value === "" ? "Not recorded" : value,
+    ]),
+  );
+
 // Full student record rendering, shared by the student journey route and the
-// Student analytics search so both always show the same profile.
-export function StudentProfile({ student }: { student: Row }) {
+// Student analytics search so both always show the same profile. The unified
+// profile page passes the skills intelligence view as `intelligence`; it is
+// shown after the heading and before the recorded placement sections.
+export function StudentProfile({
+  student,
+  intelligence,
+}: {
+  student: Row;
+  intelligence?: React.ReactNode;
+}) {
   const offers = student.offers as Row[],
     registrations = student.registrations as Row[],
     timeline = student.timeline as Row[];
@@ -44,6 +61,8 @@ export function StudentProfile({ student }: { student: Row }) {
           ? `${text(current.category)} · ${text(current.package_lpa)} LPA`
           : "No active offers"}
       </p>
+      {intelligence}
+      {intelligence && <h2 className="po-record-heading">Placement record</h2>}
       <Metrics
         data={{
           drives_applied: registrations.length,
@@ -74,7 +93,7 @@ export function StudentProfile({ student }: { student: Row }) {
         <section className="erp-panel">
           <h2>Academic &amp; admission profile</h2>
           <Facts
-            data={{
+            data={filled({
               ...Object.fromEntries(Object.entries((student.profile as Row)||{}).filter(([key])=>!["id","student_id","source_hash"].includes(key))),
               ...Object.fromEntries(Object.entries((student.academic as Row)||{}).filter(([key])=>!["id","student_id"].includes(key))),
               cgpa: student.cgpa,
@@ -85,13 +104,13 @@ export function StudentProfile({ student }: { student: Row }) {
                   : student.eligible
                     ? "Eligible"
                     : "Not Eligible",
-            }}
+            })}
           />
         </section>
         <section className="erp-panel">
           <h2>Contact &amp; family</h2>
           {student.contact ? (
-            <Facts data={student.contact as Row} />
+            <Facts data={filled(student.contact as Row)} />
           ) : (
             <p>No contact information recorded.</p>
           )}
@@ -110,7 +129,7 @@ export function StudentProfile({ student }: { student: Row }) {
               key: "rounds_cleared",
               title: "Rounds cleared",
               render: (r) =>
-                `${results(r).filter((v) => v.result === "pass").length} / ${Array.isArray(r.rounds) ? r.rounds.length : "—"}`,
+                `${results(r).filter((v) => v.result === "pass").length} / ${Array.isArray(r.rounds) ? r.rounds.length : "?"}`,
             },
             {
               key: "results",
@@ -148,13 +167,13 @@ export function StudentProfile({ student }: { student: Row }) {
       {student.prediction && (
         <section className="erp-panel">
           <h2>Existing career insight</h2>
-          <Facts data={student.prediction as Row} />
+          <Facts data={filled(student.prediction as Row)} />
         </section>
       )}
       {student.points && (
         <section className="erp-panel">
           <h2>Recorded points</h2>
-          <Facts data={student.points as Row} />
+          <Facts data={filled(student.points as Row)} />
         </section>
       )}
       <section className="erp-panel">

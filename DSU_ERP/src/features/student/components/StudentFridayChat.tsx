@@ -1,0 +1,1 @@
+export { StudentFridayChat } from "./StudentChat";

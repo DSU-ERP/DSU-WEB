@@ -1,5 +1,25 @@
 # Verification
 
+## Student Skills Intelligence — 23 October 2026
+
+- Student portal:
+  - Four-step skills onboarding at `/student/onboarding`: institution record, six platform cards, visibility, review. It is enforced by a server redirect in the student layout (pathname from `proxy.ts`), the `@gate` slot for client navigation, and a 403 from the student API proxy for non-skills resources.
+  - The GitHub callback route and the `/student/connections` page (manage, refresh, featured projects, officer preview).
+  - New dashboard sections: academic rank, technical profile, coding activity, featured projects, AI summary, descriptive checklist.
+- Placement portal:
+  - Student categories cards and ranked directory with a formula-safe CSV export.
+  - Overview KPIs with hand-built accessible line, donut and bar charts, with empty states and no invented trends.
+  - The unified student profile with provenance labels, consent and visibility handling.
+  - A "View student profile" action in Student Analytics.
+- F.R.I.D.A.Y.:
+  - `student_profile` and `skill_profiles` tools, and a category option on `rank_students` using the same dense ranks.
+  - A `profile_link` event rendered as a "View student profile" button bound to tool results.
+  - Bounded metrics, with no contribution calendar sent to the model.
+- A web review found 9 issues, all fixed with tests. The worst: the officer preview did not match what officers actually see.
+- **161 of 161 unit tests, 19 of 19 F.R.I.D.A.Y. tool tests, and all 10 browser suites passed.** Those are placement, F.R.I.D.A.Y., student, student skills, student journeys, registration, intelligence and the three interview suites, with mocked backends, in light and dark at 390, 1440 and 2560 px. Typecheck and the production build passed.
+- The build reports that Next.js 16.4.0 has a known security advisory and stops once; re-running completes. The upgrade was not run.
+- The new endpoints need the backend migration, which has not been applied, so on the shared database the new pages show their error or empty states.
+
 ## Required security in both interview modes — 22 October 2026
 
 - Removed coached practice's security bypass. Both modes now require consent, live camera/microphone access, a single-display check, entire-monitor sharing and fullscreen before starting or resuming. Camera cannot be switched off during a session. Text-only coached practice still skips transcription preparation; proctored scoring/coaching visibility remains unchanged.

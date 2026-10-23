@@ -3,9 +3,17 @@ import { userSession } from "@/shared/auth/session";
 import { backendOrigin } from "@/shared/config/env";
 import { CampusError, readCampusResponse } from "./errors";
 
-export async function backendApi<T>(path: string, options: { method?: "GET" | "POST"; body?: string; contentType?: string; timeoutMs?: number } = {}): Promise<T> {
+export async function backendApi<T>(
+  path: string,
+  options: {
+    method?: "GET" | "POST"; body?: string; contentType?: string; timeoutMs?: number;
+    // A session the caller already verified in this request. Route handlers
+    // pass it so several backend calls verify the user only once.
+    session?: { token: string };
+  } = {},
+): Promise<T> {
   if (!path.startsWith("/") || path.startsWith("//")) throw new CampusError(400, "Invalid resource.");
-  const { token } = await userSession();
+  const { token } = options.session ?? (await userSession());
   let origin: URL;
   try { origin = backendOrigin(); }
   catch { throw new CampusError(503, "Campus services have not been configured correctly.", "BACKEND_NOT_CONFIGURED"); }

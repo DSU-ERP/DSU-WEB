@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { formatMessage, parseInline } from "../src/features/student/lib/format";
-import { groupHakiHistory } from "../src/features/student/lib/haki-history";
+import { groupFridayHistory } from "../src/features/student/lib/friday-history";
 import { activitySeries } from "../src/features/student/lib/progress";
 import { driveImportDefaults, type DriveImportFields } from "../src/features/placement/lib/driveImport";
 
@@ -65,7 +65,7 @@ test("older flattened replies recover explicit headings and sequential list item
   assert.deepEqual(formatMessage("```text\nExample ## heading 1. first 2. second\n```"), [{ kind: "code", language: "text", text: "Example ## heading 1. first 2. second" }]);
 });
 
-test("Haki recents group campus days across midnight and search without mutating history", () => {
+test("F.R.I.D.A.Y. recents group campus days across midnight and search without mutating history", () => {
   const rows = [
     { title: "SQL plan", updated_at: "2026-10-20T18:29:00Z" },
     { title: "Resume review", updated_at: "2026-10-19T09:00:00Z" },
@@ -74,13 +74,13 @@ test("Haki recents group campus days across midnight and search without mutating
     { title: "Unknown date", updated_at: "invalid" },
     { title: "Skill roadmap", updated_at: "2026-10-10T08:00:00Z" },
   ];
-  const groups = groupHakiHistory(rows, "", new Date("2026-10-20T19:00:00Z"));
+  const groups = groupFridayHistory(rows, "", new Date("2026-10-20T19:00:00Z"));
   assert.deepEqual(groups.map(group => group.label), ["Today", "Yesterday", "Previous 7 days", "Previous 30 days", "Older"]);
   assert.equal(groups[0].conversations[0].title, "Interview practice");
   assert.equal(groups[1].conversations[0].title, "SQL plan");
   assert.equal(rows[0].title, "SQL plan", "sorting does not mutate server data");
-  assert.deepEqual(groupHakiHistory(rows, "  RESUME  ").map(group => [group.label, group.conversations[0].title]), [["Search results", "Resume review"]]);
-  assert.deepEqual(groupHakiHistory(rows, "no match"), []);
+  assert.deepEqual(groupFridayHistory(rows, "  RESUME  ").map(group => [group.label, group.conversations[0].title]), [["Search results", "Resume review"]]);
+  assert.deepEqual(groupFridayHistory(rows, "no match"), []);
 });
 
 test("the activity strip covers fourteen campus days with real counts only", () => {

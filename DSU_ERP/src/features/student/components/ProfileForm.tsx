@@ -1,10 +1,17 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { studentFetch } from "../lib/client";
 import type { ProfileDetails, ProfileState } from "../lib/types";
 import { ErrorNote, PageTitle, Panel } from "./UI";
+import { DocumentUpload, type UploadedDocument } from "./DocumentUpload";
+
+type SavedDocument = Pick<UploadedDocument, "id" | "filename"> & {
+  kind: "resume" | "jd" | "attachment";
+  created_at: string;
+  pageCount?: number | null;
+};
 const STEPS = [
   "Your student workspace",
   "Your DSU identity",
@@ -25,7 +32,10 @@ export function ProfileForm({
     [error, setError] = useState(""),
     [success, setSuccess] = useState(""),
     [busy, setBusy] = useState(false),
-    [revision, setRevision] = useState(initial.revision);
+    [revision, setRevision] = useState(initial.revision),
+    [documents, setDocuments] = useState<SavedDocument[]>([]),
+    [documentsLoading, setDocumentsLoading] = useState(false),
+    [documentsError, setDocumentsError] = useState("");
   const [details, setDetails] = useState<ProfileDetails>({
     fullName: initial.official.full_name,
     phone: "",
@@ -57,6 +67,20 @@ export function ProfileForm({
     key: keyof ProfileDetails,
     value: string | number | boolean | string[],
   ) => setDetails((prev) => ({ ...prev, [key]: value }));
+  const loadDocuments = async () => {
+    setDocumentsLoading(true);
+    setDocumentsError("");
+    try {
+      setDocuments(await studentFetch<SavedDocument[]>("documents"));
+    } catch (e) {
+      setDocumentsError((e as Error).message);
+    } finally {
+      setDocumentsLoading(false);
+    }
+  };
+  useEffect(() => {
+    if (!onboarding && tab === "Documents") void loadDocuments();
+  }, [onboarding, tab]);
   const input = (key: keyof ProfileDetails, title: string, type = "text") => (
     <label key={key}>
       {title}
@@ -116,7 +140,7 @@ export function ProfileForm({
       />
       {!onboarding && (
         <div className="st-tabs" role="tablist" aria-label="Profile settings">
-          {["Profile", "Career links", "Preferences", "Help & support"].map(
+          {["Profile", "Career links", "Documents", "Preferences", "Help & support"].map(
             (item) => (
               <button
                 key={item}
@@ -321,6 +345,59 @@ export function ProfileForm({
                 </p>
               </>
             )}
+            {!onboarding && tab === "Documents" && (
+              <section className="st-profile-documents" aria-labelledby="student-documents-title">
+                <div>
+                  <h3 id="student-documents-title">Career documents</h3>
+                  <p className="st-muted">
+                    Add your current resume and completed certificates. These files are private to your student workspace.
+                  </p>
+                </div>
+                <div className="st-profile-document-grid">
+                  <section>
+                    <h4>Resume</h4>
+                    <p className="st-muted">Add the version you want F.R.I.D.A.Y. and career tools to use.</p>
+                    <DocumentUpload
+                      kind="resume"
+                      label="Upload your resume"
+                      onReady={() => void loadDocuments()}
+                    />
+                  </section>
+                  <section>
+                    <h4>Completed certifications</h4>
+                    <p className="st-muted">Add each certificate only after you have completed it.</p>
+                    <DocumentUpload
+                      kind="attachment"
+                      label="Upload a completed certificate"
+                      onReady={() => void loadDocuments()}
+                    />
+                  </section>
+                </div>
+                <section className="st-saved-documents" aria-labelledby="saved-documents-title">
+                  <h4 id="saved-documents-title">Saved documents</h4>
+                  {documentsLoading ? (
+                    <p className="st-muted">Loading your documents…</p>
+                  ) : documentsError ? (
+                    <ErrorNote message={documentsError} />
+                  ) : documents.length ? (
+                    <ul>
+                      {documents.map((document) => (
+                        <li key={document.id}>
+                          <strong>{document.filename}</strong>
+                          <span>
+                            {document.kind === "resume" ? "Resume" : document.kind === "attachment" ? "Certificate" : "Job description"}
+                            {" · "}
+                            {new Intl.DateTimeFormat("en-IN", { dateStyle: "medium" }).format(new Date(document.created_at))}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="st-muted">No resume or certification has been added yet.</p>
+                  )}
+                </section>
+              </section>
+            )}
             {onboarding && step === 4 && (
               <>
                 <p className="st-muted">
@@ -356,13 +433,13 @@ export function ProfileForm({
                 <p className="st-muted">
                   For a change to your USN, academic record or account access,
                   contact your campus administrator or placement office. For a
-                  preparation question, ask Observation Haki.
+                  preparation question, ask F.R.I.D.A.Y.
                 </p>
                 <Link
                   className="st-button st-button-secondary"
-                  href="/student/observation-haki"
+                  href="/student/friday"
                 >
-                  Open Observation Haki ↗
+                  Open F.R.I.D.A.Y. ↗
                 </Link>
               </>
             ) : (

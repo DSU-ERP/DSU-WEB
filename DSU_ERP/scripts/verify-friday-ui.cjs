@@ -82,6 +82,41 @@ events.push([(t += 40), { type: "usage", usage: { promptTokens: 2104, completion
 events.push([(t += 10), { type: "done", text: answer }]);
 events.push([(t += 10), { type: "saved", conversationId: "c1000000-0000-4000-8000-000000000009" }]);
 
+// A profile question: the server resolves students through its tools and
+// emits profile_link events. Only well-formed, distinct links may render, and
+// the model's own text links are not the mechanism for the button.
+const PROFILE_A = "2b7d4c1e-5f3a-4e8b-9c6d-0a1b2c3d4e5f";
+const PROFILE_B = "7e8f9a0b-1c2d-4e3f-8a5b-6c7d8e9f0a1b";
+const profileAnswer =
+  "### Aditi Rao\n\n" +
+  "- **USN:** 1DS23CS014\n- **Department:** CSE\n- **Batch:** 2027\n- **CGPA:** 9.12 (institution record)\n" +
+  "- **Category:** Advanced (institution record)\n- **Batch rank:** 2 within the 2027 batch (dense rank)\n" +
+  "- **Category rank:** 2 within the Advanced category of the 2027 batch (dense rank)\n" +
+  "- **GitHub:** 18 public repositories (verified on GitHub)\n- **LeetCode:** 312 problems solved (student submitted)\n" +
+  "- **Kaggle:** Not linked (unavailable)\n\n" +
+  "The profile summary describes backend projects in Python (AI generated).\n\n" +
+  "I also compared her with Rahul Menon (1DS23CS027), who is rank 5 within the same category.";
+const profileEvents = [
+  [0, { type: "status", state: "preparing" }],
+  [200, { type: "status", state: "retrieving" }],
+  [220, { type: "tool_status", label: "Opening student profile", state: "running" }],
+  [500, { type: "tool_status", label: "Opening student profile", state: "done" }],
+  [510, { type: "profile_link", id: PROFILE_A, usn: "1DS23CS014", name: "Aditi Rao", url: `/placement/students/${PROFILE_A}` }],
+  // A duplicate and three malformed events must all be ignored.
+  [515, { type: "profile_link", id: PROFILE_A, usn: "1DS23CS014", name: "Aditi Rao", url: `/placement/students/${PROFILE_A}` }],
+  [520, { type: "profile_link", id: "not-a-uuid", usn: "X", name: "Bad", url: "/placement/students/not-a-uuid" }],
+  [525, { type: "profile_link", id: PROFILE_B, usn: "X", name: "Elsewhere", url: `https://example.com/placement/students/${PROFILE_B}` }],
+  [530, { type: "profile_link", id: PROFILE_B, usn: "X", name: "Other page", url: `/student/${PROFILE_B}` }],
+  [540, { type: "tool_status", label: "Opening student profile", state: "running" }],
+  [700, { type: "tool_status", label: "Opening student profile", state: "done" }],
+  [710, { type: "profile_link", id: PROFILE_B, usn: "1DS23CS027", name: "Rahul Menon", url: `/placement/students/${PROFILE_B}` }],
+  [750, { type: "status", state: "responding" }],
+];
+let tp = 800;
+for (let i = 0; i < profileAnswer.length; i += 24) profileEvents.push([(tp += 14), { type: "text_delta", text: profileAnswer.slice(i, i + 24) }]);
+profileEvents.push([(tp += 30), { type: "done", text: profileAnswer }]);
+profileEvents.push([(tp += 10), { type: "saved", conversationId: "c1000000-0000-4000-8000-000000000010" }]);
+
 const entry = `import React from 'react';import {createRoot} from 'react-dom/client';
 import {Workspace} from '@/features/placement/components/Workspace';import {FridayChat} from '@/features/assistant/components/FridayChat';
 createRoot(document.getElementById('root')).render(<Workspace><FridayChat initialHistory={${JSON.stringify(history)}} initialCapabilities={${JSON.stringify(capabilities)}} focusBatch="2026"/></Workspace>);`;
@@ -161,9 +196,16 @@ const fakeSpeech = () => {
         return res.end(fs.readFileSync(path.join(root, "public", url)));
       }
       if (url.startsWith("/placement/friday-api") && req.method === "POST") {
-        res.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8" });
-        for (const [at, ev] of events) setTimeout(() => res.write(`data: ${JSON.stringify(ev)}\n\n`), at);
-        setTimeout(() => res.end(), t + 50);
+        let body = "";
+        req.on("data", (c) => (body += c));
+        req.on("end", () => {
+          const profile = /profile/i.test(JSON.parse(body).message || "");
+          const list = profile ? profileEvents : events;
+          const end = profile ? tp : t;
+          res.writeHead(200, { "Content-Type": "text/event-stream; charset=utf-8" });
+          for (const [at, ev] of list) setTimeout(() => res.write(`data: ${JSON.stringify(ev)}\n\n`), at);
+          setTimeout(() => res.end(), end + 50);
+        });
         return;
       }
       if (url.startsWith("/placement/assistant-api")) {
@@ -511,6 +553,88 @@ const fakeSpeech = () => {
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
     await page.waitForTimeout(100);
     await shot("8c-conversation-end-mobile");
+
+    // 9. Profile action bound to tool output, desktop and mobile, both themes.
+    const askProfile = async () => {
+      await page.getByRole("textbox", { name: "Ask F.R.I.D.A.Y." }).fill("Show the skills profile for 1DS23CS014");
+      await page.getByRole("button", { name: "Send", exact: true }).click();
+      // No button while the answer is still streaming.
+      await page.getByText("Opening student profile").first().waitFor();
+      assert.equal(await page.locator(".fr-profile-link").count(), 0, "no profile button before the answer completes");
+      await page.getByRole("button", { name: "Copy text" }).waitFor({ timeout: 15000 });
+    };
+    const checkProfileLinks = async (where) => {
+      const links = page.locator(".fr-profile-link");
+      assert.equal(await links.count(), 2, "one button per distinct valid profile on " + where);
+      assert.deepEqual(
+        await links.evaluateAll((els) => els.map((el) => el.getAttribute("href"))),
+        [`/placement/students/${PROFILE_A}`, `/placement/students/${PROFILE_B}`],
+        "hrefs come from the profile_link events",
+      );
+      await page.getByRole("link", { name: "View student profile: Aditi Rao, 1DS23CS014" }).waitFor();
+      assert.equal(await page.locator(".fr-profile-links").getByText("Elsewhere").count(), 0, "external URL rejected");
+      assert.equal(await page.locator(".fr-profile-links").getByText("Bad").count(), 0, "non-UUID rejected");
+      const shape = await links.first().evaluate((el) => {
+        const cs = getComputedStyle(el);
+        const r = el.getBoundingClientRect();
+        return { radius: parseFloat(cs.borderTopLeftRadius), height: r.height, right: r.right, icon: !!el.querySelector("svg"), bg: cs.backgroundColor, color: cs.color };
+      });
+      assert.ok(shape.radius <= 6, "not pill shaped: " + JSON.stringify(shape));
+      assert.ok(shape.icon, "button carries an icon");
+      assert.ok(shape.right <= (await page.evaluate(() => innerWidth)), "button fits the viewport");
+      assert.notEqual(shape.bg, shape.color, "readable button");
+      const clipped = await page
+        .locator(".fr-profile-link-name")
+        .evaluateAll((els) => els.filter((el) => el.scrollWidth > el.clientWidth + 1).map((el) => el.textContent));
+      assert.deepEqual(clipped, [], "student names are not cut off on " + where);
+      const visible = await page.locator(".fr-log").innerText();
+      assert.equal(visible.includes("\u2014"), false, "no em dash in visible text");
+      await noOverflow("profile " + where);
+      return shape;
+    };
+    const showProfileTurn = () =>
+      page.locator(".fr-profile-links").last().evaluate((el) => el.scrollIntoView({ block: "center", behavior: "instant" }));
+
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(origin + "/placement/assistants/friday");
+    await page.getByRole("heading", { name: "What would you like to know?" }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await askProfile();
+    const lightShape = await checkProfileLinks("desktop light");
+    await showProfileTurn();
+    await page.waitForTimeout(100);
+    await shot("9a-profile-link-desktop");
+    await page.getByRole("button", { name: "Use dark theme" }).click();
+    await page.waitForTimeout(150);
+    const darkShape = await checkProfileLinks("desktop dark");
+    assert.notEqual(darkShape.bg, lightShape.bg, "dark theme restyles the button");
+    await shot("9b-profile-link-desktop-dark");
+    // A plain question in the same conversation shows no profile buttons.
+    await page.getByRole("textbox", { name: "Ask F.R.I.D.A.Y." }).fill("Break this down by branch");
+    await page.getByRole("button", { name: "Send", exact: true }).click();
+    await page.waitForFunction(() => document.querySelectorAll(".fr-turn--assistant .fr-turn-actions").length > 1, null, { timeout: 15000 });
+    assert.equal(await page.locator(".fr-profile-links").count(), 1, "buttons belong only to the turn that resolved them");
+
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(origin + "/placement/assistants/friday");
+    await page.getByRole("heading", { name: "What would you like to know?" }).waitFor();
+    await page.evaluate(() => document.fonts.ready);
+    await askProfile();
+    await checkProfileLinks("mobile " + ((await page.locator(".po-dark").count()) ? "dark" : "light"));
+    await showProfileTurn();
+    await page.waitForTimeout(100);
+    const mobileDark = (await page.locator(".po-dark").count()) > 0;
+    await shot(mobileDark ? "9c-profile-link-mobile-dark" : "9c-profile-link-mobile");
+    await page.getByRole("button", { name: mobileDark ? "Use light theme" : "Use dark theme" }).click();
+    await page.waitForTimeout(150);
+    await checkProfileLinks("mobile other theme");
+    // The theme toggle sits at the top of the page; wait for its re-render
+    // before scrolling back to the profile buttons.
+    await page.waitForTimeout(300);
+    await showProfileTurn();
+    await page.waitForTimeout(200);
+    await shot(mobileDark ? "9d-profile-link-mobile" : "9d-profile-link-mobile-dark");
+    if (!mobileDark) await page.getByRole("button", { name: "Use light theme" }).click();
 
     assert.deepEqual(errors, [], "browser errors: " + errors.join(" | "));
     console.log("F.R.I.D.A.Y. UI verified. Screenshots:\n" + shots.map((s) => "  " + path.relative(root, s)).join("\n"));

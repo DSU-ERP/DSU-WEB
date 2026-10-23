@@ -711,6 +711,93 @@
   color: var(--fr-ink-2);
   padding-inline: 0.375rem;
 }
+/* Profile actions bound to tool output (profile_link events), one per
+   distinct student. Square-cornered outline buttons, like the rest. */
+.fr-profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+.fr-profile-links li {
+  min-width: 0;
+  max-width: 100%;
+}
+.fr-profile-link {
+  max-width: 100%;
+  min-height: 2.25rem;
+  justify-content: flex-start;
+  gap: 0.5rem;
+  padding-inline: 0.75rem 0.625rem;
+  color: var(--fr-ink);
+  text-decoration: none;
+}
+.fr-profile-link > svg {
+  flex: none;
+  color: var(--fr-ink-2);
+}
+.fr-profile-link:hover > svg {
+  color: var(--fr-ink);
+}
+.fr-profile-link:focus-visible {
+  outline: 2px solid var(--fr-ink);
+  outline-offset: 2px;
+}
+.fr-profile-link-text {
+  flex: none;
+  font-weight: 600;
+}
+.fr-profile-link-who {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4375rem;
+  min-width: 0;
+  padding-left: 0.5rem;
+  border-left: 1px solid var(--fr-line);
+  color: var(--fr-ink-2);
+}
+.fr-profile-link-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fr-profile-link-usn {
+  flex: none;
+  font: 500 0.6875rem/1 var(--fr-mono);
+  letter-spacing: 0.04em;
+  color: var(--fr-ink-3);
+}
+@media (max-width: 640px) {
+  /* Narrow screens: label above the student so the name is never cut. */
+  .fr-profile-links {
+    flex-direction: column;
+  }
+  .fr-profile-link {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    column-gap: 0.625rem;
+    row-gap: 0.3125rem;
+    width: 100%;
+    padding-block: 0.5625rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+  .fr-profile-link > svg:first-child {
+    grid-row: 1 / span 2;
+  }
+  .fr-profile-link-who {
+    grid-column: 2;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .fr-profile-link-go {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
+}
+
 .fr-turn-tokens {
   margin-left: auto;
   font: 500 0.6875rem/1 var(--fr-mono);

@@ -10,6 +10,9 @@ import {
   sentences,
   explainUpstream,
   upstreamFailure,
+  parseProfileLink,
+  profileLink,
+  MAX_PROFILE_LINKS,
   type ToolCallFragment,
 } from "../src/features/assistant/lib/protocol";
 import { sameOrigin } from "../src/features/placement/lib/request";
@@ -274,4 +277,59 @@ test("SDK errors are recognised even when the class was loaded twice", () => {
   assert.equal(upstreamFailure(new Error("socket hang up")), null);
   assert.equal(upstreamFailure({ statusCode: 401, body: "" }), null);
   assert.equal(upstreamFailure("401"), null);
+});
+
+const PID = "00000000-0000-4000-8000-0000000000a1";
+const okLink = {
+  type: "profile_link",
+  id: PID,
+  usn: "1DS23CS001",
+  name: "Synthetic Student",
+  url: `/placement/students/${PID}`,
+};
+
+test("profile links are built by the server from a UUID, never from free text", () => {
+  assert.deepEqual(profileLink({ id: PID.toUpperCase(), usn: " T01 ", name: "A  B" }), {
+    id: PID,
+    usn: "T01",
+    name: "A B",
+    url: `/placement/students/${PID}`,
+  });
+  for (const id of ["", "x", "../admin", `${PID}/edit`, 42, null])
+    assert.equal(profileLink({ id, usn: "T01", name: "A" }), null, String(id));
+  assert.equal(profileLink({ id: PID, usn: "", name: "A" }), null);
+  assert.equal(profileLink({ id: PID, usn: "T01", name: 7 }), null);
+  assert.equal(profileLink({ id: PID, usn: "T01", name: "x".repeat(201) }), null);
+  assert.equal(MAX_PROFILE_LINKS, 3);
+});
+
+test("profile_link events are strictly validated", () => {
+  assert.deepEqual(parseProfileLink(okLink), {
+    id: PID,
+    usn: "1DS23CS001",
+    name: "Synthetic Student",
+    url: `/placement/students/${PID}`,
+  });
+  const bad: unknown[] = [
+    null,
+    "profile_link",
+    [okLink],
+    { ...okLink, type: "text_delta" },
+    { ...okLink, id: "not-a-uuid", url: "/placement/students/not-a-uuid" },
+    { ...okLink, url: "https://evil.example/placement/students/" + PID },
+    { ...okLink, url: "//evil.example/" + PID },
+    { ...okLink, url: `/student/${PID}` },
+    { ...okLink, url: `/placement/students/${PID}/edit` },
+    { ...okLink, url: `/placement/students/${PID}?x=1` },
+    { ...okLink, url: "javascript:alert(1)" },
+    // The URL must match the id exactly.
+    { ...okLink, url: "/placement/students/00000000-0000-4000-8000-0000000000b2" },
+    // Upper-case ids are never emitted by the server.
+    { ...okLink, id: PID.toUpperCase(), url: `/placement/students/${PID.toUpperCase()}` },
+    { ...okLink, usn: "" },
+    { ...okLink, name: { text: "x" } },
+    { ...okLink, extra: "field" },
+    { type: "profile_link", id: PID, usn: "T01", name: "A" },
+  ];
+  for (const event of bad) assert.equal(parseProfileLink(event), null, JSON.stringify(event));
 });

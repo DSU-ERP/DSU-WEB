@@ -34,7 +34,7 @@ import { useSpeechInput } from "../lib/useSpeech";
 import { DocumentUpload, type UploadedDocument } from "./DocumentUpload";
 import { ErrorNote } from "./UI";
 import { RichText } from "./RichText";
-import { groupHakiHistory } from "../lib/haki-history";
+import { groupFridayHistory } from "../lib/friday-history";
 import type { Opportunity } from "./Placement";
 type CareerCard = {
   type: string;
@@ -70,8 +70,8 @@ type DriveContext = {
 };
 const COMPARE_PROMPT = "Compare my profile with this JD";
 const RESUME_LIMIT = 60000;
-const SIDEBAR_WIDTH_KEY = "dsu-haki-sidebar-width";
-const SEARCH_PREFERENCE_KEY = "dsu-haki-web-search";
+const SIDEBAR_WIDTH_KEY = "dsu-friday-sidebar-width";
+const SEARCH_PREFERENCE_KEY = "dsu-friday-web-search";
 const savedSearchPreference = () => { try { return localStorage.getItem(SEARCH_PREFERENCE_KEY) === "true"; } catch { return false; } };
 const SIDEBAR_MIN = 220;
 const SIDEBAR_MAX = 420;
@@ -169,7 +169,7 @@ function Sources({ sources, label = "Sources" }: { sources: Source[]; label?: st
     </section>
   );
 }
-export function StudentChat({
+export function StudentFridayChat({
   initial,
   driveId,
   prompt,
@@ -403,9 +403,9 @@ export function StudentChat({
     const content = text.trim();
     if (sending.current) return;
     if (opening) { setError("Wait for this conversation to finish opening, then send your question."); return; }
-    if (driveGone) { setError("This drive is no longer available. Start a new conversation to ask Haki a question."); return; }
+    if (driveGone) { setError("This drive is no longer available. Start a new F.R.I.D.A.Y. conversation to ask a question."); return; }
     if (!content) { composer.current?.focus(); return; }
-    if (service.state === "unconfigured") { setError("Haki’s AI connection needs to be configured. Your question is kept here."); return; }
+    if (service.state === "unconfigured") { setError("F.R.I.D.A.Y.’s AI connection needs to be configured. Your question is kept here."); return; }
     sending.current = true;
     followConversation.current = true;
     speech.stop();
@@ -487,12 +487,12 @@ export function StudentChat({
     usePrompt(item.content);
   };
   const activeTitle = history.find((item) => item.id === conversation)?.title || (drive ? `${drive.company} · ${drive.title}` : "A fresh perspective");
-  const historyGroups = groupHakiHistory(history, search);
+  const historyGroups = groupFridayHistory(history, search);
   const sidebar = (mobile = false) => (
     <>
       <div className="hk-sidebar-brand">
         <span className="hk-sidebar-logo"><Eye size={23} strokeWidth={1.5} /></span>
-        <strong>Haki<span>Student workspace</span></strong>
+        <strong>F.R.I.D.A.Y.<span>Student workspace</span></strong>
         <button ref={mobile ? undefined : sidebarClose} type="button" className="hk-nav-icon" aria-label={mobile ? "Close conversation history" : "Collapse sidebar"} onClick={() => { if (mobile) setHistoryOpen(false); else { setSidebarCollapsed(true); requestAnimationFrame(() => mainSidebarToggle.current?.focus()); } }}>{mobile ? <X size={19} /> : <PanelLeftClose size={19} />}</button>
       </div>
       <nav className="hk-sidebar-actions" aria-label="Chat actions">
@@ -539,12 +539,12 @@ export function StudentChat({
             <div className="hk-main-brand">
               <button ref={mainSidebarToggle} type="button" className="hk-nav-icon hk-desktop-open" aria-label="Expand sidebar" aria-controls="hk-conversation-sidebar" aria-expanded={!sidebarCollapsed} onClick={() => { setSidebarCollapsed(false); requestAnimationFrame(() => sidebarClose.current?.focus()); }}><PanelLeftOpen size={21} /></button>
               <button type="button" className="hk-nav-icon hk-mobile-open" aria-label="Show conversations" aria-controls="hk-mobile-history" aria-expanded={historyOpen} onClick={() => setHistoryOpen(true)}><PanelLeftOpen size={21} /></button>
-              <div><h1>Observation Haki</h1><span className="hk-active-title" title={activeTitle}>{activeTitle}</span></div>
+              <div><h1>F.R.I.D.A.Y.</h1><span className="hk-active-title" title={activeTitle}>{activeTitle}</span></div>
             </div>
             <small className={`hk-service hk-service-${service.state}`}><i />{service.state === "ready" ? "Ready to explore" : service.state === "checking" ? "Connecting" : service.state === "unconfigured" ? "Setup needed" : "Connection interrupted"}</small>
           </header>
           {(service.state === "unavailable" || service.state === "unconfigured") && (
-            <div className="hk-service-banner" role="status"><div><strong>{service.state === "unconfigured" ? "Haki needs its AI connection configured." : "We couldn’t connect to Haki."}</strong><p>{service.state === "unconfigured" ? "Ask your campus administrator to connect the assistant. Your conversations are still here." : service.message || "Check your connection and try again. Your draft stays here."}</p></div><button type="button" onClick={() => { void checkService(); void refresh().then(() => setError("")).catch((e) => setError(e.message)); }}><RotateCcw size={14} /> Reconnect</button></div>
+            <div className="hk-service-banner" role="status"><div><strong>{service.state === "unconfigured" ? "F.R.I.D.A.Y. needs its AI connection configured." : "We couldn’t connect to F.R.I.D.A.Y."}</strong><p>{service.state === "unconfigured" ? "Ask your campus administrator to connect the assistant. Your conversations are still here." : service.message || "Check your connection and try again. Your draft stays here."}</p></div><button type="button" onClick={() => { void checkService(); void refresh().then(() => setError("")).catch((e) => setError(e.message)); }}><RotateCcw size={14} /> Reconnect</button></div>
           )}
           {driveGone && (
             <div className="st-drive-context" role="note">
@@ -626,7 +626,7 @@ export function StudentChat({
                   data-reveal={item.animate || undefined}
                 >
                   <div className="hk-message-content">
-                  <div className={`hk-message-label${item.role === "user" ? " st-visually-hidden" : ""}`}><span className="hk-message-avatar" aria-hidden="true">{item.role === "user" ? "Y" : <Eye size={15} />}</span><p className="st-eyebrow">{item.role === "user" ? "You" : "Observation Haki"}</p></div>
+                  <div className={`hk-message-label${item.role === "user" ? " st-visually-hidden" : ""}`}><span className="hk-message-avatar" aria-hidden="true">{item.role === "user" ? "Y" : <Eye size={15} />}</span><p className="st-eyebrow">{item.role === "user" ? "You" : "F.R.I.D.A.Y."}</p></div>
                   {item.role === "user" ? (
                     <p className="st-preserve">{item.content}</p>
                   ) : (
@@ -692,7 +692,7 @@ export function StudentChat({
             <ErrorNote message={error || speech.error} />
             {(resume || jd) && <div className="hk-context-chips">{resume && <button onClick={() => review.current?.showModal()}><FileText size={12} />Resume in context<Check size={11} /></button>}{jd && !drive && <button onClick={() => review.current?.showModal()}><BriefcaseBusiness size={12} />Job description added<Check size={11} /></button>}</div>}
             {attachmentOpen && (
-              <div className="hk-attachment-tray"><div><strong>Give Haki a little more context</strong><button className="st-icon-button" aria-label="Close attachment tray" onClick={() => setAttachmentOpen(false)}><X size={15} /></button></div>
+              <div className="hk-attachment-tray"><div><strong>Give F.R.I.D.A.Y. a little more context</strong><button className="st-icon-button" aria-label="Close attachment tray" onClick={() => setAttachmentOpen(false)}><X size={15} /></button></div>
               <DocumentUpload
                 kind="attachment"
                 label="Add context to this conversation"
@@ -724,8 +724,8 @@ export function StudentChat({
                 ref={composer}
                 name="message"
                 enterKeyHint="send"
-                aria-describedby="haki-compose-help"
-                aria-label="Message Observation Haki"
+                aria-describedby="friday-compose-help"
+                aria-label="Message F.R.I.D.A.Y."
                 placeholder={drive ? "Ask about this opportunity…" : "Ask anything about your next chapter…"}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
@@ -740,7 +740,7 @@ export function StudentChat({
                   }
                 }}
               />
-              <span id="haki-compose-help" className="st-visually-hidden">Press Enter to send your question. Press Shift and Enter together to add a new line.</span>
+              <span id="friday-compose-help" className="st-visually-hidden">Press Enter to send your question. Press Shift and Enter together to add a new line.</span>
               <div>
                 <div className="st-actions">
                   <button
@@ -801,7 +801,7 @@ export function StudentChat({
               </div>
             </form>
             <small>
-              Haki can make mistakes. Career advice is advisory. Your context is sent to the AI provider
+              F.R.I.D.A.Y. can make mistakes. Career advice is advisory. Your context is sent to the AI provider
               {webSearch
                 ? drive
                   ? "; web search sends only the company and role to the search provider."
@@ -884,3 +884,6 @@ export function StudentChat({
     </div>
   );
 }
+
+/** @deprecated Temporary compatibility export for an already-running legacy route. */
+export const StudentChat = StudentFridayChat;

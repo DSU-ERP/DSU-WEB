@@ -1,5 +1,5 @@
 const {installInterviewSecurity}=require("./fixtures/interview-security.cjs");
-// Browser check for the interview, assessment and Observation Haki screens.
+// Browser check for the interview, assessment and student F.R.I.D.A.Y. screens.
 // Renders the real components with synthetic fixtures and mocked campus APIs,
 // at desktop and phone widths, in light and dark themes.
 const fs = require("node:fs"),
@@ -141,7 +141,7 @@ const entry = `import React from 'react';import{createRoot}from'react-dom/client
 import{StudentShell}from'@/features/student/components/StudentShell';
 import{InterviewRoom,InterviewResults,InterviewPlanView}from'@/features/student/components/InterviewRoom';
 import{TestResults}from'@/features/student/components/Assessments';
-import{StudentChat}from'@/features/student/components/StudentChat';
+import{StudentFridayChat}from'@/features/student/components/StudentFridayChat';
 import{Dashboard}from'@/features/student/components/Dashboard';
 import{Workspace}from'@/features/placement/components/Workspace';
 import{DriveCreator}from'@/features/placement/components/DriveImport';
@@ -154,14 +154,14 @@ const pages={
  plan:()=>student(<InterviewPlanView plan={plan}/>),
  result:()=>student(<TestResults initial={attempt}/>),
  withheld:()=>student(<TestResults initial={withheld}/>),
- chat:()=>student(<StudentChat initial={[{id:'${id}',title:'Resume feedback',updated_at:'${now}'},{id:'22222222-2222-4222-8222-222222222222',title:'Interview plan',updated_at:'${now}'}]}/>),
+ chat:()=>student(<StudentFridayChat initial={[{id:'${id}',title:'Resume feedback',updated_at:'${now}'},{id:'22222222-2222-4222-8222-222222222222',title:'Interview plan',updated_at:'${now}'}]}/>),
  dashboard:()=>student(<Dashboard data={dashboard}/>),
  'drive-import':()=><Workspace><h1>Create a placement drive.</h1><DriveCreator companies={[company]} options={options}/></Workspace>,
 };
 import{depositMedia}from"@/features/student/lib/media";if(location.pathname.endsWith("/room"))depositMedia(session.id,window.__makeInterviewMedia());createRoot(document.getElementById('root')).render(<React.StrictMode>{pages[route]()}</React.StrictMode>);`;
 const mocks = {
-  "next/link": "import React from'react';export default function Link({children,prefetch,scroll,...p}){return <a {...p}>{children}</a>}",
-  "next/navigation": "export const usePathname=()=>location.pathname.endsWith('/room')?'/student/interview/session/fixture':location.pathname.endsWith('/chat')?'/student/observation-haki':location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);const router={push:p=>{window.__pushed=p},replace:p=>{window.__pushed=p},refresh:()=>{}};export const useRouter=()=>router;",
+  "next/link": "import React from'react';export default function Link({children,prefetch,scroll,...p}){return React.createElement('a',p,children)}",
+  "next/navigation": "export const usePathname=()=>location.pathname.endsWith('/room')?'/student/interview/session/fixture':location.pathname.endsWith('/chat')?'/student/friday':location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);const router={push:p=>{window.__pushed=p},replace:p=>{window.__pushed=p},refresh:()=>{}};export const useRouter=()=>router;",
   "@/app/login/actions": "export async function signOut(){}",
   "@/app/placement/actions": "export async function changePlacement(){return {error:'',success:'Changes saved.'}}",
 };
@@ -361,7 +361,7 @@ const send = (res, status, body) => {
       await page.reload();
       assert.equal(await page.getByRole('button',{name:'Web search',exact:true}).getAttribute('aria-pressed'),'true','search preference survives reload');
       await page.emulateMedia({reducedMotion:'reduce'});
-      await page.getByLabel('Message Observation Haki').fill('Show a clear answer without motion.');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.locator('.hk-answer-phrase').first().waitFor();
+      await page.getByLabel('Message F.R.I.D.A.Y.').fill('Show a clear answer without motion.');await page.getByRole('button',{name:'Send message',exact:true}).click();await page.locator('.hk-answer-phrase').first().waitFor();
       assert.equal(await page.locator('.hk-answer-phrase').first().evaluate(el=>getComputedStyle(el).animationName),'none','reduced motion reveals the answer immediately');
       await context.close();
       checks.push("chat send, JD match card, safe formatter/sources, phrase reveal/reduced motion and persistent web-search preference");
@@ -375,7 +375,7 @@ const send = (res, status, body) => {
         text: "Your SQL project gives you a useful starting point for graduate analyst roles. Focus your next week on showing how you use data to solve a problem.\n\n## Build on what you already know\n\nYou have **practical project evidence**. Explain the problem you solved, the decision you made, and the result you observed.\n\n- Write one concise project story with a measurable outcome.\n- Practise joins, grouping, and explaining a query in plain language.\n- Add one spreadsheet example to broaden your evidence.\n\n## A focused plan for this week\n\n1. Choose a real dataset and write three useful queries.\n2. Check the results and document one trade-off.\n3. Rehearse a two-minute explanation of your work.\n\nUse `GROUP BY` when you need a summary for each category.\n\n```sql\nSELECT department, COUNT(*) AS total\nFROM students\nGROUP BY department;\n```\n\nWhich part would you like to practise first?", card: null, sources: []
       } }) }));
       await page.goto(`${origin}/qa/chat`);
-      await page.getByLabel("Message Observation Haki").fill("How can I prepare for a graduate analyst role with my SQL project experience?");
+      await page.getByLabel("Message F.R.I.D.A.Y.").fill("How can I prepare for a graduate analyst role with my SQL project experience?");
       await page.getByRole("button", { name: "Send message", exact: true }).click();
       await page.getByRole("heading", { name: "Build on what you already know" }).waitFor();
       await page.waitForFunction(()=>{const answer=document.querySelector('.st-chat-assistant').getBoundingClientRect(),area=document.querySelector('.st-chat-messages').getBoundingClientRect();return answer.y>=area.y-1&&answer.y<area.y+80;},undefined,{timeout:3000});
@@ -408,9 +408,9 @@ const send = (res, status, body) => {
       const {context,page}=await open('light',390);let ready=false;
       await page.route('**/student/api/assistant/status',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({data:{chatReady:true,researchReady:ready}})}));
       await page.goto(`${origin}/qa/chat`);await page.getByRole('button',{name:'Check web search',exact:true}).waitFor();
-      await page.getByLabel('Message Observation Haki').fill('Keep this question while reconnecting search.');ready=true;
+      await page.getByLabel('Message F.R.I.D.A.Y.').fill('Keep this question while reconnecting search.');ready=true;
       await page.getByRole('button',{name:'Check web search',exact:true}).click();await page.getByRole('button',{name:'Web search',exact:true}).waitFor();
-      assert.equal(await page.getByLabel('Message Observation Haki').inputValue(),'Keep this question while reconnecting search.');
+      assert.equal(await page.getByLabel('Message F.R.I.D.A.Y.').inputValue(),'Keep this question while reconnecting search.');
       assert.equal(await page.getByRole('button',{name:'Web search',exact:true}).getAttribute('aria-pressed'),'false');
       await context.close();checks.push('web search reconnects without losing the draft or changing opt-in');
     }
@@ -426,7 +426,7 @@ const send = (res, status, body) => {
       });
       await page.goto(`${origin}/qa/chat`);
       await page.getByRole("button", { name: /Find my direction/ }).click();
-      assert.equal(await page.getByLabel("Message Observation Haki").inputValue(), "Help me choose my next preparation step.");
+      assert.equal(await page.getByLabel("Message F.R.I.D.A.Y.").inputValue(), "Help me choose my next preparation step.");
       await page.getByRole("button", { name: "Send message", exact: true }).click();
       await page.getByText(/Not sent.*reconnecting/).waitFor();
       await page.getByRole("button", { name: "Retry", exact: true }).click();
@@ -474,7 +474,7 @@ const send = (res, status, body) => {
       assert.equal(await resizer.getAttribute("aria-valuenow"),"220","resize has a minimum");
       await resizer.dblclick();
       assert.equal(await resizer.getAttribute("aria-valuenow"),"264","double click resets width");
-      await page.getByLabel("Message Observation Haki").fill("Keep this draft while I browse the sidebar.");
+      await page.getByLabel("Message F.R.I.D.A.Y.").fill("Keep this draft while I browse the sidebar.");
       await sidebar.getByRole("textbox", { name: "Search conversations" }).fill("resume");
       assert.equal(await sidebar.getByRole("button", {name:/^Interview plan/}).count(), 0);
       await sidebar.getByRole("textbox", { name: "Search conversations" }).fill("not found");
@@ -482,7 +482,7 @@ const send = (res, status, body) => {
       await sidebar.getByRole("textbox", { name: "Search conversations" }).fill("");
       await page.getByRole("button", { name: "Collapse sidebar", exact: true }).click();
       assert.equal(await sidebar.isVisible(), false);
-      assert.equal(await page.getByLabel("Message Observation Haki").inputValue(), "Keep this draft while I browse the sidebar.");
+      assert.equal(await page.getByLabel("Message F.R.I.D.A.Y.").inputValue(), "Keep this draft while I browse the sidebar.");
       await page.getByRole("button", { name: "Expand sidebar", exact: true }).click();
       await sidebar.getByRole("button", { name:/^Resume feedback/ }).click();
       await page.getByText("Your saved preparation notes.", {exact:true}).waitFor();
@@ -495,7 +495,7 @@ const send = (res, status, body) => {
       await page.getByRole("button", { name:"Close JD review" }).click();
       await page.screenshot({path:path.join(dir,"haki-sidebar-desktop.png"),fullPage:true});
       await page.setViewportSize({width:390,height:900});
-      await page.getByLabel("Message Observation Haki").fill("Mobile draft stays here.");
+      await page.getByLabel("Message F.R.I.D.A.Y.").fill("Mobile draft stays here.");
       const toggle = page.getByRole("button", { name:"Show conversations", exact:true });
       await toggle.click();
       const drawer = page.getByRole("dialog", {name:"Conversation history"});
@@ -504,7 +504,7 @@ const send = (res, status, body) => {
       await page.keyboard.press("Escape");
       assert.equal(await drawer.isVisible(),false);
       assert.equal(await toggle.evaluate(el => el === document.activeElement),true,"drawer restores opener focus");
-      assert.equal(await page.getByLabel("Message Observation Haki").inputValue(),"Mobile draft stays here.");
+      assert.equal(await page.getByLabel("Message F.R.I.D.A.Y.").inputValue(),"Mobile draft stays here.");
       await toggle.click();
       await drawer.getByRole("button",{name:/^Interview plan/}).click();
       await drawer.waitFor({state:"hidden"});
@@ -519,13 +519,13 @@ const send = (res, status, body) => {
       const { context, page } = await open("light", 375);
       await page.route("**/student/api/assistant/status", route => route.fulfill({contentType:"application/json",body:JSON.stringify({data:{chatReady:false,researchReady:false}})}));
       await page.goto(`${origin}/qa/chat`);
-      await page.getByText("Haki needs its AI connection configured.",{exact:true}).waitFor();
-      await page.getByLabel("Message Observation Haki").fill("My draft stays here.");
+      await page.getByText("F.R.I.D.A.Y. needs its AI connection configured.",{exact:true}).waitFor();
+      await page.getByLabel("Message F.R.I.D.A.Y.").fill("My draft stays here.");
       assert.equal(await page.getByRole("button",{name:"Send message",exact:true}).isDisabled(),true);
       await page.getByRole("button",{name:"Show conversations"}).click();
       await page.getByRole("dialog",{name:"Conversation history"}).getByRole("link",{name:"Back to dashboard"}).waitFor();
       await page.getByRole("button",{name:"Close conversation history"}).click();
-      assert.equal(await page.getByLabel("Message Observation Haki").inputValue(),"My draft stays here.");
+      assert.equal(await page.getByLabel("Message F.R.I.D.A.Y.").inputValue(),"My draft stays here.");
       await page.screenshot({path:path.join(dir,"haki-service-state-mobile.png"),fullPage:true});
       await page.getByRole("button",{name:"Show conversations"}).click();
       await page.getByRole("link",{name:"Back to dashboard"}).click();

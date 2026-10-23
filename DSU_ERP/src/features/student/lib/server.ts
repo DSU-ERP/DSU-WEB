@@ -5,6 +5,7 @@ import { signInAgain } from "@/shared/auth/session";
 import { CampusError } from "@/shared/http/errors";
 import type { ProfileState } from "./types";
 import { requireWorkspace } from "@/shared/auth/workspace";
+import type { SkillsProfile } from "./skills";
 
 export type StudentRecord = {
   id: string;
@@ -35,7 +36,22 @@ export const studentProfile = cache(async () => {
     ]);
     if (access.status === "rejected") throw access.reason;
     if (profile.status === "rejected") throw profile.reason;
-    return profile.value.data;
+    // /session decides whether skills onboarding still blocks the workspace.
+    return {
+      ...profile.value.data,
+      skillsOnboardingRequired: access.value.onboardingRequired === true,
+    };
+  } catch (error) {
+    if (error instanceof CampusError && error.status === 401)
+      signInAgain(error);
+    throw error;
+  }
+});
+
+/** The canonical skills profile (GET /student/skills/profile), once per request. */
+export const skillsProfile = cache(async () => {
+  try {
+    return (await backendApi<{ data: SkillsProfile }>("/student/skills/profile")).data;
   } catch (error) {
     if (error instanceof CampusError && error.status === 401)
       signInAgain(error);

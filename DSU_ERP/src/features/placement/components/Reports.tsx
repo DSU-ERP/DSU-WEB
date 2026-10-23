@@ -22,6 +22,13 @@ import {
   type Row,
   type Section,
 } from "@/features/placement/lib/types";
+import {
+  directoryHref,
+  formatCgpa,
+  formatCount,
+  formatPercent,
+  isCategory,
+} from "@/features/placement/lib/intelligence";
 const rows = (value: unknown): Row[] =>
   Array.isArray(value) ? (value as Row[]) : [];
 const numeric = (keys: string[]): Column[] =>
@@ -42,7 +49,7 @@ export function ReportFilters({
       title: "Passing-out batch",
       options: data.options.batches,
     });
-  if (!["companies", "drives", "overview", "company-reports"].includes(section))
+  if (!["companies", "drives", "company-reports"].includes(section))
     fields.push({
       key: "department",
       title: "Branch",
@@ -480,33 +487,62 @@ export function ReportBody({
           keys={["students", "valid", "unclassified", "average", "eligible"]}
         />
         <div className="po-card-grid">
-          {rows(data.categories).map((c) => (
-            <article key={text(c.id)} className="po-card">
-              <h2>{text(c.name)}</h2>
-              <p className="erp-muted">{text(c.conditionLabel)}</p>
-              <strong>{number(c.count)}</strong>
-              <p>{number(c.percentage, 1)}% of selected cohort</p>
-              <Facts
-                data={{
-                  average_cgpa: c.average,
-                  eligible_students: c.eligible,
-                  eligibility_percentage: Number(c.count)
-                    ? (100 * Number(c.eligible)) / Number(c.count)
-                    : 0,
-                }}
-              />
-              <div className="po-actions">
-                <a
-                  href={href("export/students", query, {
-                    category: String(c.id),
-                    page: undefined,
-                  })}
-                >
-                  Export CSV ↓
-                </a>
-              </div>
-            </article>
-          ))}
+          {rows(data.categories).map((c) => {
+            const count = Number(c.count) || 0,
+              eligible = Number(c.eligible) || 0;
+            return (
+              <article key={text(c.id)} className="po-card po-category-card">
+                <h2>{text(c.name)}</h2>
+                <p className="erp-muted">CGPA {text(c.conditionLabel)}</p>
+                <strong>
+                  {formatCount(count)} <small>students</small>
+                </strong>
+                <dl className="po-facts">
+                  <div>
+                    <dt>Share of cohort</dt>
+                    <dd>{formatPercent(c.percentage ?? 0, 1)}</dd>
+                  </div>
+                  <div>
+                    <dt>Average CGPA</dt>
+                    <dd>{count ? formatCgpa(c.average) : "No students"}</dd>
+                  </div>
+                  <div>
+                    <dt>Placement eligible</dt>
+                    <dd>{formatCount(eligible)}</dd>
+                  </div>
+                  <div>
+                    <dt>Eligibility rate</dt>
+                    <dd>
+                      {count ? formatPercent((100 * eligible) / count, 1) : "No students"}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="po-card-actions">
+                  {isCategory(c.id) && (
+                    <Link
+                      className="erp-primary"
+                      href={directoryHref(c.id, {
+                        batch: query.batch,
+                        department: query.department,
+                      })}
+                    >
+                      View ranked students
+                    </Link>
+                  )}
+                  <a
+                    className="erp-secondary"
+                    download
+                    href={href("export/students", query, {
+                      category: String(c.id),
+                      page: undefined,
+                    })}
+                  >
+                    Export CSV ↓
+                  </a>
+                </div>
+              </article>
+            );
+          })}
         </div>
         <p className="po-note">
           Baseline eligible: {data.options.policy.label}. Missing or invalid

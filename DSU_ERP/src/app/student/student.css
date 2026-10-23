@@ -1266,6 +1266,17 @@
   border: 1px solid var(--st-line);
   border-radius: 12px;
 }
+.st-profile-documents { display: grid; gap: 22px; }
+.st-profile-documents h3, .st-profile-documents h4 { margin: 0; }
+.st-profile-document-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+.st-profile-document-grid > section, .st-saved-documents { border: 1px solid var(--st-line); border-radius: 10px; padding: 18px; }
+.st-profile-document-grid .st-muted { margin: 7px 0 15px; }
+.st-saved-documents { display: grid; gap: 13px; }
+.st-saved-documents ul { list-style: none; display: grid; gap: 0; padding: 0; margin: 0; }
+.st-saved-documents li { display: flex; justify-content: space-between; gap: 18px; padding: 11px 0; border-top: 1px solid var(--st-line); }
+.st-saved-documents li strong { font-size: 12px; overflow-wrap: anywhere; }
+.st-saved-documents li span { color: var(--st-muted); font-size: 11px; text-align: right; white-space: nowrap; }
+@media (max-width: 760px) { .st-profile-document-grid { grid-template-columns: 1fr; } .st-saved-documents li { display: grid; gap: 4px; } .st-saved-documents li span { text-align: left; white-space: normal; } }
 .st-bullets {
   padding-left: 18px;
   margin: 10px 0;
@@ -3300,7 +3311,7 @@
 .st-portions h3 { font-size: 12px; margin-bottom: 8px; }
 .st-portions ul { list-style: none; margin: 0; padding: 0; }
 
-/* ---- Observation Haki research & parsers ---- */
+/* ---- Student F.R.I.D.A.Y. research & parsers ---- */
 .st-rich { display: grid; gap: 10px; }
 .st-rich h3 { font-size: 15px; letter-spacing: -0.02em; margin: 8px 0 0; }
 .st-rich h4 { font-size: 13px; margin: 6px 0 0; }

@@ -1,13 +1,16 @@
 "use client";
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   ArrowUp,
+  ArrowUpRight,
   BriefcaseBusiness,
   ChartLine,
   Check,
   CircleAlert,
   Copy,
   History as HistoryIcon,
+  IdCard,
   Info,
   Keyboard,
   Mic,
@@ -18,7 +21,13 @@ import {
   Volume2,
 } from "lucide-react";
 import type { Row } from "@/features/placement/lib/types";
-import { speakable, sentences } from "@/features/assistant/lib/protocol";
+import {
+  MAX_PROFILE_LINKS,
+  parseProfileLink,
+  speakable,
+  sentences,
+  type ProfileLink,
+} from "@/features/assistant/lib/protocol";
 import { pickVoice } from "@/shared/speech/voice";
 import { Answer } from "./friday/Answer";
 import { History } from "./friday/History";
@@ -31,6 +40,10 @@ type Turn = {
   at: number | null;
   durationMs?: number;
   tokens?: number | null;
+  // Student profiles resolved by the server's tools during this turn. They
+  // arrive as profile_link events and are not stored with the saved text, so
+  // a reloaded conversation shows the answer without these buttons.
+  links?: ProfileLink[];
 };
 
 type Capabilities = {
@@ -502,6 +515,19 @@ export function FridayChat({
             const total =
               typeof u?.totalTokens === "number" ? u.totalTokens : null;
             patchTurn(answerId, (t) => ({ ...t, tokens: total }));
+          } else if (event.type === "profile_link") {
+            // Strictly validated; anything malformed is ignored.
+            const link = parseProfileLink(event);
+            if (link)
+              patchTurn(answerId, (t) => {
+                const links = t.links ?? [];
+                if (
+                  links.length >= MAX_PROFILE_LINKS ||
+                  links.some((l) => l.id === link.id)
+                )
+                  return t;
+                return { ...t, links: [...links, link] };
+              });
           } else if (event.type === "text_delta") {
             text += String(event.text ?? "");
             patchTurn(answerId, (t) => ({ ...t, content: text }));
@@ -1065,6 +1091,47 @@ export function FridayChat({
                             This answer was interrupted and has not been saved.
                           </p>
                         )}
+
+                        {t.state === "complete" &&
+                          t.content &&
+                          t.links &&
+                          t.links.length > 0 && (
+                            <ul
+                              className="fr-profile-links"
+                              aria-label="Student profiles in this answer"
+                            >
+                              {t.links.map((l) => (
+                                <li key={l.id}>
+                                  <Link
+                                    href={l.url}
+                                    target="_blank"
+                                    rel="noopener"
+                                    prefetch={false}
+                                    className="fr-btn fr-btn--outline fr-btn--small fr-profile-link"
+                                    aria-label={`View student profile: ${l.name}, ${l.usn}`}
+                                  >
+                                    <IdCard size={15} aria-hidden="true" />
+                                    <span className="fr-profile-link-text">
+                                      View student profile
+                                    </span>
+                                    <span className="fr-profile-link-who">
+                                      <span className="fr-profile-link-name">
+                                        {l.name}
+                                      </span>
+                                      <span className="fr-profile-link-usn">
+                                        {l.usn}
+                                      </span>
+                                    </span>
+                                    <ArrowUpRight
+                                      size={14}
+                                      aria-hidden="true"
+                                      className="fr-profile-link-go"
+                                    />
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
 
                         {t.state === "complete" && t.content && (
                           <div className="fr-turn-actions">

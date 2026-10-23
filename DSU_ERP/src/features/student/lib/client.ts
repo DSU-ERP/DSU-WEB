@@ -1,3 +1,25 @@
+/**
+ * A failed student API request. It is still an Error with the same message as
+ * before; the code and the known extra fields (missing sections, invalid
+ * fields, the latest revision, refresh wait) are added for screens that need
+ * them.
+ */
+export class StudentApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+    public code?: string,
+    public details: {
+      missing?: string[];
+      fields?: string[];
+      revision?: number;
+      retryAfterSeconds?: number;
+    } = {},
+  ) {
+    super(message);
+    this.name = "StudentApiError";
+  }
+}
 export async function studentFetch<T>(
   path: string,
   options: {
@@ -30,11 +52,14 @@ export async function studentFetch<T>(
     throw new Error("Please sign in again.");
   }
   if (!response.ok || !result || !("data" in result))
-    throw new Error(
+    throw new StudentApiError(
       result?.error ||
         (response.status >= 500
           ? "Campus services are busy right now. Please try again in a moment."
           : "The request could not be completed. Please try again."),
+      response.status,
+      typeof result?.code === "string" ? result.code : undefined,
+      result?.details && typeof result.details === "object" ? result.details : {},
     );
   return result.data as T;
 }

@@ -9,7 +9,7 @@ const campusDay = (date: Date) => {
 };
 
 /** Recents use campus calendar days, independent of the browser's timezone. */
-export function groupHakiHistory<T extends DatedConversation>(rows: T[], search = "", now = new Date()) {
+export function groupFridayHistory<T extends DatedConversation>(rows: T[], search = "", now = new Date()) {
   const today = campusDay(now);
   const query = search.trim().toLocaleLowerCase();
   const groups = new Map<string, T[]>();

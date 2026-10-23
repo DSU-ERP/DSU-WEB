@@ -1,6 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { officerSession, placementRead } from "@/features/placement/lib/server";
+import {
+  officerSession,
+  placementOverviewCharts,
+  placementRead,
+} from "@/features/placement/lib/server";
+import { CampusError } from "@/shared/http/errors";
+import type { OverviewCharts as ChartsData } from "@/features/placement/lib/intelligence";
+import { OverviewCharts } from "@/features/placement/components/Charts";
 import {
   SECTIONS,
   queryFrom,
@@ -21,7 +28,20 @@ export default async function PlacementSection({
   if (!Object.hasOwn(SECTIONS, section)) notFound();
   const config = SECTIONS[section as Section],
     query = queryFrom(await searchParams);
-  const data = await placementRead<Report>(config.resource, query);
+  // Overview charts share the page's cohort filters (batch and department
+  // only). A chart failure must not take the recorded reports down with it.
+  const [data, charts] = await Promise.all([
+    placementRead<Report>(config.resource, query),
+    section === "overview"
+      ? placementOverviewCharts({ batch: query.batch, department: query.department }).then(
+          (value): { value: ChartsData | null; error?: string } => ({ value }),
+          (error: unknown) => {
+            if (!(error instanceof CampusError)) throw error;
+            return { value: null, error: error.message };
+          },
+        )
+      : null,
+  ]);
   return (
     <>
       <p className="erp-eyebrow">DSU / PLACEMENT OFFICER</p>
@@ -58,6 +78,7 @@ export default async function PlacementSection({
         </div>
       </div>
       <ReportFilters section={section as Section} data={data} query={query} />
+      {charts && <OverviewCharts charts={charts.value} error={charts.error} />}
       <ReportBody section={section as Section} data={data} query={query} />
     </>
   );

@@ -44,3 +44,6 @@ test("small text helpers", () => {
   assert.equal(wordCount(""), 0);
   assert.equal(statusText("in-progress"), "In progress");
 });
+
+// Skills intelligence helpers run with the student progress suite.
+import "./student-skills.test";

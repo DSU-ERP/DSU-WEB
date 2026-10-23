@@ -2,6 +2,8 @@ import Link from "next/link";
 import { DateLabel, Progress } from "./UI";
 import { ArrowRight, ArrowUpRight, Mic, Sparkles, MessageSquare, CalendarDays, Check, FileText } from "lucide-react";
 import type { Notice, OfficialStudent } from "../lib/types";
+import type { SkillsProfile } from "../lib/skills";
+import { SkillsDashboard } from "./TechnicalProfile";
 import { academicStanding, activitySeries, deadlineLabel, readinessChecklist, statusText, type ActivityDay } from "../lib/progress";
 export type DashboardData = {
   official: OfficialStudent;
@@ -68,7 +70,8 @@ export function ReadinessRing({ data }: { data: DashboardData }) {
       style={{ "--score": `${data.score ?? 0}%` } as React.CSSProperties}
     >
       <div>
-        <strong>{data.score ?? "—"}</strong>
+        {/* No score yet: the band says "Not measured"; no placeholder dash. */}
+        {data.score !== null && <strong>{data.score}</strong>}
         <small>{data.band}</small>
       </div>
     </div>
@@ -120,7 +123,10 @@ function ActivityStrip({ activity }: { activity: ActivityDay[] }) {
     </div>
   );
 }
-export function Dashboard({ data }: { data: DashboardData }) {
+export function Dashboard({ data, skills, skillsError }: { data: DashboardData; skills?: SkillsProfile | null; skillsError?: string }) {
+  // /student/onboarding is now skills onboarding; profile setup (registration)
+  // lives at /onboarding.
+  const next = data.next.href === "/student/onboarding" ? { ...data.next, href: "/onboarding" } : data.next;
   const words = (data.profile.fullName || data.official.full_name).trim().split(/\s+/);
   const first = words.find((word) => word.replace(/\./g, "").length > 1) || words[0] || "there";
   const name = first === first.toUpperCase() ? first[0] + first.slice(1).toLowerCase() : first;
@@ -145,7 +151,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
         {[
           { title: "Practise an interview", note: "Build confidence in your answers", href: "/student/interview?view=create", Icon: Mic },
           { title: "Take a mock test", note: "Give your knowledge a workout", href: "/student/ai-mock-test", Icon: Sparkles },
-          { title: "Ask Observation Haki", note: "Think through your next move", href: "/student/observation-haki", Icon: MessageSquare },
+          { title: "Ask F.R.I.D.A.Y.", note: "Think through your next move", href: "/student/friday", Icon: MessageSquare },
         ].map(({ title, note, href, Icon }) => (
           <Link key={href} href={href}>
             <span className="st-home-launch-icon"><Icon size={20} strokeWidth={1.6} /></span>
@@ -156,8 +162,8 @@ export function Dashboard({ data }: { data: DashboardData }) {
 
       <section className="st-home-next" aria-labelledby="home-next-title">
         <span className="st-home-next-icon"><FileText size={22} strokeWidth={1.5} /></span>
-        <div><p className="st-home-kicker">A good next step</p><h2 id="home-next-title">{data.next.title}</h2><p>{data.next.reason}</p></div>
-        <Link className="st-home-primary" href={data.next.href}>{data.next.label}<ArrowRight size={16} /></Link>
+        <div><p className="st-home-kicker">A good next step</p><h2 id="home-next-title">{next.title}</h2><p>{next.reason}</p></div>
+        <Link className="st-home-primary" href={next.href}>{next.label}<ArrowRight size={16} /></Link>
       </section>
 
       <dl className="st-home-stats" aria-label="Your progress at a glance">
@@ -215,6 +221,7 @@ export function Dashboard({ data }: { data: DashboardData }) {
           {data.notifications.length > 0 && <section className="st-home-section" aria-labelledby="home-updates-title"><header><h2 id="home-updates-title">Campus updates</h2></header><div className="st-home-rows">{data.notifications.map((notice) => <article key={notice.id}>{notice.href ? <Link href={notice.href}><h3>{notice.title}</h3></Link> : <h3>{notice.title}</h3>}<p>{notice.body}</p>{!notice.read_at && <span className="st-home-unread">Unread</span>}</article>)}</div></section>}
         </aside>
       </div>
+      {skills !== undefined && <SkillsDashboard profile={skills} error={skillsError} />}
     </div>
   );
 }
