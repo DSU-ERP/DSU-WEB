@@ -44,7 +44,7 @@ const clampWidth = (w: number) =>
 const uiScale = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
 
-export function Workspace({ children }: { children: React.ReactNode }) {
+export function Workspace({ children, competencyTesting=false }: { children: React.ReactNode; competencyTesting?:boolean }) {
   const path = usePathname();
   const [collapsed, setCollapsed] = useState(false),
     [theme, setTheme] = useState("light"),
@@ -106,6 +106,7 @@ export function Workspace({ children }: { children: React.ReactNode }) {
     current: boolean;
     className?: string;
   }[] = [
+    ...(competencyTesting ? [{href:"/placement/talent-intelligence",label:"Talent intelligence",Icon:ChartLine,current:path==="/placement/talent-intelligence"}] : []),
     ...Object.entries(SECTIONS).map(([key, section]) => ({
       href: `/placement/${key}`,
       label: section.title,

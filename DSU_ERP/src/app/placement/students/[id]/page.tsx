@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {competencyTestingEnabled} from '@/features/competency/server';
 import { notFound } from "next/navigation";
 import {
   officerSession,
@@ -50,6 +51,7 @@ export default async function Journey({
           )
         }
       />
+      {competencyTestingEnabled()&&<Link href={'/placement/talent-intelligence?student='+id} className="erp-secondary">Review competency evidence and role alignment</Link>}
     </>
   );
 }

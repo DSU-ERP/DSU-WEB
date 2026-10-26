@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { competencyTestingEnabled } from "@/features/competency/server";
 import { officerSession } from "@/features/placement/lib/server";
 import { requireWorkspace } from "@/shared/auth/workspace";
 import { CampusError } from "@/shared/http/errors";
@@ -47,5 +48,5 @@ export default async function PlacementLayout({
       </main>
     );
   }
-  return <Workspace>{children}</Workspace>;
+  return <Workspace competencyTesting={competencyTestingEnabled()}>{children}</Workspace>;
 }

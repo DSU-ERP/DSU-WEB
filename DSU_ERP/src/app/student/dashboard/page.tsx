@@ -1,4 +1,6 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { competencyTestingEnabled } from "@/features/competency/testing-config";
 import { backendApi } from "@/shared/http/backend";
 import { CampusError } from "@/shared/http/errors";
 import { describeFailure } from "@/shared/http/diagnostics";
@@ -26,10 +28,19 @@ export default async function Page() {
         : "Your skills profile is unavailable right now."
       : undefined;
   return (
+    <>
     <Dashboard
       data={dashboard.value.data}
       skills={skills.status === "fulfilled" ? skills.value : null}
       skillsError={skillsError}
     />
+    {competencyTestingEnabled() && (
+      <section className="st-panel">
+        <h2>Career intelligence</h2>
+        <p>Explore your competency evidence and role requirements, separately from academic grades.</p>
+        <Link href="/student/career-intelligence">View evidence and career paths</Link>
+      </section>
+    )}
+    </>
   );
 }

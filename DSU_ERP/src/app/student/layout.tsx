@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import { competencyTestingEnabled } from "@/features/competency/server";
 import { redirect } from "next/navigation";
 import { studentProfile } from "@/features/student/lib/server";
 import { PATHNAME_HEADER, skillsGateRedirect, studentSegments } from "@/features/student/lib/skills";
@@ -83,6 +84,7 @@ async function AuthenticatedStudentLayout({ children }: { children: React.ReactN
   }
   return (
     <StudentShell
+      competencyTesting={competencyTestingEnabled()}
       name={profile.details.fullName || profile.official.full_name}
       usn={profile.official.enrollment_no}
       // While skills onboarding is required only the onboarding flow is

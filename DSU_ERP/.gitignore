@@ -4,6 +4,8 @@ node_modules/
 
 # Next.js output and generated TypeScript files
 .next/
+.next-competency-testing/
+.next-competency-build/
 out/
 build/
 dist/

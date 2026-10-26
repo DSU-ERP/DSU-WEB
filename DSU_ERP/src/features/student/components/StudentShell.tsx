@@ -46,6 +46,7 @@ export function StudentShell({
   usn,
   children,
   mode = "full",
+  competencyTesting = false,
 }: {
   name: string;
   usn: string;
@@ -53,6 +54,7 @@ export function StudentShell({
   // "onboarding": skills onboarding is still required, so only the
   // onboarding flow is reachable and no workspace navigation is shown.
   mode?: "full" | "onboarding";
+  competencyTesting?: boolean;
 }) {
   const path = usePathname();
   const [theme, setTheme] = useState("light"),
@@ -63,7 +65,8 @@ export function StudentShell({
     [noticeLoading, setNoticeLoading] = useState(false),
     [noticeError, setNoticeError] = useState("");
   const command = useRef<HTMLDialogElement>(null);
-  const current = [...STUDENT_MODULES]
+  const modules = [...STUDENT_MODULES, ...(competencyTesting ? [{href:"/student/career-intelligence",label:"Career intelligence",purpose:"Evidence and career development",group:"Workspace",icon:"chart" as const}] : [])];
+  const current = [...modules]
     .reverse()
     .find((item) => path.startsWith(item.href));
   useEffect(() => {
@@ -194,7 +197,7 @@ export function StudentShell({
           {["Workspace", "Placement kit", "Campus", "Account"].map((group) => (
             <div className="st-nav-group" key={group}>
               <p>{group}</p>
-              {STUDENT_MODULES.filter((item) => item.group === group).map(
+              {modules.filter((item) => item.group === group).map(
                 (item) => {
                   const Icon = icons[item.icon];
                   const active = current?.href === item.href;
@@ -382,7 +385,7 @@ export function StudentShell({
           </button>
         </div>
         <div className="st-command-results">
-          {STUDENT_MODULES.filter((item) =>
+          {modules.filter((item) =>
             `${item.label} ${item.purpose}`
               .toLowerCase()
               .includes(term.toLowerCase()),
@@ -403,7 +406,7 @@ export function StudentShell({
               </Link>
             );
           })}
-          {!STUDENT_MODULES.some((item) =>
+          {!modules.some((item) =>
             `${item.label} ${item.purpose}`
               .toLowerCase()
               .includes(term.toLowerCase()),

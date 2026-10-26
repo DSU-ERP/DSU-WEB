@@ -1,4 +1,6 @@
 import { skillsProfile } from "@/features/student/lib/server";
+import Link from 'next/link';
+import {competencyTestingEnabled} from '@/features/competency/server';
 import { Connections } from "@/features/student/components/Connections";
 import { PageTitle } from "@/features/student/components/UI";
 import { CampusError } from "@/shared/http/errors";
@@ -27,11 +29,11 @@ export default async function Page({ searchParams }: { searchParams: Promise<{ g
       </>
     );
   return (
-    <Connections
+    <>{competencyTestingEnabled()&&<Link href="/student/career-intelligence" className="st-button">View competency evidence and career paths</Link>}<Connections
       initial={profile}
       github={typeof query.github === "string" ? query.github : undefined}
       githubCode={typeof query.code === "string" ? query.code : undefined}
       preview={query.preview === "1"}
-    />
+    /></>
   );
 }

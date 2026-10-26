@@ -3,6 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev:testing": "node --env-file=.env.competency-testing scripts/start-competency-testing.mjs",
+    "test:competency-ui": "node scripts/verify-competency-ui.cjs",
     "speech:setup": "node scripts/setup-interview-speech.mjs",
     "predev": "node scripts/setup-interview-speech.mjs",
     "prebuild": "node scripts/setup-interview-speech.mjs",

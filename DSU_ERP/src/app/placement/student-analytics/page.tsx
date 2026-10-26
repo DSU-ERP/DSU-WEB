@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { competencyTestingEnabled } from "@/features/competency/testing-config";
 import { officerSession, placementRead } from "@/features/placement/lib/server";
 import { StudentProfile } from "@/features/placement/components/StudentProfile";
 import { Table } from "@/features/placement/components/UI";
@@ -16,6 +17,11 @@ function ProfileLink({ id }: { id: string }) {
       <Link className="erp-primary" href={`/placement/students/${encodeURIComponent(id)}`}>
         View student profile
       </Link>
+      {competencyTestingEnabled() && (
+        <Link className="erp-secondary" href={`/placement/talent-intelligence?student=${encodeURIComponent(id)}`}>
+          View competency evidence
+        </Link>
+      )}
     </div>
   );
 }

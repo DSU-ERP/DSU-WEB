@@ -1,4 +1,5 @@
 import "server-only";
+import {COMPETENCY_TOOLS,runCompetencyTool} from '@/features/competency/friday-tools';
 import { placementRead } from "@/features/placement/lib/server";
 import type { Report, Row } from "@/features/placement/lib/types";
 import { backendApi } from "@/shared/http/backend";
@@ -251,6 +252,7 @@ function slimStudent(r: Row) {
 }
 
 export const FRIDAY_TOOLS = [
+  ...COMPETENCY_TOOLS,
   {
     type: "function" as const,
     function: {
@@ -479,6 +481,7 @@ export async function runTool(
   ctx: ToolContext = createToolContext(),
 ): Promise<ToolResult> {
   try {
+    if(name.startsWith('competency_'))return {ok:true,data:await withTimeout(runCompetencyTool(name,args,ctx.students))};
     switch (name) {
       case "eligibility_rules": {
         // Thresholds are configured in the database (erp.cgpa_rules and
