@@ -1096,76 +1096,61 @@
     padding-left: 20px;
   }
 }
-@media (max-width: 760px) {
+@media (max-width: 1023px) {
+  /* Sidebar: off-canvas overlay drawer */
   .st-sidebar,
   .st-collapsed .st-sidebar {
     transform: translateX(-120%);
-    width: 255px;
-    inset: 10px auto 10px 10px;
+    width: 270px;
+    inset: 0 auto 0 0;
+    border-radius: 0 16px 16px 0;
+    z-index: 200;
+    transition: transform 0.26s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.26s ease;
   }
   .st-sidebar.st-drawer-open {
     transform: translateX(0);
+    box-shadow: 8px 0 40px rgba(0, 0, 0, 0.18);
   }
+  /* Restore all hidden labels in drawer regardless of collapsed state */
   .st-collapsed .st-sidebar.st-drawer-open .st-brand > span + span,
   .st-collapsed .st-sidebar.st-drawer-open .st-identity,
   .st-collapsed .st-sidebar.st-drawer-open .st-nav-group > p,
-  .st-collapsed .st-sidebar.st-drawer-open .st-nav-group > a > span {
+  .st-collapsed .st-sidebar.st-drawer-open .st-nav-group > a > span,
+  .st-collapsed .st-sidebar.st-drawer-open .st-sidebar-footer {
     display: revert;
   }
   .st-page,
   .st-collapsed .st-page {
     margin-left: 0;
   }
-  .st-mobile-menu {
-    display: grid;
-  }
+  /* Show hamburger, hide desktop collapse toggle */
+  .st-mobile-menu { display: grid; }
+  .st-desktop-nav { display: none !important; }
   .st-topbar {
-    height: 65px;
-    padding: 0 16px;
+    height: 60px;
+    padding: 0 18px;
   }
-  .st-breadcrumb {
-    gap: 9px;
-  }
-  .st-top-actions {
-    gap: 7px;
-  }
-  .st-content {
-    padding: 25px 16px;
-  }
+  .st-breadcrumb { gap: 10px; }
+  .st-top-actions { gap: 8px; }
+  .st-content { padding: 24px 18px; }
   .st-heading {
     align-items: start;
     flex-direction: column;
-    gap: 15px;
+    gap: 14px;
   }
-  .st-heading h1 {
-    font-size: 30px;
-  }
-  .st-panel {
-    padding: 20px;
-    border-radius: 12px;
-  }
-  .st-metric {
-    padding: 17px;
-  }
-  .st-metric strong {
-    font-size: 26px;
-  }
-  .st-hero {
-    flex-direction: column;
-    padding: 24px;
-  }
-  .st-hero h1 {
-    font-size: 32px;
-  }
+  .st-heading h1 { font-size: 28px; }
+  .st-panel { padding: 18px; border-radius: 12px; }
+  .st-metric { padding: 16px; }
+  .st-metric strong { font-size: 26px; }
+  .st-hero { flex-direction: column; padding: 22px; }
+  .st-hero h1 { font-size: 30px; }
   .st-recommendation {
     max-width: none;
     border-left: 0;
     border-top: 1px solid var(--st-line);
-    padding: 18px 0 0;
+    padding: 16px 0 0;
   }
-  .st-onboarding {
-    grid-template-columns: 1fr;
-  }
+  .st-onboarding { grid-template-columns: 1fr; }
   .st-steps {
     display: flex;
     justify-content: space-between;
@@ -1180,10 +1165,8 @@
   .st-step > span {
     font-size: 10px;
   }
-  .st-form-grid,
-  .st-grid {
-    grid-template-columns: 1fr;
-  }
+  .st-form-grid { grid-template-columns: 1fr; }
+  .st-grid { grid-template-columns: 1fr; }
   .st-action-dock {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -1202,14 +1185,22 @@
   .st-choice-grid {
     grid-template-columns: 1fr 1fr;
   }
+  /* Sidebar footer: hidden in collapsed icon mode — restored when drawer opens */
   .st-sidebar-footer {
+    display: none;
+  }
+  .st-sidebar.st-drawer-open .st-sidebar-footer {
+    display: flex;
+  }
+  /* Collapse button is meaningless inside the drawer */
+  .st-sidebar.st-drawer-open .st-sidebar-footer > button {
     display: none;
   }
   .st-list-row {
     align-items: start;
   }
   .st-topbar strong {
-    font-size: 10px;
+    font-size: 11px;
   }
   .st-actions .st-button {
     white-space: normal;
@@ -3791,4 +3782,107 @@
 .st-loading-panel { min-height: 350px; }
 @keyframes st-dashboard-pulse { 50% { opacity: .45; } }
 @media (prefers-reduced-motion: reduce) { .st-dashboard-loading [data-slot="skeleton"] { animation: none; } }
-@media (max-width: 760px) { .st-sidebar:not(.st-drawer-open) { visibility: hidden; } .st-sidebar.st-drawer-open { visibility: visible; } }
+@media (max-width: 1023px) { .st-sidebar:not(.st-drawer-open) { visibility: hidden; } .st-sidebar.st-drawer-open { visibility: visible; } }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   STUDENT PORTAL — RESPONSIVE SYSTEM UPGRADE
+   Extends the mobile drawer from 760 → 1023px, adds proper tablet and
+   compact-desktop layouts, scrim animation, and touch targets.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Scrim: animated backdrop for mobile drawer ── */
+@keyframes st-scrim-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.st-scrim {
+  animation: st-scrim-in 0.2s ease both;
+  cursor: default;
+  border: none;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  background: rgba(0, 0, 0, 0.48);
+}
+
+/* ── Tablet layout: 1024–1279px (desktop with sidebar, but compact) ── */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .st-sidebar { width: 220px; }
+  .st-page { margin-left: 248px; }
+  .st-collapsed .st-page { margin-left: 106px; }
+  .st-topbar { padding: 0 24px; }
+  .st-content { padding: 28px 24px; }
+  .st-metrics { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); }
+}
+
+/* ── Large tablet: 768–1023px (drawer mode — content gets full width) ── */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Full-width content area (no sidebar eating space) */
+  .st-page { margin-left: 0 !important; }
+  .st-content { padding: 28px 28px; }
+  .st-topbar { padding: 0 24px; height: 64px; }
+  /* Layout: more columns available since full width */
+  .st-metrics { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  .st-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .st-action-dock { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .st-heading { flex-direction: row; align-items: flex-end; }
+  .st-heading h1 { font-size: 32px; }
+  /* Restore search bar */
+  .st-search-trigger { display: flex; border: 1px solid var(--st-line); padding: 7px 10px; }
+  .st-search-trigger span { display: inline; }
+  .st-search-trigger kbd { display: inline; }
+  /* Two-col works at this width */
+  .st-two-col { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+/* ── Short viewport fix: 768×689 and similar ── */
+@media (max-width: 1023px) and (max-height: 700px) {
+  .st-topbar { height: 52px !important; }
+  .st-content { padding-top: 18px !important; padding-bottom: 18px !important; }
+  .st-sidebar { padding-top: 16px !important; padding-bottom: 10px !important; }
+  .st-identity { margin: 16px 0 14px !important; padding: 10px !important; }
+  .st-nav-group { margin-bottom: 12px !important; }
+  .st-nav-group > a { padding: 7px 11px !important; }
+  .st-heading { margin-bottom: 18px !important; }
+  .st-panel { padding: 14px !important; margin-bottom: 14px !important; }
+  .st-metric { padding: 12px !important; }
+  .st-footer { padding: 12px 18px !important; }
+}
+
+/* ── Touch targets: 44px minimum on coarse-pointer devices ── */
+@media (hover: none) and (pointer: coarse) {
+  .st-button,
+  .st-icon-button,
+  .st-mobile-menu,
+  .st-nav-group > a,
+  .st-sidebar-footer button,
+  summary {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  .st-nav-group > a { padding: 10px 11px; }
+  .st-icon-button { padding: 10px; }
+}
+
+/* ── Large desktop: content max-width and generous padding ── */
+@media (min-width: 1450px) {
+  .st-sidebar { width: 260px; }
+  .st-page { margin-left: 288px; }
+  .st-collapsed .st-page { margin-left: 106px; }
+}
+
+/* ── Ultra-wide: cap content width ── */
+@media (min-width: 1800px) {
+  .st-content { max-width: 1800px; }
+}
+
+/* ── Print: hide chrome, show content only ── */
+@media print {
+  .st-sidebar, .st-topbar, .st-footer,
+  .st-scrim, .st-command,
+  .st-notifications, .st-account,
+  .st-search-trigger, .st-mobile-menu,
+  .st-icon-button, .st-actions { display: none !important; }
+  .st-page { margin-left: 0 !important; }
+  .st-content { padding: 0 !important; max-width: 100% !important; }
+  .st-panel { box-shadow: none !important; border: 1px solid #ccc !important; }
+}
