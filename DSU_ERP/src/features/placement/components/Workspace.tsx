@@ -10,25 +10,19 @@ import {
   Network,
   Building2,
   ChartLine,
+  ChevronDown,
   FileText,
   LayoutGrid,
   ListChecks,
   LogOut,
   Menu,
   Moon,
+  PanelLeft,
   Sun,
   Users,
   Upload,
   Shapes,
-<<<<<<< Updated upstream
-  ChevronDown,
-  PanelLeft,
-  Menu,
-  Moon,
-  Sun,
-=======
   X,
->>>>>>> Stashed changes
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS } from "@/features/placement/lib/types";
@@ -46,13 +40,9 @@ const ICONS: Record<string, LucideIcon> = {
   tests: ListChecks,
 };
 
-// Sidebar width limits in pixels at the default text size. The default
-// matches the original design. The width is applied in rem, so it scales with
-// the rest of the interface on large displays.
 const WIDTH = { min: 200, max: 380, initial: 246, step: 16 };
 const clampWidth = (w: number) =>
   Math.min(WIDTH.max, Math.max(WIDTH.min, Math.round(w)));
-// How many screen pixels one design pixel currently takes.
 const uiScale = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
 
@@ -61,55 +51,59 @@ const NAV_GROUPS = [
   { id: "departments", label: "Department Intelligence", Icon: Network, routes: ["departments", "batch", "categories", "student-analytics"] },
 ];
 const matchesRoute = (path: string, href: string) => path === href || path.startsWith(`${href}/`);
-const activeGroups = (path: string) => NAV_GROUPS.filter(group => group.routes.some(route => matchesRoute(path, `/placement/${route}`))).map(group => group.id);
+const activeGroups = (path: string) =>
+  NAV_GROUPS.filter(group =>
+    group.routes.some(route => matchesRoute(path, `/placement/${route}`))
+  ).map(group => group.id);
 
-export function Workspace({ children, competencyTesting=false }: { children: React.ReactNode; competencyTesting?:boolean }) {
+export function Workspace({ children, competencyTesting = false }: { children: React.ReactNode; competencyTesting?: boolean }) {
   const path = usePathname();
+
   const [openGroups, setOpenGroups] = useState<string[]>(() => activeGroups(path));
   useEffect(() => {
     setOpenGroups(previous => [...new Set([...previous, ...activeGroups(path)])]);
   }, [path]);
+
   const drawer = useRef<HTMLDialogElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const closeDrawer = () => { drawer.current?.close(); setMobileOpen(false); };
+
+  // Close mobile drawer on route change.
   useEffect(() => { drawer.current?.close(); setMobileOpen(false); }, [path]);
+
+  // Close drawer when viewport grows to desktop width.
   useEffect(() => {
-    const media = window.matchMedia("(min-width: 1001px)");
+    const media = window.matchMedia("(min-width: 1024px)");
     const closeOnDesktop = () => { if (media.matches) { drawer.current?.close(); setMobileOpen(false); } };
     media.addEventListener("change", closeOnDesktop);
     return () => media.removeEventListener("change", closeOnDesktop);
   }, []);
+
   const [collapsed, setCollapsed] = useState(false),
     [theme, setTheme] = useState("light"),
     [width, setWidth] = useState(WIDTH.initial),
     [resizing, setResizing] = useState(false),
-    [mobileOpen, setMobileOpen] = useState(false),
     [isMobile, setIsMobile] = useState(false);
+
   const drag = useRef<{ x: number; w: number; scale: number } | null>(null);
   const latest = useRef(width);
-  useEffect(() => {
-    latest.current = width;
-  }, [width]);
+  useEffect(() => { latest.current = width; }, [width]);
 
   // Preferences are read after mount so the server and first client render
   // agree; stored values are validated before use.
   useEffect(() => {
     try {
       setTheme(
-        localStorage.getItem("dsu-placement-theme") === "dark"
-          ? "dark"
-          : "light",
+        localStorage.getItem("dsu-placement-theme") === "dark" ? "dark" : "light",
       );
       setCollapsed(localStorage.getItem("dsu-placement-collapsed") === "true");
-      const stored = Number(
-        localStorage.getItem("dsu-placement-sidebar-width"),
-      );
+      const stored = Number(localStorage.getItem("dsu-placement-sidebar-width"));
       if (Number.isFinite(stored) && stored >= WIDTH.min && stored <= WIDTH.max)
         setWidth(stored);
     } catch {}
   }, []);
 
-  // Detect mobile viewport; swap to drawer mode below 768px.
+  // Track whether we are in mobile/tablet drawer mode (< 1024px).
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 1023px)");
     setIsMobile(mq.matches);
@@ -121,11 +115,6 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // Close mobile drawer on route change.
-  useEffect(() => {
-    setMobileOpen(false);
-  }, [path]);
-
   // Prevent body scroll while mobile drawer is open.
   useEffect(() => {
     const html = document.documentElement;
@@ -135,16 +124,12 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
   }, [mobileOpen]);
 
   const saveWidth = (w: number) => {
-    try {
-      localStorage.setItem("dsu-placement-sidebar-width", String(w));
-    } catch {}
+    try { localStorage.setItem("dsu-placement-sidebar-width", String(w)); } catch {}
   };
   const toggleTheme = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);
-    try {
-      localStorage.setItem("dsu-placement-theme", next);
-    } catch {}
+    try { localStorage.setItem("dsu-placement-theme", next); } catch {}
   };
   const toggleSidebar = () => {
     if (isMobile) {
@@ -153,9 +138,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     }
     const next = !collapsed;
     setCollapsed(next);
-    try {
-      localStorage.setItem("dsu-placement-collapsed", String(next));
-    } catch {}
+    try { localStorage.setItem("dsu-placement-collapsed", String(next)); } catch {}
   };
 
   const resizeTo = (w: number) => {
@@ -171,7 +154,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     current: boolean;
     className?: string;
   }[] = [
-    ...(competencyTesting ? [{href:"/placement/talent-intelligence",label:"Talent intelligence",Icon:ChartLine,current:path==="/placement/talent-intelligence"}] : []),
+    ...(competencyTesting ? [{ href: "/placement/talent-intelligence", label: "Talent intelligence", Icon: ChartLine, current: path === "/placement/talent-intelligence" }] : []),
     ...Object.entries(SECTIONS).map(([key, section]) => ({
       href: `/placement/${key}`,
       label: section.title,
@@ -182,9 +165,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
       href: "/placement/categories",
       label: "Student categories",
       Icon: Shapes,
-      current:
-        path === "/placement/categories" ||
-        path.startsWith("/placement/categories/"),
+      current: path === "/placement/categories" || path.startsWith("/placement/categories/"),
     },
     {
       href: "/placement/student-analytics",
@@ -219,28 +200,51 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
       if (!item) return null;
       const { href, Icon, current, className } = item;
       const label = route === "departments" ? "Department Intelligence Overview" : item.label;
-      return <Link key={href} href={href} className={className} aria-current={current ? "page" : undefined}
-        title={!mobile && collapsed ? label : undefined} onClick={mobile ? closeDrawer : undefined}>
-        <Icon size={16} aria-hidden="true"/><span className="po-nav-label">{label}</span>
-      </Link>;
+      return (
+        <Link key={href} href={href} className={className}
+          aria-current={current ? "page" : undefined}
+          title={!mobile && collapsed && !isMobile ? label : undefined}
+          onClick={mobile ? closeDrawer : undefined}
+        >
+          <Icon size={16} aria-hidden="true" /><span className="po-nav-label">{label}</span>
+        </Link>
+      );
     };
-    return <nav id={mobile ? "placement-mobile-nav" : "placement-nav"} aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}>
-      {["assistants/friday", "overview", "companies", "drives"].map(link)}
-      {NAV_GROUPS.map(({id, label, Icon, routes}) => {
-        const open = openGroups.includes(id);
-        const controls = `po-${mobile ? "mobile" : "desktop"}-${id}-links`;
-        return <div className="po-nav-group" key={id} data-active={routes.some(route => matchesRoute(path, `/placement/${route}`)) || undefined}>
-          <button type="button" className="po-nav-toggle" aria-expanded={open} aria-controls={controls}
-            title={!mobile && collapsed ? label : undefined}
-            onClick={() => setOpenGroups(previous => open ? previous.filter(value => value !== id) : [...previous, id])}>
-            <Icon size={16} aria-hidden="true"/><span className="po-nav-label">{label}</span><ChevronDown className="po-nav-chevron" size={13} aria-hidden="true"/>
-          </button>
-          <div id={controls} className="po-nav-children" hidden={!open}>{routes.map(link)}</div>
-        </div>;
-      })}
-      {["company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
-    </nav>;
+    return (
+      <nav
+        id={mobile ? "placement-mobile-nav" : "placement-nav"}
+        aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}
+      >
+        {["assistants/friday", "overview", "companies", "drives"].map(link)}
+        {NAV_GROUPS.map(({ id, label, Icon, routes }) => {
+          const open = openGroups.includes(id);
+          const controls = `po-${mobile ? "mobile" : "desktop"}-${id}-links`;
+          return (
+            <div className="po-nav-group" key={id}
+              data-active={routes.some(route => matchesRoute(path, `/placement/${route}`)) || undefined}
+            >
+              <button type="button" className="po-nav-toggle"
+                aria-expanded={open} aria-controls={controls}
+                title={!mobile && collapsed && !isMobile ? label : undefined}
+                onClick={() => setOpenGroups(previous =>
+                  open ? previous.filter(v => v !== id) : [...previous, id]
+                )}
+              >
+                <Icon size={16} aria-hidden="true" />
+                <span className="po-nav-label">{label}</span>
+                <ChevronDown className="po-nav-chevron" size={13} aria-hidden="true" />
+              </button>
+              <div id={controls} className="po-nav-children" hidden={!open}>
+                {routes.map(link)}
+              </div>
+            </div>
+          );
+        })}
+        {["company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
+      </nav>
+    );
   };
+
   return (
     <div
       className={`erp-shell po-shell po-${theme}${collapsed && !isMobile ? " po-collapsed" : ""}${resizing ? " po-resizing" : ""}${mobileOpen ? " po-mobile-open" : ""}`}
@@ -249,7 +253,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
       <a href="#placement-content" className="po-skip">
         Skip to content
       </a>
-      {/* Mobile drawer backdrop */}
+      {/* Mobile drawer backdrop (CSS-controlled) */}
       <div
         className="po-mobile-backdrop"
         onClick={() => setMobileOpen(false)}
@@ -260,26 +264,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
           DSU <span>/ PLACEMENTS</span>
         </Link>
         <p className="erp-eyebrow">PLACEMENT OFFICER</p>
-        {/* Collapsing keeps every item as an icon. The label stays in the
-            accessibility tree (visually hidden), and a tooltip names it. */}
-<<<<<<< Updated upstream
         {navigation()}
-=======
-        <nav aria-label="Placement Officer navigation" id="placement-nav">
-          {items.map(({ href, label, Icon, current, className }) => (
-            <Link
-              key={href}
-              href={href}
-              className={className}
-              aria-current={current ? "page" : undefined}
-              title={collapsed && !isMobile ? label : undefined}
-            >
-              <Icon size={16} aria-hidden="true" />
-              <span className="po-nav-label">{label}</span>
-            </Link>
-          ))}
-        </nav>
->>>>>>> Stashed changes
         <div className="erp-sidebar-bottom">
           <span className="erp-role">Placement Officer</span>
           <form action={signOut}>
@@ -344,44 +329,56 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
           />
         )}
       </aside>
-      <dialog className="po-mobile-drawer" ref={drawer} aria-labelledby="po-drawer-title" onClose={()=>setMobileOpen(false)} onClick={e=>{if(e.target===e.currentTarget)closeDrawer();}}>
-        <div className="po-drawer-heading"><strong id="po-drawer-title">DSU / Placements</strong><button type="button" className="erp-secondary" onClick={closeDrawer}>Close menu</button></div>
+      {/* Mobile/tablet overlay drawer (dialog) */}
+      <dialog
+        className="po-mobile-drawer"
+        ref={drawer}
+        aria-labelledby="po-drawer-title"
+        onClose={() => setMobileOpen(false)}
+        onClick={(e) => { if (e.target === e.currentTarget) closeDrawer(); }}
+      >
+        <div className="po-drawer-heading">
+          <strong id="po-drawer-title">DSU / Placements</strong>
+          <button type="button" className="erp-secondary" onClick={closeDrawer}>
+            <X size={15} aria-hidden="true" />Close
+          </button>
+        </div>
         {navigation(true)}
-        <div className="po-drawer-account"><span className="erp-role">Placement Officer</span><form action={signOut}><button className="erp-secondary po-signout"><LogOut size={16} aria-hidden="true"/>Sign out</button></form></div>
+        <div className="po-drawer-account">
+          <span className="erp-role">Placement Officer</span>
+          <form action={signOut}>
+            <button className="erp-secondary po-signout">
+              <LogOut size={16} aria-hidden="true" />Sign out
+            </button>
+          </form>
+        </div>
       </dialog>
       <div className="erp-workspace">
         <header className="erp-topbar po-topbar">
+          {/* Desktop: toggle sidebar collapse */}
           <button
             type="button"
-<<<<<<< Updated upstream
             className="po-desktop-nav-toggle"
-=======
-            className="po-topbar-nav-btn"
->>>>>>> Stashed changes
             onClick={toggleSidebar}
             aria-controls="placement-sidebar"
-            aria-expanded={isMobile ? mobileOpen : !collapsed}
-            aria-label={
-              isMobile
-                ? mobileOpen ? "Close navigation" : "Open navigation"
-                : collapsed ? "Expand sidebar" : "Collapse sidebar"
-            }
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-<<<<<<< Updated upstream
-            <PanelLeft size={17} aria-hidden="true"/>{collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            <PanelLeft size={17} aria-hidden="true" />
+            {collapsed ? "Expand sidebar" : "Collapse sidebar"}
           </button>
-          <button type="button" className="po-mobile-nav-toggle" aria-haspopup="dialog" aria-expanded={mobileOpen} onClick={()=>{drawer.current?.showModal();setMobileOpen(true);}}><Menu size={17} aria-hidden="true"/>Menu</button>
+          {/* Mobile/tablet: open overlay drawer */}
+          <button
+            type="button"
+            className="po-mobile-nav-toggle"
+            aria-haspopup="dialog"
+            aria-expanded={mobileOpen}
+            aria-controls="placement-mobile-nav"
+            onClick={() => { drawer.current?.showModal(); setMobileOpen(true); }}
+          >
+            <Menu size={17} aria-hidden="true" />Menu
+          </button>
           <span className="po-topbar-identity">TRAINING & PLACEMENT CELL</span>
-          <button type="button" onClick={toggleTheme}>
-            {theme === "light" ? <Moon size={16} aria-hidden="true"/> : <Sun size={16} aria-hidden="true"/>}Use {theme === "light" ? "dark" : "light"} theme
-=======
-            {isMobile ? (
-              mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />
-            ) : (
-              collapsed ? "Expand sidebar" : "Collapse sidebar"
-            )}
-          </button>
-          <span>TRAINING & PLACEMENT CELL</span>
           <button
             type="button"
             className="po-topbar-theme-btn"
@@ -392,13 +389,10 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
               ? <><Moon size={14} aria-hidden="true" /><span className="po-topbar-theme-label">Dark</span></>
               : <><Sun size={14} aria-hidden="true" /><span className="po-topbar-theme-label">Light</span></>
             }
->>>>>>> Stashed changes
           </button>
         </header>
         <main
           id="placement-content"
-          // The assistant lays out its own full-width bars, so its page drops
-          // the standard content padding.
           className={
             path.startsWith("/placement/assistants/friday")
               ? "erp-main po-main-flush"

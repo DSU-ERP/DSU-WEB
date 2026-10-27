@@ -3112,7 +3112,8 @@ html:has(.po-shell) {
     margin-top: auto !important;
   }
 
-  .po-topbar > span { display: block !important; }
+  .po-topbar > span,
+  .po-topbar-identity { display: block !important; }
 }
 
 /* ── Short viewports (≤ 750px height) on desktop: compress vertical spacing ── */
@@ -3185,4 +3186,221 @@ html:has(.po-shell) {
     transform: none !important;
     filter: none !important;
   }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOPBAR: DESKTOP / MOBILE TOGGLE BUTTONS
+   po-desktop-nav-toggle: shown only on desktop (≥ 1024px)
+   po-mobile-nav-toggle:  shown only on mobile/tablet (< 1024px)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.po-desktop-nav-toggle {
+  display: none; /* hidden below 1024px — mobile drawer button takes over */
+}
+
+.po-mobile-nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+@media (min-width: 1024px) {
+  .po-desktop-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+  .po-mobile-nav-toggle { display: none; }
+}
+
+/* Topbar centre identity label */
+.po-topbar-identity {
+  flex: 1;
+  text-align: center;
+  font: 0.5rem/1 var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--po-muted, #696d65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COLLAPSIBLE NAV GROUPS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.po-nav-group {
+  display: contents; /* groups participate in the nav flow without extra box */
+}
+
+.po-nav-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.po-nav-toggle:hover {
+  background: var(--po-highlight);
+}
+
+.po-nav-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.po-nav-toggle[aria-expanded="true"] .po-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.po-nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  padding-left: 1.375rem;
+}
+
+.po-nav-children[hidden] { display: none; }
+
+/* Active group: highlight the toggle */
+.po-nav-group[data-active] > .po-nav-toggle {
+  color: var(--po-accent, #d9252a);
+}
+
+/* Collapsed sidebar: hide group labels, center toggle icons */
+.po-collapsed .po-nav-toggle .po-nav-label,
+.po-collapsed .po-nav-chevron {
+  display: none;
+}
+
+.po-collapsed .po-nav-toggle {
+  justify-content: center;
+  padding: 0.625rem;
+  gap: 0;
+}
+
+.po-collapsed .po-nav-children {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE / TABLET DIALOG DRAWER
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.po-mobile-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(18rem, 88vw);
+  height: 100dvh;
+  height: 100vh; /* fallback */
+  margin: 0;
+  padding: 1.375rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--po-surface, #fafaf8);
+  border: none;
+  border-right: 1px solid var(--erp-border);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  z-index: 300;
+  animation: po-drawer-slide-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.po-mobile-drawer::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+@keyframes po-drawer-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.po-dark .po-mobile-drawer {
+  background: #1d231c;
+  border-right-color: #2e3a2c;
+}
+
+.po-drawer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--erp-border);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.po-drawer-account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--erp-border);
+  font-size: 0.8125rem;
+}
+
+/* Dialog nav links: full horizontal layout */
+.po-mobile-drawer nav a {
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 0.625rem 0.75rem !important;
+  gap: 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  justify-content: flex-start !important;
+}
+
+.po-mobile-drawer nav a .po-nav-label {
+  position: static !important;
+  display: inline !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+}
+
+.po-mobile-drawer .po-nav-toggle .po-nav-label,
+.po-mobile-drawer .po-nav-chevron {
+  display: inline-flex !important;
+}
+
+.po-mobile-drawer .po-nav-toggle {
+  justify-content: flex-start !important;
+  padding: 0.625rem 0.75rem !important;
+  gap: 0.625rem !important;
+}
+
+.po-mobile-drawer .po-nav-children {
+  display: flex !important;
+  padding-left: 1.375rem !important;
+}
+
+.po-mobile-drawer .po-nav-children[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .po-mobile-drawer { animation: none; }
 }

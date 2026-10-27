@@ -1010,7 +1010,8 @@ html.po-nav-open { overflow: hidden; }
   }
 
   /* Topbar title */
-  .erp-topbar > span {
+  .erp-topbar > span,
+  .po-topbar-identity {
     flex: 1 !important;
     text-align: center !important;
     font-size: 0.5rem !important;
@@ -1022,15 +1023,13 @@ html.po-nav-open { overflow: hidden; }
     display: block !important;
   }
 
-  /* Topbar nav button: icon-only on mobile */
-  .po-topbar-nav-btn {
-    display: flex !important;
+  /* Topbar mobile nav toggle */
+  .po-mobile-nav-toggle {
+    display: inline-flex !important;
     align-items: center !important;
-    justify-content: center !important;
-    width: 2.25rem !important;
-    height: 2.25rem !important;
-    padding: 0 !important;
-    font-size: 0 !important; /* hide text fallback */
+    gap: 0.375rem !important;
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.6875rem !important;
     border-radius: 0.375rem !important;
     flex-shrink: 0 !important;
   }
