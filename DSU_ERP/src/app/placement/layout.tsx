@@ -8,6 +8,7 @@ import { Workspace } from "@/features/placement/components/Workspace";
 import { signOut } from "../login/actions";
 import "../workspace.css";
 import "./placement.css";
+import "./overview.css";
 export const dynamic = "force-dynamic";
 export default async function PlacementLayout({
   children,

@@ -11,6 +11,7 @@ const result = spawnSync(
     ".qa/unit/tests/supabase-portal.test.js",
     ".qa/unit/tests/batches.test.js",
     ".qa/unit/tests/placement.test.js",
+    ".qa/unit/tests/placement-overview.test.js",
     ".qa/unit/tests/placement-intelligence.test.js",
     ".qa/unit/tests/student-skills.test.js",
     ".qa/unit/tests/friday.test.js",

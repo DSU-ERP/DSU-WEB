@@ -1,22 +1,16 @@
 // Placement Overview charts: hand-built and dependency free. Every chart has
 // a title, a definition from the API, a legend with text labels (series also
 // differ by line style, marker shape or fill pattern, never by colour alone),
-// an aria-label summary and a visually hidden data table. With no data the
+// an aria-label summary and an expandable data table. With no data the
 // chart says so instead of drawing anything.
 import {
   chartCount,
   donutArcs,
-  formatCgpa,
-  formatCount,
-  formatPercent,
   labelEvery,
   linePoints,
   monthLabel,
   niceScale,
   roundedPercents,
-  type ChartKpis,
-  type DepartmentBar,
-  type OverviewCharts as Charts,
   type ProgressPoint,
   type StatusSegment,
 } from "@/features/placement/lib/intelligence";
@@ -27,59 +21,6 @@ const SERIES = [
   { key: "drivesCompleted", label: "Drives completed", tone: "drives", shape: "diamond" },
 ] as const;
 
-const KPIS: { key: keyof ChartKpis; label: string; format: (v: unknown) => string }[] = [
-  { key: "totalStudents", label: "Total students", format: formatCount },
-  { key: "eligible", label: "Placement eligible", format: formatCount },
-  { key: "placed", label: "Students placed", format: formatCount },
-  { key: "placementRate", label: "Placement rate", format: (v) => formatPercent(v, 2) },
-  { key: "eligiblePlacementRate", label: "Eligible placement rate", format: (v) => formatPercent(v, 2) },
-  { key: "companies", label: "Participating companies", format: formatCount },
-  { key: "activeDrives", label: "Active drives", format: formatCount },
-  { key: "acceptedOffers", label: "Accepted offers", format: formatCount },
-  { key: "activeOffers", label: "Active offers", format: formatCount },
-  { key: "averageCgpa", label: "Average CGPA", format: formatCgpa },
-];
-
-export function OverviewCharts({
-  charts,
-  error,
-}: {
-  charts: Charts | null;
-  error?: string;
-}) {
-  if (!charts)
-    return (
-      <section className="erp-panel po-chart-error" role="status">
-        <h2>Cohort charts</h2>
-        <p>Charts could not be loaded. {error || "Please try again."}</p>
-        <p className="po-note">
-          The recorded reports below are unaffected.
-        </p>
-      </section>
-    );
-  const d = charts.definitions || {};
-  return (
-    <section className="po-overview-intel" aria-labelledby="po-cohort-heading">
-      <h2 id="po-cohort-heading" className="erp-visually-hidden">
-        Cohort measures and charts
-      </h2>
-      <div className="po-kpis">
-        {KPIS.map((k) => (
-          <article key={k.key} title={d[k.key]}>
-            <span>{k.label}</span>
-            <strong>{k.format(charts.kpis?.[k.key])}</strong>
-            {d[k.key] && <p>{d[k.key]}</p>}
-          </article>
-        ))}
-      </div>
-      <LineChart points={charts.progress || []} definition={d.progress} />
-      <div className="po-chart-pair">
-        <DonutChart segments={charts.status || []} definition={d.status} />
-        <BarChart rows={charts.departments || []} definition={d.departments} />
-      </div>
-    </section>
-  );
-}
 
 function Legend({ items }: { items: { label: string; tone: string; shape?: string; extra?: React.ReactNode }[] }) {
   return (
@@ -120,7 +61,7 @@ export function LineChart({ points, definition }: { points: ProgressPoint[]; def
           </details>
         )}
       </figcaption>
-      {!points.length ? (
+      {!points.length || totals.every(value => value === 0) ? (
         <p className="po-chart-empty">
           No placement events recorded yet for this cohort. The chart appears
           once offers or completed drives are recorded.
@@ -200,7 +141,7 @@ export function LineChart({ points, definition }: { points: ProgressPoint[]; def
               )}
             </div>
           </div>
-          <div className="erp-visually-hidden"><table>
+          <details className="po-chart-data"><summary>View data table</summary><div className="erp-table-scroll" tabIndex={0}><table>
             <caption>Placement progress by month</caption>
             <thead>
               <tr>
@@ -220,7 +161,7 @@ export function LineChart({ points, definition }: { points: ProgressPoint[]; def
                 </tr>
               ))}
             </tbody>
-          </table></div>
+          </table></div></details>
         </>
       )}
     </figure>
@@ -243,7 +184,7 @@ export function DonutChart({ segments, definition }: { segments: StatusSegment[]
     <figure className="erp-panel po-chart po-chart-donut">
       <figcaption>
         <h3>Placement status</h3>
-        {definition && <p className="po-chart-def">{definition}</p>}
+        {definition && <details className="po-chart-more"><summary>How this is counted</summary><p>{definition}</p></details>}
       </figcaption>
       {!total ? (
         <p className="po-chart-empty">No students in this cohort, so there is no placement status to show.</p>
@@ -293,7 +234,7 @@ export function DonutChart({ segments, definition }: { segments: StatusSegment[]
               }))}
             />
           </div>
-          <div className="erp-visually-hidden"><table>
+          <details className="po-chart-data"><summary>View data table</summary><div className="erp-table-scroll" tabIndex={0}><table>
             <caption>Placement status</caption>
             <thead>
               <tr>
@@ -311,81 +252,11 @@ export function DonutChart({ segments, definition }: { segments: StatusSegment[]
                 </tr>
               ))}
             </tbody>
-          </table></div>
+          </table></div></details>
         </>
       )}
     </figure>
   );
 }
 
-const BAR_SERIES = [
-  { key: "total", label: "Total students", tone: "total" },
-  { key: "eligible", label: "Placement eligible", tone: "eligible" },
-  { key: "placed", label: "Students placed", tone: "placed" },
-] as const;
-
-export function BarChart({ rows, definition }: { rows: DepartmentBar[]; definition?: string }) {
-  const max = Math.max(0, ...rows.map((r) => Number(r.total) || 0));
-  const name = (r: DepartmentBar) => r.department || "Department not recorded";
-  return (
-    <figure className="erp-panel po-chart po-chart-bars">
-      <figcaption>
-        <h3>Departments</h3>
-        {definition && <p className="po-chart-def">{definition}</p>}
-      </figcaption>
-      {!rows.length || !max ? (
-        <p className="po-chart-empty">No students in this cohort, so there are no departments to compare.</p>
-      ) : (
-        <>
-          <Legend items={BAR_SERIES.map((s) => ({ label: s.label, tone: s.tone }))} />
-          <div
-            className="po-bars"
-            role="img"
-            aria-label={`Grouped bar chart of total, placement eligible and placed students for ${rows.length} ${rows.length === 1 ? "department" : "departments"}. The data table follows.`}
-          >
-            {rows.map((r) => (
-              <div className="po-bar-row" key={name(r)}>
-                <span className="po-bar-label">{name(r)}</span>
-                <div className="po-bar-set">
-                  {BAR_SERIES.map((s) => {
-                    const value = Number(r[s.key]) || 0;
-                    return (
-                      <div className="po-bar-track" key={s.key} title={`${name(r)}: ${value} ${s.label.toLowerCase()}`}>
-                        <span
-                          className={`po-bar po-tone-${s.tone}`}
-                          style={{ width: `calc((100% - 3.5rem) * ${value / max})` }}
-                        />
-                        <span className="po-bar-value">{value.toLocaleString("en-IN")}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="erp-visually-hidden"><table>
-            <caption>Students by department</caption>
-            <thead>
-              <tr>
-                <th scope="col">Department</th>
-                {BAR_SERIES.map((s) => (
-                  <th key={s.key} scope="col">{s.label}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => (
-                <tr key={name(r)}>
-                  <th scope="row">{name(r)}</th>
-                  {BAR_SERIES.map((s) => (
-                    <td key={s.key}>{Number(r[s.key]) || 0}</td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table></div>
-        </>
-      )}
-    </figure>
-  );
-}
+export { BarChart } from "./DepartmentBarChart";

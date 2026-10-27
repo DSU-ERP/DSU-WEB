@@ -96,7 +96,7 @@ export const placementRankedStudents = (
     "/placement/categories/" + encodeURIComponent(category) + "/students",
     query,
   );
-export const placementOverviewCharts = (query: { batch?: string; department?: string }) =>
+export const placementOverviewCharts = (query: { batch?: string; department?: string; search?: string }) =>
   officerGet<OverviewCharts>("/placement/overview/charts", query);
 export const placementStudentIntelligence = (id: string) =>
   officerGet<StudentIntelligence>(

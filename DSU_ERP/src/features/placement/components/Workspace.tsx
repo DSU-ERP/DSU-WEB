@@ -17,6 +17,11 @@ import {
   Users,
   Upload,
   Shapes,
+  ChevronDown,
+  PanelLeft,
+  Menu,
+  Moon,
+  Sun,
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS } from "@/features/placement/lib/types";
@@ -44,8 +49,29 @@ const clampWidth = (w: number) =>
 const uiScale = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
 
+const NAV_GROUPS = [
+  { id: "offers", label: "Offers & Placements", Icon: Award, routes: ["offers", "multiple-offers"] },
+  { id: "departments", label: "Department Intelligence", Icon: Network, routes: ["departments", "batch", "categories", "student-analytics"] },
+];
+const matchesRoute = (path: string, href: string) => path === href || path.startsWith(`${href}/`);
+const activeGroups = (path: string) => NAV_GROUPS.filter(group => group.routes.some(route => matchesRoute(path, `/placement/${route}`))).map(group => group.id);
+
 export function Workspace({ children, competencyTesting=false }: { children: React.ReactNode; competencyTesting?:boolean }) {
   const path = usePathname();
+  const [openGroups, setOpenGroups] = useState<string[]>(() => activeGroups(path));
+  useEffect(() => {
+    setOpenGroups(previous => [...new Set([...previous, ...activeGroups(path)])]);
+  }, [path]);
+  const drawer = useRef<HTMLDialogElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const closeDrawer = () => { drawer.current?.close(); setMobileOpen(false); };
+  useEffect(() => { drawer.current?.close(); setMobileOpen(false); }, [path]);
+  useEffect(() => {
+    const media = window.matchMedia("(min-width: 1001px)");
+    const closeOnDesktop = () => { if (media.matches) { drawer.current?.close(); setMobileOpen(false); } };
+    media.addEventListener("change", closeOnDesktop);
+    return () => media.removeEventListener("change", closeOnDesktop);
+  }, []);
   const [collapsed, setCollapsed] = useState(false),
     [theme, setTheme] = useState("light"),
     [width, setWidth] = useState(WIDTH.initial),
@@ -111,7 +137,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
       href: `/placement/${key}`,
       label: section.title,
       Icon: ICONS[key] ?? LayoutGrid,
-      current: path === `/placement/${key}`,
+      current: matchesRoute(path, `/placement/${key}`),
     })),
     {
       href: "/placement/categories",
@@ -148,6 +174,34 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     },
   ];
 
+  const navigation = (mobile = false) => {
+    const link = (route: string) => {
+      const item = items.find(item => item.href === `/placement/${route}`);
+      if (!item) return null;
+      const { href, Icon, current, className } = item;
+      const label = route === "departments" ? "Department Intelligence Overview" : item.label;
+      return <Link key={href} href={href} className={className} aria-current={current ? "page" : undefined}
+        title={!mobile && collapsed ? label : undefined} onClick={mobile ? closeDrawer : undefined}>
+        <Icon size={16} aria-hidden="true"/><span className="po-nav-label">{label}</span>
+      </Link>;
+    };
+    return <nav id={mobile ? "placement-mobile-nav" : "placement-nav"} aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}>
+      {["assistants/friday", "overview", "companies", "drives"].map(link)}
+      {NAV_GROUPS.map(({id, label, Icon, routes}) => {
+        const open = openGroups.includes(id);
+        const controls = `po-${mobile ? "mobile" : "desktop"}-${id}-links`;
+        return <div className="po-nav-group" key={id} data-active={routes.some(route => matchesRoute(path, `/placement/${route}`)) || undefined}>
+          <button type="button" className="po-nav-toggle" aria-expanded={open} aria-controls={controls}
+            title={!mobile && collapsed ? label : undefined}
+            onClick={() => setOpenGroups(previous => open ? previous.filter(value => value !== id) : [...previous, id])}>
+            <Icon size={16} aria-hidden="true"/><span className="po-nav-label">{label}</span><ChevronDown className="po-nav-chevron" size={13} aria-hidden="true"/>
+          </button>
+          <div id={controls} className="po-nav-children" hidden={!open}>{routes.map(link)}</div>
+        </div>;
+      })}
+      {["company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
+    </nav>;
+  };
   return (
     <div
       className={`erp-shell po-shell po-${theme}${collapsed ? " po-collapsed" : ""}${resizing ? " po-resizing" : ""}`}
@@ -163,20 +217,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
         <p className="erp-eyebrow">PLACEMENT OFFICER</p>
         {/* Collapsing keeps every item as an icon. The label stays in the
             accessibility tree (visually hidden), and a tooltip names it. */}
-        <nav aria-label="Placement Officer navigation" id="placement-nav">
-          {items.map(({ href, label, Icon, current, className }) => (
-            <Link
-              key={href}
-              href={href}
-              className={className}
-              aria-current={current ? "page" : undefined}
-              title={collapsed ? label : undefined}
-            >
-              <Icon size={16} aria-hidden="true" />
-              <span className="po-nav-label">{label}</span>
-            </Link>
-          ))}
-        </nav>
+        {navigation()}
         <div className="erp-sidebar-bottom">
           <span className="erp-role">Placement Officer</span>
           <form action={signOut}>
@@ -241,19 +282,26 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
           />
         )}
       </aside>
+      <dialog className="po-mobile-drawer" ref={drawer} aria-labelledby="po-drawer-title" onClose={()=>setMobileOpen(false)} onClick={e=>{if(e.target===e.currentTarget)closeDrawer();}}>
+        <div className="po-drawer-heading"><strong id="po-drawer-title">DSU / Placements</strong><button type="button" className="erp-secondary" onClick={closeDrawer}>Close menu</button></div>
+        {navigation(true)}
+        <div className="po-drawer-account"><span className="erp-role">Placement Officer</span><form action={signOut}><button className="erp-secondary po-signout"><LogOut size={16} aria-hidden="true"/>Sign out</button></form></div>
+      </dialog>
       <div className="erp-workspace">
         <header className="erp-topbar po-topbar">
           <button
             type="button"
+            className="po-desktop-nav-toggle"
             onClick={toggleSidebar}
             aria-controls="placement-sidebar"
             aria-expanded={!collapsed}
           >
-            {collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            <PanelLeft size={17} aria-hidden="true"/>{collapsed ? "Expand sidebar" : "Collapse sidebar"}
           </button>
-          <span>TRAINING & PLACEMENT CELL</span>
+          <button type="button" className="po-mobile-nav-toggle" aria-haspopup="dialog" aria-expanded={mobileOpen} onClick={()=>{drawer.current?.showModal();setMobileOpen(true);}}><Menu size={17} aria-hidden="true"/>Menu</button>
+          <span className="po-topbar-identity">TRAINING & PLACEMENT CELL</span>
           <button type="button" onClick={toggleTheme}>
-            Use {theme === "light" ? "dark" : "light"} theme
+            {theme === "light" ? <Moon size={16} aria-hidden="true"/> : <Sun size={16} aria-hidden="true"/>}Use {theme === "light" ? "dark" : "light"} theme
           </button>
         </header>
         <main
@@ -263,7 +311,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
           className={
             path.startsWith("/placement/assistants/friday")
               ? "erp-main po-main-flush"
-              : "erp-main"
+              : path === "/placement/overview" ? "erp-main po-overview-main" : "erp-main"
           }
           tabIndex={-1}
         >

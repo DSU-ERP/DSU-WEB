@@ -308,20 +308,22 @@ const legacyStudent = {
   timeline: [],
 };
 const entry = `import React from 'react';import {createRoot} from 'react-dom/client';
-import {Workspace} from '@/features/placement/components/Workspace';import {ReportBody,ReportFilters} from '@/features/placement/components/Reports';import {DriveEditor} from '@/features/placement/components/DriveEditor';import {DriveCandidates} from '@/features/placement/components/DriveCandidates';import {AssistantChat} from '@/features/assistant/components/AssistantChat';import {DeleteRecord} from '@/features/placement/components/Controls';import {SECTIONS} from '@/features/placement/lib/types';import {OverviewCharts} from '@/features/placement/components/Charts';import {CategoryCards,CategorySummary,CohortFilters,RankedDirectory} from '@/features/placement/components/CategoryDirectory';import {IntelligenceProfile} from '@/features/placement/components/UnifiedProfile';import {StudentProfile} from '@/features/placement/components/StudentProfile';
+import {Workspace} from '@/features/placement/components/Workspace';import {ReportBody,ReportFilters} from '@/features/placement/components/Reports';import {DriveEditor} from '@/features/placement/components/DriveEditor';import {DriveCandidates} from '@/features/placement/components/DriveCandidates';import {AssistantChat} from '@/features/assistant/components/AssistantChat';import {DeleteRecord} from '@/features/placement/components/Controls';import {SECTIONS} from '@/features/placement/lib/types';import {PlacementOverview} from '@/features/placement/components/Overview';import {CategoryCards,CategorySummary,CohortFilters,RankedDirectory} from '@/features/placement/components/CategoryDirectory';import {IntelligenceProfile} from '@/features/placement/components/UnifiedProfile';import {StudentProfile} from '@/features/placement/components/StudentProfile';
 const categoriesData=${JSON.stringify(categoriesData)},directoryPage2=${JSON.stringify(directoryPage2)},chartsData=${JSON.stringify(chartsData)},chartsEmpty=${JSON.stringify(chartsEmpty)},intelligence=${JSON.stringify(intelligence)},hiddenIntelligence=${JSON.stringify(hiddenIntelligence)},pendingIntelligence=${JSON.stringify(pendingIntelligence)},withheldIntelligence=${JSON.stringify(withheldIntelligence)},legacyStudent=${JSON.stringify(legacyStudent)};
 const data=${JSON.stringify(data)},student=${JSON.stringify(student)},drive=${JSON.stringify(drive)},company=${JSON.stringify(company)};
+const overviewData={...data,options:{...data.options,batches:['2027']},summary:{students:120,placed:46,unplaced:74,placement_percentage:38.33,offers:52,accepted:31,average:10,highest:18,median:9,drives:5,companies:18},categories:['regular','dream','super-dream','mega'].map((category,i)=>({category,offers:[20,18,10,4][i]})),drive_statuses:[{status:'upcoming',count:3},{status:'completed',count:2}],departments:chartsData.departments.map(d=>({...d,placement_percentage:d.total?100*d.placed/d.total:0,average:null,highest:null})),scheduled:[],recent:[],companies:[]};
 const section=location.pathname.split('/')[2]||'batch',query=Object.fromEntries(new URLSearchParams(location.search));let content;
 const segment=location.pathname.split('/')[3];
 if(section==='categories'&&!segment)content=<><h1>Student categories</h1><CohortFilters action='/placement/categories' batches={categoriesData.batches} departments={categoriesData.departments} query={{batch:'2027'}}/><CategorySummary data={categoriesData}/><CategoryCards cards={categoriesData.cards} cohort={{batch:'2027'}}/></>;
 else if(section==='categories')content=<><h1>Advanced students</h1><a className='erp-secondary' download href='/placement/export/ranked?category=advanced&batch=2027'>Export CSV</a><CohortFilters action='/placement/categories/advanced' batches={categoriesData.batches} departments={categoriesData.departments} query={{...query,batch:'2027'}} extra/><RankedDirectory data={directoryPage2} query={{...query,batch:'2027'}} category='advanced'/></>;
-else if(section==='overview-empty')content=<><h1>Placement overview</h1><OverviewCharts charts={chartsEmpty}/></>;
-else if(section==='overview-error')content=<><h1>Placement overview</h1><OverviewCharts charts={null} error='Campus services are temporarily unavailable. Please try again.'/></>;
+else if(section==='overview-empty')content=<PlacementOverview data={{...overviewData,summary:{students:0,drives:0,unplaced:0},departments:[],categories:[],drive_statuses:[]}} charts={chartsEmpty} query={query} today='2026-10-26'/>;
+else if(section==='overview-error')content=<PlacementOverview data={overviewData} charts={null} query={query} today='2026-10-26'/>;
+else if(section==='overview')content=<PlacementOverview data={overviewData} charts={chartsData} query={query} today='2026-10-26'/>;
 else if(section==='students')content=<StudentProfile student={legacyStudent} intelligence={<IntelligenceProfile profile={query.hidden?hiddenIntelligence:query.pending?pendingIntelligence:query.withheld?withheldIntelligence:intelligence}/>}/>;
 else if(section==='drive-editor')content=<><h1>Create a placement drive.</h1><DriveEditor companies={[company]} options={data.options}/><DeleteRecord kind='company' record={company} back='/placement/companies'/></>;
 else if(section==='drive-pool')content=<DriveCandidates drive={drive} rows={[{...student,registration_id:null,reason:null}]}/>;
 else if(section==='assistants')content=<AssistantChat assistant='friday' initialHistory={[]} batches={['2028']} initialDiagnostics={{mode:'Fixture data'}}/>;
-else {if(['students','ranking','points','github','domain','tests','talent'].includes(section))data.rows=[student];if(section==='companies')data.rows=[company];if(section==='drives')data.rows=[drive];if(['offers','multiple-offers'].includes(section))data.rows=[];content=<><h1>{SECTIONS[section]?.title||section}</h1><ReportFilters section={section} data={data} query={query}/>{section==='overview'&&<OverviewCharts charts={chartsData}/>}<ReportBody section={section} data={data} query={query}/></>;}
+else {if(['students','ranking','points','github','domain','tests','talent'].includes(section))data.rows=[student];if(section==='companies')data.rows=[company];if(section==='drives')data.rows=[drive];if(['offers','multiple-offers'].includes(section))data.rows=[];content=<><h1>{SECTIONS[section]?.title||section}</h1><ReportFilters section={section} data={data} query={query}/><ReportBody section={section} data={data} query={query}/></>;}
 createRoot(document.getElementById('root')).render(<Workspace>{content}</Workspace>);`;
 const mock = {
   "next/link": `import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
@@ -335,7 +337,7 @@ const css =
     .readFileSync("src/app/globals.css", "utf8")
     .replace('@import "tailwindcss";', "") +
   fs.readFileSync("src/app/workspace.css", "utf8") +
-  fs.readFileSync("src/app/placement/placement.css", "utf8");
+  fs.readFileSync("src/app/placement/placement.css", "utf8") + fs.readFileSync("src/app/placement/overview.css", "utf8");
 (async () => {
   let browser, server;
   try {
@@ -432,7 +434,7 @@ const css =
     // every link keeps its accessible name.
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     assert.equal(await page.locator("#placement-nav").isVisible(), true);
-    assert.equal(await page.locator("#placement-nav a svg:visible").count(), await page.locator("#placement-nav a").count());
+    assert.equal(await page.locator("#placement-nav a svg:visible").count(), await page.locator("#placement-nav a:visible").count());
     await page.getByRole("link", { name: "Student tools" }).waitFor();
     await page.getByRole("link", { name: "Data imports" }).waitFor();
     await page.getByRole("link", { name: "Batch analytics" }).waitFor();
@@ -581,7 +583,7 @@ const css =
             false,
             "Overflow: " + label,
           );
-          const scope = p.name.startsWith("overview") ? ".po-overview-intel, .po-chart" : "#placement-content";
+          const scope = p.name.startsWith("overview") ? ".po-overview, .po-chart" : "#placement-content";
           assert.ok(!(await visibleText(scope)).includes("\u2014"), "Em dash: " + label);
           await page.screenshot({ path: path.join(dir, `intel-${p.name}-${theme}-${width}.png`), fullPage: true });
         }
@@ -609,7 +611,7 @@ const css =
     const headers = await page.locator(".po-ranked-table thead th").allInnerTexts();
     assert.ok(/^Category rank/i.test(headers[0]) && /^Batch rank/i.test(headers[1]), String(headers));
     assert.ok(!headers.some((h) => /CGPA rank|Unranked/i.test(h)), "one rank wording: " + headers);
-    assert.match(await page.locator(".po-ranked-table .po-status-complete").first().getAttribute("title"), /every required platform .* linked or declared not used/);
+    assert.match(await page.locator(".po-ranked-table .po-status-complete").first().getAttribute("title"), /GitHub, LeetCode, and LinkedIn are linked/);
     assert.match(await page.locator(".po-ranked-table .po-status-not_started").first().getAttribute("title"), /not started/);
     assert.ok((await page.locator("#po-skill-rule").innerText()).includes("disconnected"));
     assert.ok((await page.locator(".po-ranked-table thead th").first().getAttribute("title")).includes("Filters do not change ranks"));
@@ -625,23 +627,23 @@ const css =
     // Overview charts: three labelled charts with hidden tables; empty states are honest.
     await page.goto(origin + "/placement/overview?batch=2027");
     await page.getByRole("heading", { name: "Placement progress by month" }).waitFor();
-    const charts = page.locator(".po-overview-intel [role=img][aria-label]");
+    const charts = page.locator(".po-overview [role=img][aria-label], .po-overview .po-bars[role=group][aria-label]");
     assert.equal(await charts.count(), 3);
     for (const labelText of await charts.evaluateAll((n) => n.map((x) => x.getAttribute("aria-label"))))
       assert.ok(labelText.length > 20, labelText);
-    assert.equal(await page.locator(".po-overview-intel .erp-visually-hidden table").count(), 3);
+    assert.equal(await page.locator(".po-overview .po-chart-data table").count(), 3);
     assert.ok((await page.locator(".po-chart-line").innerText()).includes("when offers were recorded in the ERP"));
     const donutText = await page.locator(".po-chart-donut .po-legend").innerText();
     for (const expected of ["46", "38.3%", "55", "45.8%", "17", "14.2%", "2", "1.7%"]) assert.ok(donutText.includes(expected), expected);
-    assert.equal(await page.locator(".po-kpis article").count(), 10);
-    assert.ok((await page.locator(".po-kpis").innerText()).includes("38.33%"));
+    assert.equal(await page.locator(".po-overview-primary article").count(), 4);
+    assert.ok((await page.locator(".po-overview-primary").innerText()).includes("38.33%"));
     await page.goto(origin + "/placement/overview-empty");
     await page.getByText("No placement events recorded yet", { exact: false }).waitFor();
-    assert.equal(await page.locator(".po-chart-empty").count(), 3);
-    assert.equal(await page.locator(".po-overview-intel [role=img]").count(), 0);
-    assert.ok((await page.locator(".po-kpis").innerText()).includes("Not available"));
+    assert.equal(await page.locator(".po-chart-empty").count(), 1);
+    assert.equal(await page.locator(".po-overview [role=img]").count(), 0);
+    assert.equal(await page.locator(".po-overview-primary").count(), 0);
     await page.goto(origin + "/placement/overview-error");
-    await page.getByText("Charts could not be loaded", { exact: false }).waitFor();
+    await page.getByText("Cohort analytics are unavailable.", { exact: false }).waitFor();
     // Unified profile: three regions, provenance, safe links, no score.
     await page.goto(origin + `/placement/students/${id}`);
     await page.getByRole("heading", { name: "Technical contributions" }).waitFor();

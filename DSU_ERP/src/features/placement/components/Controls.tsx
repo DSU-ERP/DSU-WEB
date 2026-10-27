@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changePlacement, type MutationState } from "@/app/placement/actions";
 import type { Row } from "@/features/placement/lib/types";
@@ -159,13 +159,16 @@ export function RoundsInput({
 }
 export function Refresh() {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
   return (
     <button
       type="button"
       className="erp-secondary"
-      onClick={() => router.refresh()}
+        disabled={pending}
+        aria-busy={pending}
+        onClick={() => startTransition(() => router.refresh())}
     >
-      Refresh ↻
+        {pending ? "Refreshing…" : "Refresh ↻"}
     </button>
   );
 }
