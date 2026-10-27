@@ -14,14 +14,21 @@ import {
   LayoutGrid,
   ListChecks,
   LogOut,
+  Menu,
+  Moon,
+  Sun,
   Users,
   Upload,
   Shapes,
+<<<<<<< Updated upstream
   ChevronDown,
   PanelLeft,
   Menu,
   Moon,
   Sun,
+=======
+  X,
+>>>>>>> Stashed changes
   type LucideIcon,
 } from "lucide-react";
 import { SECTIONS } from "@/features/placement/lib/types";
@@ -75,7 +82,9 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
   const [collapsed, setCollapsed] = useState(false),
     [theme, setTheme] = useState("light"),
     [width, setWidth] = useState(WIDTH.initial),
-    [resizing, setResizing] = useState(false);
+    [resizing, setResizing] = useState(false),
+    [mobileOpen, setMobileOpen] = useState(false),
+    [isMobile, setIsMobile] = useState(false);
   const drag = useRef<{ x: number; w: number; scale: number } | null>(null);
   const latest = useRef(width);
   useEffect(() => {
@@ -100,6 +109,31 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     } catch {}
   }, []);
 
+  // Detect mobile viewport; swap to drawer mode below 768px.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => {
+      setIsMobile(e.matches);
+      if (!e.matches) setMobileOpen(false);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+
+  // Close mobile drawer on route change.
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [path]);
+
+  // Prevent body scroll while mobile drawer is open.
+  useEffect(() => {
+    const html = document.documentElement;
+    if (mobileOpen) html.classList.add("po-nav-open");
+    else html.classList.remove("po-nav-open");
+    return () => html.classList.remove("po-nav-open");
+  }, [mobileOpen]);
+
   const saveWidth = (w: number) => {
     try {
       localStorage.setItem("dsu-placement-sidebar-width", String(w));
@@ -113,9 +147,14 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
     } catch {}
   };
   const toggleSidebar = () => {
-    setCollapsed(!collapsed);
+    if (isMobile) {
+      setMobileOpen((o) => !o);
+      return;
+    }
+    const next = !collapsed;
+    setCollapsed(next);
     try {
-      localStorage.setItem("dsu-placement-collapsed", String(!collapsed));
+      localStorage.setItem("dsu-placement-collapsed", String(next));
     } catch {}
   };
 
@@ -204,12 +243,18 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
   };
   return (
     <div
-      className={`erp-shell po-shell po-${theme}${collapsed ? " po-collapsed" : ""}${resizing ? " po-resizing" : ""}`}
+      className={`erp-shell po-shell po-${theme}${collapsed && !isMobile ? " po-collapsed" : ""}${resizing ? " po-resizing" : ""}${mobileOpen ? " po-mobile-open" : ""}`}
       style={{ "--po-sidebar-w": `${width / 16}rem` } as React.CSSProperties}
     >
       <a href="#placement-content" className="po-skip">
         Skip to content
       </a>
+      {/* Mobile drawer backdrop */}
+      <div
+        className="po-mobile-backdrop"
+        onClick={() => setMobileOpen(false)}
+        aria-hidden="true"
+      />
       <aside className="erp-sidebar" id="placement-sidebar">
         <Link href="/placement" className="erp-wordmark">
           DSU <span>/ PLACEMENTS</span>
@@ -217,20 +262,37 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
         <p className="erp-eyebrow">PLACEMENT OFFICER</p>
         {/* Collapsing keeps every item as an icon. The label stays in the
             accessibility tree (visually hidden), and a tooltip names it. */}
+<<<<<<< Updated upstream
         {navigation()}
+=======
+        <nav aria-label="Placement Officer navigation" id="placement-nav">
+          {items.map(({ href, label, Icon, current, className }) => (
+            <Link
+              key={href}
+              href={href}
+              className={className}
+              aria-current={current ? "page" : undefined}
+              title={collapsed && !isMobile ? label : undefined}
+            >
+              <Icon size={16} aria-hidden="true" />
+              <span className="po-nav-label">{label}</span>
+            </Link>
+          ))}
+        </nav>
+>>>>>>> Stashed changes
         <div className="erp-sidebar-bottom">
           <span className="erp-role">Placement Officer</span>
           <form action={signOut}>
             <button
               className="erp-secondary po-signout"
-              title={collapsed ? "Sign out" : undefined}
+              title={collapsed && !isMobile ? "Sign out" : undefined}
             >
               <LogOut size={15} aria-hidden="true" />
               <span className="po-nav-label">Sign out</span>
             </button>
           </form>
         </div>
-        {!collapsed && (
+        {!collapsed && !isMobile && (
           <div
             className="po-resize"
             role="separator"
@@ -291,17 +353,46 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
         <header className="erp-topbar po-topbar">
           <button
             type="button"
+<<<<<<< Updated upstream
             className="po-desktop-nav-toggle"
+=======
+            className="po-topbar-nav-btn"
+>>>>>>> Stashed changes
             onClick={toggleSidebar}
             aria-controls="placement-sidebar"
-            aria-expanded={!collapsed}
+            aria-expanded={isMobile ? mobileOpen : !collapsed}
+            aria-label={
+              isMobile
+                ? mobileOpen ? "Close navigation" : "Open navigation"
+                : collapsed ? "Expand sidebar" : "Collapse sidebar"
+            }
           >
+<<<<<<< Updated upstream
             <PanelLeft size={17} aria-hidden="true"/>{collapsed ? "Expand sidebar" : "Collapse sidebar"}
           </button>
           <button type="button" className="po-mobile-nav-toggle" aria-haspopup="dialog" aria-expanded={mobileOpen} onClick={()=>{drawer.current?.showModal();setMobileOpen(true);}}><Menu size={17} aria-hidden="true"/>Menu</button>
           <span className="po-topbar-identity">TRAINING & PLACEMENT CELL</span>
           <button type="button" onClick={toggleTheme}>
             {theme === "light" ? <Moon size={16} aria-hidden="true"/> : <Sun size={16} aria-hidden="true"/>}Use {theme === "light" ? "dark" : "light"} theme
+=======
+            {isMobile ? (
+              mobileOpen ? <X size={18} aria-hidden="true" /> : <Menu size={18} aria-hidden="true" />
+            ) : (
+              collapsed ? "Expand sidebar" : "Collapse sidebar"
+            )}
+          </button>
+          <span>TRAINING & PLACEMENT CELL</span>
+          <button
+            type="button"
+            className="po-topbar-theme-btn"
+            onClick={toggleTheme}
+            aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+          >
+            {theme === "light"
+              ? <><Moon size={14} aria-hidden="true" /><span className="po-topbar-theme-label">Dark</span></>
+              : <><Sun size={14} aria-hidden="true" /><span className="po-topbar-theme-label">Light</span></>
+            }
+>>>>>>> Stashed changes
           </button>
         </header>
         <main

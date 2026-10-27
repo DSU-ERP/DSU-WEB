@@ -215,24 +215,29 @@ export function DonutChart({ segments, definition }: { segments: StatusSegment[]
                   <title>{`${segments[arc.index].label}: ${arc.count} (${arc.percent.toFixed(1)}%)`}</title>
                 </path>
               ))}
-              <text x="60" y="58" textAnchor="middle" className="po-donut-total">
+              <text x="60" y="55" textAnchor="middle" className="po-donut-total">
                 {total.toLocaleString("en-IN")}
               </text>
-              <text x="60" y="72" textAnchor="middle" className="po-donut-caption">
+              <text x="60" y="68" textAnchor="middle" className="po-donut-label">
                 students
               </text>
             </svg>
-            <Legend
-              items={segments.map((s, i) => ({
-                label: s.label,
-                tone: STATUS_TONES[s.key] ?? "unknown",
-                extra: (
-                  <strong>
-                    {counts[i].toLocaleString("en-IN")} <small>{percents[i].toFixed(1)}%</small>
-                  </strong>
-                ),
-              }))}
-            />
+            <ul className="po-status-legend">
+              {segments.map((s, i) => {
+                const tone = STATUS_TONES[s.key] ?? "unknown";
+                return (
+                  <li key={s.key} className={`po-tone-${tone}`}>
+                    <span className="po-sl-dot" aria-hidden="true" />
+                    <span className="po-sl-label">{s.label}</span>
+                    <strong className="po-sl-count">{counts[i].toLocaleString("en-IN")}</strong>
+                    <span className="po-sl-pct">{percents[i].toFixed(1)}%</span>
+                    <span className="po-sl-track" aria-hidden="true">
+                      <span className="po-sl-fill" style={{ width: `${percents[i]}%` }} />
+                    </span>
+                  </li>
+                );
+              })}
+            </ul>
           </div>
           <details className="po-chart-data"><summary>View data table</summary><div className="erp-table-scroll" tabIndex={0}><table>
             <caption>Placement status</caption>
