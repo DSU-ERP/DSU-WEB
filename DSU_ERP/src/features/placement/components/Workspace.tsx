@@ -115,13 +115,6 @@ export function Workspace({ children, competencyTesting = false }: { children: R
     return () => mq.removeEventListener("change", handler);
   }, []);
 
-  // Prevent body scroll while mobile drawer is open.
-  useEffect(() => {
-    const html = document.documentElement;
-    if (mobileOpen) html.classList.add("po-nav-open");
-    else html.classList.remove("po-nav-open");
-    return () => html.classList.remove("po-nav-open");
-  }, [mobileOpen]);
 
   const saveWidth = (w: number) => {
     try { localStorage.setItem("dsu-placement-sidebar-width", String(w)); } catch {}
@@ -253,12 +246,6 @@ export function Workspace({ children, competencyTesting = false }: { children: R
       <a href="#placement-content" className="po-skip">
         Skip to content
       </a>
-      {/* Mobile drawer backdrop (CSS-controlled) */}
-      <div
-        className="po-mobile-backdrop"
-        onClick={() => setMobileOpen(false)}
-        aria-hidden="true"
-      />
       <aside className="erp-sidebar" id="placement-sidebar">
         <Link href="/placement" className="erp-wordmark">
           DSU <span>/ PLACEMENTS</span>

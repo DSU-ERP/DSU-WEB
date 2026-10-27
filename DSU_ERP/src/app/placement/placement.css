@@ -3303,7 +3303,8 @@ html:has(.po-shell) {
    MOBILE / TABLET DIALOG DRAWER
    ══════════════════════════════════════════════════════════════════════════ */
 
-.po-mobile-drawer {
+/* Dialog is hidden by default (UA stylesheet). Only show when open. */
+.po-mobile-drawer[open] {
   position: fixed;
   inset: 0 auto 0 0;
   width: min(18rem, 88vw);
@@ -3335,7 +3336,7 @@ html:has(.po-shell) {
   to   { transform: translateX(0); }
 }
 
-.po-dark .po-mobile-drawer {
+.po-dark .po-mobile-drawer[open] {
   background: #1d231c;
   border-right-color: #2e3a2c;
 }
