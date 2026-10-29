@@ -387,7 +387,8 @@ export function Workspace({ children, competencyTesting = false }: { children: R
           }
           tabIndex={-1}
         >
-          {children}
+          {/* Keyed by path so each page plays the entrance transition. */}
+          <div className="po-route" key={path}>{children}</div>
         </main>
       </div>
     </div>

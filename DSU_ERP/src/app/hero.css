@@ -15,7 +15,7 @@
 .scene-description { max-width:350px; color:var(--muted); font-size:14px; line-height:1.65; }
 .scene-copy-0 .scene-description { margin:auto; }
 .intro-rule { display:none; }
-.static-scene-number { display:block; margin-top:24px; font:9px var(--mono); color:var(--red); }
+.static-scene-number { display:block; margin-top:24px; font:9px var(--mono); color:var(--accent-ink); }
 .ecosystem-notes { display:flex; gap:30px; max-width:700px; margin-top:30px; }
 .ecosystem-notes > div { border-top:1px solid var(--line); padding-top:14px; }
 .ecosystem-notes h3 { font:9px var(--mono); margin-bottom:10px; }
@@ -37,10 +37,10 @@
 .datum-subtitle { fill:var(--muted); font:7px var(--mono); letter-spacing:.7px; }
 .technical-guides { opacity:0; }
 .technical-guides line { stroke:var(--line); stroke-dasharray:3 5; stroke-width:.8; }
-.technical-guides rect,.connections rect { fill:var(--red); }
+.technical-guides rect,.connections rect { fill:var(--accent); }
 .connections path { stroke:#a5a5a0; stroke-width:.8; }
 .connections text { font:9px var(--mono); letter-spacing:.4px; fill:#454540; paint-order:stroke; stroke:var(--paper); stroke-width:5px; stroke-linejoin:round; }
-.connections .ecosystem-paths path { stroke:var(--red); stroke-width:.7; }
+.connections .ecosystem-paths path { stroke:var(--accent); stroke-width:.7; }
 .stage-bottom { display:flex; justify-content:space-between; align-items:center; gap:26px; min-height:68px; border-top:1px solid var(--line); padding:15px 0; }
 .scroll-prompt { display:none; align-items:center; gap:12px; font:8px var(--mono); letter-spacing:.05em; }
 .scroll-icon { width:23px; height:32px; border:1px solid var(--line); border-radius:15px; display:grid; place-items:center; }
@@ -50,10 +50,10 @@
 .scene-nav-line { position:absolute; inset:auto 0 0; height:1px; background:var(--line); }
 .scene-navigation a[aria-current] { flex:2.1; color:var(--ink); }
 .scene-navigation a[aria-current] .scene-nav-title { display:inline; }
-.scene-navigation a[aria-current] .scene-nav-line { background:var(--red); }
+.scene-navigation a[aria-current] .scene-nav-line { background:var(--accent); }
 .skip-story { display:flex; align-items:center; gap:8px; font:8px var(--mono); color:var(--muted); white-space:nowrap; }
 .stage-progress { display:none; position:absolute; inset:auto 0 0; height:2px; }
-.stage-progress span { display:block; height:100%; width:100%; background:var(--red); }
+.stage-progress span { display:block; height:100%; width:100%; background:var(--accent); }
 
 /* Enhanced mode: one camera, one object, one scroll timeline. */
 .is-enhanced .scroll-stage { height:100svh; padding:0; overflow:hidden; isolation:isolate; }

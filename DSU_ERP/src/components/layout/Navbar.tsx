@@ -1,6 +1,6 @@
 export function Navbar() {
   return <header className="site-header">
-    <a className="brand" href="#vision" aria-label="DSU Agentic ERP — back to the beginning"><span className="brand-mark" aria-hidden="true">D<span /></span><span>DSU <span className="brand-slash">/</span> <span className="brand-product">AGENTIC ERP</span></span></a>
-    <nav aria-label="Main navigation"><a href="#vision">Vision</a></nav>
+    {/* eslint-disable-next-line @next/next/no-img-element */}
+    <a className="brand" href="#vision" aria-label="Dayananda Sagar University — back to the beginning"><img className="brand-logo" src="/assets/college/dsu-official-logo-dark.png" alt="Dayananda Sagar University" width="2579" height="828" /></a>
   </header>;
 }

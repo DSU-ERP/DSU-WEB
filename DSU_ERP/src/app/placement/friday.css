@@ -16,9 +16,9 @@
   --fr-ink-3: #6c6f68;
   --fr-line: #e1e3dd;
   --fr-line-strong: #a9aca4;
-  --fr-accent: #d9252a;
-  --fr-accent-ink: #b71c21;
-  --fr-accent-soft: #fde8e7;
+  --fr-accent: #f5cf1d;
+  --fr-accent-ink: #7a5f00;
+  --fr-accent-soft: #fdf6d3;
   --fr-primary: #171717;
   --fr-primary-hover: #2f302e;
   --fr-on-primary: #ffffff;
@@ -33,8 +33,8 @@
      passes 4.5:1 on white and the canvas; the "strong" shade is visually the
      same and is used for small text on tinted backgrounds, where the logo red
      falls just short (4.32 to 4.47:1). The officer's own messages are black. */
-  --fr-brand: #d9252a;
-  --fr-brand-strong: #d02329;
+  --fr-brand: #7a5f00;
+  --fr-brand-strong: #6b5300;
   --fr-user-ink: #171717;
   --fr-reply-ink: #0a0a0a;
   --fr-user-bg: #f3f4f0;
@@ -58,7 +58,7 @@
   --fr-line: #343c31;
   --fr-line-strong: #5a6453;
   --fr-accent: #ef5257;
-  --fr-accent-ink: #ff8a8d;
+  --fr-accent-ink: #f5d84a;
   --fr-accent-soft: #3b2222;
   --fr-primary: #e8ece3;
   --fr-primary-hover: #ffffff;
@@ -70,8 +70,8 @@
   /* The logo red is too dark on these surfaces (4.47:1 and below); this tint
      of it passes 5.0:1 or better on every dark background. Black messages
      need a light bubble to stay readable. */
-  --fr-brand: #ff8a8d;
-  --fr-brand-strong: #ff8a8d;
+  --fr-brand: #f5d84a;
+  --fr-brand-strong: #f5d84a;
   --fr-user-bg: #eef0ea;
   /* Black text would be unreadable on dark cards, so replies use the
      theme's light ink here. */
@@ -186,8 +186,8 @@
 }
 .fr-btn--record {
   background: var(--fr-surface);
-  border: 1.5px solid var(--fr-accent);
-  color: var(--fr-accent-ink);
+  border: 1.5px solid var(--fr-danger);
+  color: var(--fr-danger);
 }
 .fr-btn--record:hover {
   background: var(--fr-accent-soft);
@@ -831,8 +831,8 @@
 .po-dark .fr-live {
   /* The officer's words stay black, so the live card stays light. */
   background: #f4f5f1;
-  --fr-accent: #d9252a;
-  --fr-accent-ink: #b71c21;
+  --fr-accent: #f5cf1d;
+  --fr-accent-ink: #7a5f00;
   --fr-ink-2: #5f625b;
   --fr-ink-3: #6c6f68;
 }
@@ -982,10 +982,10 @@
   animation: fr-pulse 1.2s var(--fr-ease) infinite;
 }
 .fr-state--error {
-  color: var(--fr-accent-ink);
+  color: var(--fr-danger);
 }
 .fr-state--error .fr-state-dot {
-  background: var(--fr-accent);
+  background: var(--fr-danger);
   border-radius: 0;
 }
 .fr-composer-fact {
@@ -1074,7 +1074,7 @@
 .fr-rec-dot {
   width: 0.5625rem;
   height: 0.5625rem;
-  background: var(--fr-accent);
+  background: var(--fr-danger);
   animation: fr-pulse 1.2s var(--fr-ease) infinite;
 }
 .fr-recorder-meta {

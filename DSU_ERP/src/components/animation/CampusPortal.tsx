@@ -28,6 +28,7 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
       // coordinates ignore transforms and remain deterministic after resizing.
       gsap.set(copy, { autoAlpha: 0, y: 24 });
       gsap.set('.portal-seal', { autoAlpha: 0, scale: 0.94 });
+      gsap.set('.portal-ring', { autoAlpha: 0, scale: 0.94 });
       copy.inert = true;
       const timeline = gsap.timeline({
         defaults: { ease: 'none' },
@@ -49,6 +50,7 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
           duration: MORPH.moveDuration, ease: 'power2.inOut',
         }, MORPH.moveStart)
         .to('.portal-seal', { autoAlpha: 0.2, scale: 1, duration: 0.4 }, 0.3)
+        .to('.portal-ring', { autoAlpha: 1, scale: 1, duration: 0.4 }, 0.3)
         .to(copy, { autoAlpha: 1, y: 0, duration: MORPH.textDuration }, MORPH.textStart)
         .to({}, { duration: 0.22 }, 0.78);
 
@@ -65,15 +67,13 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
   }, []);
 
   return <section className="static-campus campus-scroll-stage" ref={stage} aria-label="From one campus to your digital campus">
-    <div className="campus-masthead" aria-hidden="true"><span>THE ARCHITECTURE OF INTELLIGENCE</span><span>DSU / AN INSTITUTION, CONNECTED</span></div>
     <div className="campus-presentation">
       <header className="campus-heading">
         <p className="eyebrow"><span className="eyebrow-square"/>[ INTRODUCING DSU AGENTIC ERP ]</p>
         <h1>ONE CAMPUS.</h1>
         <p className="campus-tagline">INFINITE POSSIBILITIES.</p>
         <nav className="campus-sign-in" aria-label="Campus sign in">
-          <Link href="/login?portal=student">Student sign in <span aria-hidden="true">↗</span></Link>
-          <Link href="/login?portal=placement-officer">Placement Officer sign in <span aria-hidden="true">↗</span></Link>
+          <Link href="/login">Sign in <span aria-hidden="true">↗</span></Link>
         </nav>
       </header>
       <figure className="campus-artwork" ref={artwork}>
@@ -86,16 +86,18 @@ export function CampusPortal({ src }: { src: DrawingSource | null }) {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src="/assets/college/dsu-official-logo.png" alt="" width="2579" height="828"/>
     </div>
+    {/* The seal's outer ring in full colour, on its own layer so it stays vivid. */}
+    <div className="portal-ring" aria-hidden="true">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/assets/college/dsu-official-logo.png" alt="" width="2579" height="828"/>
+    </div>
     <section className="portal-copy" ref={portal} aria-labelledby="portal-title">
       <p className="portal-eyebrow">[ DSU AGENTIC ERP ]</p>
       <h2 id="portal-title">ACCESS PORTAL.</h2>
       <p className="portal-description">Connect to your digital campus environment.</p>
-      <p className="portal-index">02 / PORTAL GATEWAY</p>
       <div className="portal-actions">
-        <Link href="/login?portal=student" className="portal-button portal-button-primary">STUDENT SIGN IN</Link>
-        <Link href="/login?portal=placement-officer" className="portal-button">PLACEMENT OFFICER SIGN IN</Link>
+        <Link href="/login" className="portal-button portal-button-primary">SIGN IN</Link>
       </div>
     </section>
-    <div className="campus-caption"><p>An intelligent operating system<br/>for the modern university.</p><span>ONE INSTITUTION.<br/>EVERY POSSIBILITY.</span></div>
   </section>;
 }

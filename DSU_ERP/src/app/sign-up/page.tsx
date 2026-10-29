@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { SignUpForm } from "./SignUpForm";
+import { StudentBrand } from "@/features/student/components/StudentBrand";
 import "../student/student.css";
 export default async function Page({
   searchParams,
@@ -9,8 +10,8 @@ export default async function Page({
   const failed = (await searchParams).verification === "failed";
   return (
     <main className="st-app st-auth">
-      <Link className="st-brand" href="/">
-        DSU <small>/ STUDENT</small>
+      <Link className="st-brand" href="/" aria-label="Dayananda Sagar University — home">
+        <StudentBrand />
       </Link>
       <section className="st-panel">
         <p className="st-eyebrow">
@@ -33,7 +34,7 @@ export default async function Page({
         <SignUpForm />
         <p className="st-muted">
           Already have an account?{" "}
-          <Link href="/login?portal=student">Sign in ↗</Link>
+          <Link href="/login">Sign in ↗</Link>
         </p>
       </section>
     </main>

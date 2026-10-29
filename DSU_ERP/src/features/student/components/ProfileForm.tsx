@@ -6,6 +6,7 @@ import { studentFetch } from "../lib/client";
 import type { ProfileDetails, ProfileState } from "../lib/types";
 import { ErrorNote, PageTitle, Panel } from "./UI";
 import { DocumentUpload, type UploadedDocument } from "./DocumentUpload";
+import { enhanceCertifications } from "../lib/enhance-actions";
 
 type SavedDocument = Pick<UploadedDocument, "id" | "filename"> & {
   kind: "resume" | "jd" | "attachment";
@@ -35,7 +36,8 @@ export function ProfileForm({
     [revision, setRevision] = useState(initial.revision),
     [documents, setDocuments] = useState<SavedDocument[]>([]),
     [documentsLoading, setDocumentsLoading] = useState(false),
-    [documentsError, setDocumentsError] = useState("");
+    [documentsError, setDocumentsError] = useState(""),
+    [tidy, setTidy] = useState<{ busy: boolean; note: string; before: string | null }>({ busy: false, note: "", before: null });
   const [details, setDetails] = useState<ProfileDetails>({
     fullName: initial.official.full_name,
     phone: "",
@@ -312,7 +314,6 @@ export function ProfileForm({
                   {input("linkedin", "LinkedIn URL", "url")}
                   {input("github", "GitHub profile URL", "url")}
                   {input("portfolio", "Portfolio or personal website", "url")}
-                  {input("placementProfile", "Placement profile URL", "url")}
                   <label>
                     Career platform
                     <select
@@ -335,10 +336,45 @@ export function ProfileForm({
                   Case competitions and certifications
                   <textarea
                     value={details.certifications}
-                    onChange={(e) => change("certifications", e.target.value)}
+                    onChange={(e) => {
+                      change("certifications", e.target.value);
+                      setTidy({ busy: false, note: "", before: null });
+                    }}
                     maxLength={3000}
+                    placeholder="e.g. AWS Cloud Practitioner — Amazon (2025)"
                   />
                 </label>
+                <div className="st-tidy">
+                  <button
+                    type="button"
+                    className="st-button st-button-secondary"
+                    disabled={tidy.busy || !details.certifications.trim()}
+                    onClick={async () => {
+                      const before = details.certifications;
+                      setTidy({ busy: true, note: "", before: null });
+                      const result = await enhanceCertifications(before);
+                      if (result.text) {
+                        change("certifications", result.text);
+                        setTidy({ busy: false, note: "Tidied by AI: only names, issuers, years and results. Review, then save.", before });
+                      } else setTidy({ busy: false, note: result.error ?? "AI tidy-up failed. Try again.", before: null });
+                    }}
+                  >
+                    {tidy.busy ? "Tidying…" : "✨ Tidy with AI"}
+                  </button>
+                  {tidy.before !== null && (
+                    <button
+                      type="button"
+                      className="st-tidy-undo"
+                      onClick={() => {
+                        change("certifications", tidy.before ?? "");
+                        setTidy({ busy: false, note: "", before: null });
+                      }}
+                    >
+                      Undo
+                    </button>
+                  )}
+                  {tidy.note && <p className="st-muted" role="status">{tidy.note}</p>}
+                </div>
                 <p className="st-muted">
                   These links are supplied by you. Saving them does not connect
                   or import data from those services.

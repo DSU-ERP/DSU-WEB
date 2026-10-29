@@ -1,7 +1,16 @@
 /** @type {import('next').NextConfig} */
 import { fileURLToPath } from "node:url";
+import { networkInterfaces } from "node:os";
 
 const appRoot = fileURLToPath(new URL(".", import.meta.url));
+
+/** IPv4 addresses of this machine's network adapters (Wi-Fi, Ethernet, VMs). */
+function localNetworkAddresses() {
+  return Object.values(networkInterfaces())
+    .flat()
+    .filter((address) => address && address.family === "IPv4" && !address.internal)
+    .map((address) => address.address);
+}
 
 const config = {
   // There is another package-lock.json one directory above this application.
@@ -11,8 +20,10 @@ const config = {
   // Validate production output separately while a development server is running.
   distDir: process.env.DSU_NEXT_DIST_DIR || ".next",
   // The desktop preview opens the app through loopback rather than localhost.
-  // Next also checks this host for development scripts and hot reload.
-  allowedDevOrigins: ["127.0.0.1"],
+  // Next also checks this host for development scripts and hot reload. This
+  // machine's own network addresses are added so a phone on the same Wi-Fi
+  // can open the dev server; this setting has no effect in production.
+  allowedDevOrigins: ["127.0.0.1", ...localNetworkAddresses()],
   deploymentId:
     process.env.DEPLOYMENT_ID || process.env.RENDER_GIT_COMMIT || undefined,
   poweredByHeader: false,
