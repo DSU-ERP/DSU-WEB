@@ -13,6 +13,7 @@ import {
   FileText,
   LayoutGrid,
   ListChecks,
+  ListOrdered,
   LogOut,
   Users,
   Upload,
@@ -154,6 +155,12 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
       current: path === "/placement/student-analytics",
     },
     {
+      href: "/placement/students-ranking",
+      label: "Students Ranking",
+      Icon: ListOrdered,
+      current: matchesRoute(path, "/placement/students-ranking"),
+    },
+    {
       href: "/placement/imports",
       label: "Data imports",
       Icon: Upload,
@@ -199,7 +206,7 @@ export function Workspace({ children, competencyTesting=false }: { children: Rea
           <div id={controls} className="po-nav-children" hidden={!open}>{routes.map(link)}</div>
         </div>;
       })}
-      {["company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
+      {["students-ranking", "company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
     </nav>;
   };
   return (

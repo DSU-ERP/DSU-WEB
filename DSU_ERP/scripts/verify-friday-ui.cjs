@@ -484,14 +484,28 @@ const fakeSpeech = () => {
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     await settle();
     assert.equal(await sidebarWidth(), 76, "collapsed rail");
-    // Every navigation entry keeps its icon in the collapsed rail.
+    // Every VISIBLE navigation link keeps its icon in the collapsed rail, and each group
+    // is an icon button. Links inside a closed group are hidden until it is expanded.
     assert.equal(
-      await page.locator("#placement-nav a svg:visible").count(),
-      await page.locator("#placement-nav a").count(),
+      await page.locator("#placement-nav a:visible svg:visible").count(),
+      await page.locator("#placement-nav a:visible").count(),
       "icons remain when collapsed",
     );
+    assert.equal(
+      await page.locator("#placement-nav .po-nav-toggle:visible > svg:not(.po-nav-chevron):visible").count(),
+      await page.locator("#placement-nav .po-nav-toggle:visible").count(),
+      "group buttons keep their icons when collapsed",
+    );
+    // A group opens in the collapsed rail, and its links stay reachable with icons.
+    const closed = page.locator("#placement-nav .po-nav-toggle[aria-expanded='false']").first();
+    const hiddenBefore = await page.locator("#placement-nav a:visible").count();
+    await closed.click();
+    const opened = await page.locator("#placement-nav a:visible").count();
+    assert.ok(opened > hiddenBefore, "expanding a group in the collapsed rail reveals its links");
+    assert.equal(await page.locator("#placement-nav a:visible svg:visible").count(), opened, "revealed links keep icons");
+    await closed.click();
     assert.equal(await page.getByRole("link", { name: "F.R.I.D.A.Y." }).count(), 1, "links keep their names");
-    assert.equal(await page.locator("#placement-nav a").first().getAttribute("title"), "Placement overview", "tooltip");
+    assert.equal(await page.locator('#placement-nav a[href="/placement/overview"]').getAttribute("title"), "Placement overview", "tooltip");
     assert.equal(await page.getByRole("separator", { name: "Resize sidebar" }).count(), 0, "no resize when collapsed");
     await shot("6b-sidebar-collapsed");
     await page.getByRole("button", { name: "Expand sidebar" }).click();

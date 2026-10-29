@@ -103,3 +103,13 @@ export const placementStudentIntelligence = (id: string) =>
     "/placement/students/" + encodeURIComponent(id) + "/profile",
     { purpose: "officer" },
   );
+
+// ---- Students Ranking (officer reads) ----------------------------------------
+// Ranks, scores and explanations come from the backend's stored, versioned
+// scores; these reads never trigger a calculation or an external API call.
+export const placementRankingOverview = (query: { batch?: string; department?: string; semester?: string }) =>
+  officerGet<import("./ranking").RankingOverview>("/placement/rankings/overview", query);
+export const placementRankings = (query: import("./ranking").RankingQuery) =>
+  officerGet<import("./ranking").RankingList>("/placement/rankings", query as Record<string, string | undefined>);
+export const placementRankingStudent = (id: string) =>
+  officerGet<import("./ranking").RankingStudent>("/placement/rankings/students/" + encodeURIComponent(id));

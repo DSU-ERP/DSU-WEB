@@ -43,6 +43,8 @@ export type PlatformAccount = {
   syncStatus: SyncStatus | null;
   syncError: string | null;
   lastSyncedAt: string | null;
+  /** LeetCode only: the username or LeetCode profile name matches the official name. */
+  nameMatch?: "verified" | "unverified" | null;
   submitted: Submitted;
   metrics: SkillMetric[];
 };

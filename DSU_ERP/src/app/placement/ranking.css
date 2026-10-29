@@ -1,0 +1,229 @@
+/* ---------- Students Ranking ---------- */
+/* Status tones: a tinted fill plus a distinct border style, so status never
+   depends on colour alone. Dark values are stepped for the dark surface. */
+.po-shell {
+  --po-rank-warn-bg: #fbf1dc;
+  --po-rank-warn-border: #c99a3a;
+  --po-rank-alert-bg: #f8e4e1;
+  --po-rank-alert-border: #b4513f;
+}
+.po-dark {
+  --po-rank-warn-bg: #3a3220;
+  --po-rank-warn-border: #a8813a;
+  --po-rank-alert-bg: #3d2522;
+  --po-rank-alert-border: #b0604f;
+}
+
+.po-rank-provisional {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  border: 1px solid var(--erp-border);
+  background: var(--po-badge-bg);
+  border-radius: 0.375rem;
+  padding: 0.75rem 0.875rem;
+  max-width: 75ch;
+  color: var(--po-text);
+}
+.po-rank-provisional svg {
+  flex: none;
+  margin-top: 0.3125rem;
+}
+
+.po-rank-metrics article {
+  min-width: 0;
+}
+
+.po-rank-tabs {
+  display: flex;
+  gap: 0;
+  margin: 1.5rem 0 0;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  background: var(--po-surface);
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.po-rank-tabs a {
+  flex: 1 0 auto;
+  padding: 0.75rem 1rem;
+  font-size: 0.75rem;
+  text-align: center;
+  white-space: nowrap;
+  border-right: 1px solid var(--erp-border);
+  color: var(--erp-muted);
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.po-rank-tabs a:last-child {
+  border-right: 0;
+}
+.po-rank-tabs a:hover {
+  color: var(--po-text);
+}
+.po-rank-tabs a[aria-current="page"] {
+  background: var(--po-highlight);
+  color: var(--po-text);
+  font-weight: 600;
+}
+
+.po-rank-table td {
+  vertical-align: middle;
+}
+.po-rank-name {
+  display: block;
+  font-weight: 500;
+}
+.po-rank-table small,
+.po-rank-parts small {
+  display: block;
+  font-size: 0.6875rem;
+}
+.po-rank-primary {
+  font-weight: 600;
+}
+.po-rank-none {
+  font-weight: 400;
+  font-size: 0.6875rem;
+  color: var(--erp-muted);
+}
+.po-rank-wrap {
+  white-space: normal;
+  min-width: 10rem;
+}
+.po-rank-namematch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 0.1875rem;
+  border: 1px solid var(--erp-border);
+  vertical-align: middle;
+}
+.po-rank-namematch-verified {
+  background: var(--po-highlight);
+}
+.po-rank-namematch-unverified {
+  background: var(--po-rank-warn-bg);
+  border-color: var(--po-rank-warn-border);
+}
+td .po-rank-namematch:first-child,
+dd > .po-rank-namematch:first-child {
+  margin-left: 0;
+}
+.po-rank-block {
+  display: block;
+  margin-top: 0.25rem;
+}
+.po-rank-inline {
+  margin-left: 0.375rem;
+}
+
+.po-rank-status-scored,
+.po-rank-evidence-complete {
+  background: var(--po-highlight);
+}
+.po-rank-status-stale,
+.po-rank-status-pending,
+.po-rank-evidence-partial {
+  background: var(--po-rank-warn-bg);
+  border-color: var(--po-rank-warn-border);
+}
+.po-rank-status-unavailable,
+.po-rank-status-disputed,
+.po-rank-status-invalid {
+  background: var(--po-rank-alert-bg);
+  border-color: var(--po-rank-alert-border);
+}
+.po-rank-status-not_linked,
+.po-rank-status-hidden,
+.po-rank-status-missing,
+.po-rank-status-not_calculated,
+.po-rank-evidence-pending {
+  border-style: dashed;
+}
+
+.po-rank-compare-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+  font-size: 0.75rem;
+}
+.po-rank-compare-bar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.po-rank-meta {
+  margin-top: 1.25rem;
+  max-width: 48rem;
+}
+.po-rank-components {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 26rem), 1fr));
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+.po-rank-component {
+  min-width: 0;
+}
+.po-rank-component-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+.po-rank-component-head h3 {
+  margin: 0;
+  font-size: 0.9375rem;
+}
+.po-rank-component-head strong {
+  font-size: 1.5rem;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.po-rank-component .po-facts {
+  margin-top: 0.75rem;
+}
+.po-rank-component .erp-table-scroll {
+  margin-top: 1rem;
+}
+.po-rank-reasons {
+  margin: 0.75rem 0 0;
+  padding-left: 1.125rem;
+  font-size: 0.75rem;
+  line-height: 1.7;
+}
+.po-rank-topic-group h3 {
+  font-size: 0.8125rem;
+  margin: 1.25rem 0 0.25rem;
+}
+.po-rank-rowheads tbody th[scope="row"] {
+  text-align: left;
+  font-weight: 500;
+  font-size: 0.75rem;
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--po-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .po-rank-tabs a {
+    transition: none;
+  }
+}
+@media (max-width: 40rem) {
+  .po-rank-tabs a {
+    padding: 0.75rem 0.75rem;
+  }
+  .po-rank-component-head strong {
+    font-size: 1.25rem;
+  }
+}

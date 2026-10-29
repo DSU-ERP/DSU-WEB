@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "test:overview-ui": "node scripts/verify-overview-ui.cjs",
+    "test:ranking-ui": "node scripts/verify-ranking-ui.cjs",
     "dev:testing": "node --env-file=.env.competency-testing scripts/start-competency-testing.mjs",
     "test:competency-ui": "node scripts/verify-competency-ui.cjs",
     "speech:setup": "node scripts/setup-interview-speech.mjs",
@@ -19,7 +20,7 @@
     "env:setup": "node scripts/setup-env.mjs",
     "env:check": "node scripts/check-env.mjs",
     "test:student-ui": "node scripts/verify-student-ui.cjs",
-    "test:ui": "npm run test:placement-ui && npm run test:friday-ui && npm run test:student-ui && npm run test:student-journeys && npm run test:registration-ui && npm run test:intelligence-ui && npm run test:interview-ui",
+    "test:ui": "npm run test:placement-ui && npm run test:ranking-ui && npm run test:friday-ui && npm run test:student-ui && npm run test:student-journeys && npm run test:registration-ui && npm run test:intelligence-ui && npm run test:interview-ui",
     "test:registration-ui": "node scripts/verify-registration-ui.cjs",
     "test:intelligence-ui": "node scripts/verify-intelligence-ui.cjs",
     "test:student-journeys": "node scripts/verify-student-journeys.cjs",

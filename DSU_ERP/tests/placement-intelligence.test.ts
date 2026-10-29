@@ -197,7 +197,7 @@ test("officer sharing follows consent and says when a summary was withheld", () 
   assert.deepEqual(officerSharing({ ...skills({ complete: false, consented: false }), summaryWithheld: true }), { consented: false, summaryWithheld: false });
   assert.equal(officerSharing(skills({ complete: true })).consented, true, "older backends share once complete");
   assert.equal(officerSharing(skills({ complete: false })).consented, false);
-  assert.match(skillStatusDetail("complete"), /every required platform/);
+  assert.match(skillStatusDetail("complete"), /GitHub, LeetCode, and LinkedIn are linked/);
   assert.match(skillStatusDetail("incomplete"), /disconnected/);
   assert.match(skillStatusDetail("bogus"), /not started/);
 });

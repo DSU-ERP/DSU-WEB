@@ -73,15 +73,15 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await page.setViewportSize({width:390,height:844});await open();
   const menu=page.getByRole('button',{name:'Menu',exact:true});await menu.click();
   const dialog=page.getByRole('dialog');assert.ok(await dialog.isVisible());
-  assert.equal(await dialog.locator('nav a').count(),14,'all normal-runtime officer routes are preserved');
+  assert.equal(await dialog.locator('nav a').count(),15,'all normal-runtime officer routes are preserved');
   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await menu.evaluate(e=>e===document.activeElement));
   await menu.click();await dialog.getByRole('link',{name:'Placement overview',exact:true}).click();await page.locator('.po-overview').waitFor();assert.equal(await dialog.isVisible(),false);
   await page.setViewportSize({width:1440,height:900});await open();
   await page.getByRole('button',{name:'Collapse sidebar'}).click();assert.ok(await page.locator('.po-collapsed').count());
-  assert.equal(await page.locator('#placement-nav a').count(),14);
+  assert.equal(await page.locator('#placement-nav a').count(),15);
   await page.getByRole('button',{name:'Expand sidebar'}).click();
   await page.screenshot({path:path.join(dir,'navigation-offers-expanded.png')});
-  const routes=['assistants/friday','overview','companies','drives','offers','multiple-offers','departments','batch','categories','student-analytics','company-reports','tests','imports','student-tools'];
+  const routes=['assistants/friday','overview','companies','drives','offers','multiple-offers','departments','batch','categories','student-analytics','students-ranking','company-reports','tests','imports','student-tools'];
   const nav=page.locator('#placement-nav');
   assert.deepEqual(await nav.locator('a').evaluateAll(elements=>elements.map(e=>e.getAttribute('href'))),routes.map(route=>'/placement/'+route));
   assert.equal(await nav.locator('a').first().innerText(),'F.R.I.D.A.Y.');
@@ -163,7 +163,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'populated tables contained on mobile');
   await page.screenshot({path:path.join(dir,'overview-populated-mobile.png'),fullPage:true});
   await open('?testing=true');await page.getByRole('button',{name:'Menu',exact:true}).click();
-  assert.equal(await page.locator('#placement-mobile-nav a').count(),15,'testing-only module is preserved');
+  assert.equal(await page.locator('#placement-mobile-nav a').count(),16,'testing-only module is preserved');
   await page.locator('#placement-mobile-nav').getByRole('button',{name:'Department Intelligence',exact:true}).click();
   assert.ok(await page.getByRole('dialog').getByRole('link',{name:'Student analytics',exact:true}).isVisible());
   await page.screenshot({path:path.join(dir,'navigation-mobile-expanded.png')});
@@ -175,7 +175,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await touchPage.locator('.po-department-chart').screenshot({path:path.join(dir,'department-mobile.png')});
   await touchPage.close();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['KPI hierarchy','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','past drive warning','filters/clear/refresh','14 preserved routes and testing-only link','collapsible groups and active nested routes','hidden scrollbar with wheel and keyboard scrolling','mobile dialog and focus return','populated tables','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
+  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['KPI hierarchy','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','past drive warning','filters/clear/refresh','15 preserved routes and testing-only link','collapsible groups and active nested routes','hidden scrollbar with wheel and keyboard scrolling','mobile dialog and focus return','populated tables','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
  } catch(e){console.error(e.stack);if(page)await page.screenshot({path:path.join(dir,'failure.png'),fullPage:true});process.exitCode=1;}
  finally{await browser?.close();await new Promise(r=>server?server.close(r):r());}
 })();

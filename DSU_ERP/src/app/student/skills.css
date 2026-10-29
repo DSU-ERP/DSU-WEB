@@ -29,6 +29,7 @@
 .st-si-badge-good { color: var(--st-good); border-color: color-mix(in srgb, var(--st-good) 35%, transparent); background: color-mix(in srgb, var(--st-good) 9%, transparent); }
 .st-si-badge-warn { color: var(--st-si-warn); border-color: var(--st-si-warn-line); background: var(--st-si-warn-bg); }
 .st-si-badge-bad { color: var(--st-red); border-color: color-mix(in srgb, var(--st-red) 35%, transparent); background: color-mix(in srgb, var(--st-red) 8%, transparent); }
+.st-si-namematch { display: inline-flex; margin-left: 8px; vertical-align: middle; }
 .st-si-provenance { display: block; margin-top: 3px; font-size: 10px; color: var(--st-muted); letter-spacing: .01em; }
 .st-si-fine { display: block; font-size: 11px; line-height: 1.6; color: var(--st-muted); }
 .st-si-note { font-size: 12px; line-height: 1.6; color: var(--st-text); background: var(--st-panel-alt); border-radius: 7px; padding: 10px 12px; margin: 12px 0; }

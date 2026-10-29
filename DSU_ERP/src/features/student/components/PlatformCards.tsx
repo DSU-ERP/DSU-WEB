@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useId, useState, type ReactNode } from "react";
 import {
+  BadgeCheck,
   BrainCircuit,
+  CircleHelp,
   BriefcaseBusiness,
   ChartColumn,
   CodeXml,
@@ -63,8 +65,22 @@ const DESCRIPTIONS: Record<Platform, string> = {
   kaggle: "Your profile link. You can also list achievements shown on your profile.",
 };
 
-export function Badge({ tone = "neutral", children }: { tone?: StateBadge["tone"]; children: ReactNode }) {
-  return <span className={`st-si-badge st-si-badge-${tone}`}>{children}</span>;
+export function Badge({ tone = "neutral", children, title }: { tone?: StateBadge["tone"]; children: ReactNode; title?: string }) {
+  return <span className={`st-si-badge st-si-badge-${tone}`} title={title}>{children}</span>;
+}
+
+/** LeetCode name check: a plausibility check against the official name, not proof of ownership. */
+export function NameMatchBadge({ value }: { value: PlatformAccount["nameMatch"] }) {
+  if (!value) return null;
+  return value === "verified" ? (
+    <Badge tone="good" title="Your LeetCode username or LeetCode profile name matches your name in the university record.">
+      <BadgeCheck size={11} aria-hidden="true" /> Verified
+    </Badge>
+  ) : (
+    <Badge tone="warn" title="Your LeetCode username and profile name do not match your name in the university record. Add your name to your LeetCode profile; it is checked again at the next sync.">
+      <CircleHelp size={11} aria-hidden="true" /> Unverified
+    </Badge>
+  );
 }
 
 /** Six platform cards: GitHub first, then the link-based platforms. */
@@ -132,6 +148,7 @@ function LinkedFacts({ account }: { account: PlatformAccount }) {
           ) : (
             account.handle
           )}
+          {account.platform === "leetcode" && <span className="st-si-namematch"><NameMatchBadge value={account.nameMatch} /></span>}
         </dd>
       </div>
       <div>
@@ -732,6 +749,7 @@ export function PlatformStateList({ profile }: { profile: SkillsProfile }) {
             <span>
               <strong>{PLATFORM_LABELS[platform]}</strong>
               {account?.state === "linked" && account.handle && <small>{account.handle}</small>}
+              {account?.state === "linked" && platform === "leetcode" && <NameMatchBadge value={account.nameMatch} />}
               {account?.state === "linked" && <small className="st-si-provenance">{provenanceLabel(account.ownership)}</small>}
             </span>
             <Badge tone={status.tone}>{status.label}</Badge>

@@ -118,7 +118,7 @@ const mocks = { "next/link": "import React from 'react';export default function 
           if (body.action === "link") {
             if (body.submitted?.contestRating > 4000) return fail(res, 400, "INVALID_SUBMITTED_FIELDS", "Check the figures you entered.", { fields: ["contestRating"] });
             const handle = body.value.replace(/\/$/, "").split("/").pop();
-            return ok(upsert({ handle, profileUrl: body.value.startsWith("https://") ? body.value : "https://example.invalid/" + handle, submitted: body.submitted || {}, authMethod: platform === "huggingface" ? "public_api" : "link_only", syncStatus: platform === "huggingface" ? "pending" : "not_applicable" }));
+            return ok(upsert({ handle, profileUrl: body.value.startsWith("https://") ? body.value : "https://example.invalid/" + handle, submitted: body.submitted || {}, authMethod: ["huggingface", "leetcode"].includes(platform) ? "public_api" : "link_only", syncStatus: ["huggingface", "leetcode"].includes(platform) ? "pending" : "not_applicable", ...(platform === "leetcode" ? { nameMatch: /^asha/i.test(handle) ? "verified" : "unverified" } : {}) }));
           }
         }
         return fail(res, 404, undefined, "Unknown resource.");
@@ -146,7 +146,7 @@ const mocks = { "next/link": "import React from 'react';export default function 
     // ---- Step 2: platforms -----------------------------------------------------
     await page.getByRole("heading", { name: "Developer platforms" }).waitFor();
     assert.equal(await page.locator(".st-si-card").count(), 6);
-    assert.equal(await page.locator(".st-si-card-head p").getByText("Optional", { exact: true }).count(), 2);
+    assert.equal(await page.locator(".st-si-card-head p").getByText("Optional", { exact: true }).count(), 3);
     assert.equal(await page.getByRole("button", { name: "Continue" }).isDisabled(), true);
     const gh = page.locator('.st-si-card[data-platform="github"]');
     await gh.getByRole("button", { name: "Connect with GitHub" }).click();
@@ -164,7 +164,18 @@ const mocks = { "next/link": "import React from 'react';export default function 
     assert.equal(await gh.getByLabel("Fine-grained token").count(), 0, "token form closes when integrations are not configured");
     assert.ok(!(await page.content()).includes(secret), "token is never re-displayed");
     await shot("onboarding-2-github-unavailable-1440-light");
-    await gh.getByRole("button", { name: "I don’t use GitHub" }).click(); await gh.getByText("Does not use", { exact: true }).waitFor();
+    // Version 2: GitHub, LeetCode and LinkedIn are required, so none of them can be skipped.
+    assert.equal(await gh.getByRole("button", { name: "I don’t use GitHub" }).count(), 0, "GitHub cannot be declared absent");
+    await gh.getByText(/GitHub is required before skills-profile setup can finish/).waitFor();
+    for (const required of ["leetcode", "linkedin"])
+      assert.equal(await page.locator(`.st-si-card[data-platform="${required}"]`).getByRole("button", { name: /I don’t use/ }).count(), 0, required + " cannot be declared absent");
+    // The server's GitHub integration is then configured and the student connects with a token.
+    githubMode = "app-missing";
+    await page.reload(); await page.getByRole("heading", { name: "Developer platforms" }).waitFor();
+    await gh.getByRole("button", { name: "Connect with GitHub" }).click(); await gh.getByText(/not set up on this server yet/).waitFor();
+    await gh.getByLabel("Fine-grained token").fill(secret); await gh.getByRole("button", { name: "Connect with token" }).click();
+    await gh.getByText("Sync pending", { exact: true }).waitFor();
+    assert.ok(!(await page.content()).includes(secret), "token is never re-displayed after linking");
 
     const lc = page.locator('.st-si-card[data-platform="leetcode"]');
     await lc.getByLabel("LeetCode profile link or username").fill("https://leetcode.com.evil.com/u/x"); await lc.getByRole("button", { name: "Save LeetCode" }).click();
@@ -177,7 +188,8 @@ const mocks = { "next/link": "import React from 'react';export default function 
     await lc.getByRole("button", { name: "Save LeetCode" }).click(); await lc.getByText("Check the figures you entered. Fields: Contest rating.").waitFor();
     await shot("onboarding-2-validation-1440-light");
     await lc.getByLabel("Contest rating").fill("1650"); await lc.getByRole("button", { name: "Save LeetCode" }).click();
-    await lc.getByText("Linked", { exact: true }).waitFor(); await lc.getByText("Student submitted, not verified by DSU").first().waitFor();
+    await lc.getByText("Sync pending", { exact: true }).waitFor(); await lc.getByText("Student submitted, not verified by DSU").first().waitFor();
+    await lc.getByText("Verified", { exact: true }).waitFor(); assert.match(await lc.locator(".st-si-badge-good").filter({ hasText: "Verified" }).getAttribute("title"), /matches your name/);
     assert.deepEqual(calls.findLast((c) => c.resource === "skills/platforms/leetcode").body.submitted, { solved: 240, easy: 5, medium: 5, hard: 5, contestRating: 1650 });
     await page.locator('.st-si-card[data-platform="hackerrank"]').getByRole("button", { name: "I don’t use HackerRank" }).click();
     const li = page.locator('.st-si-card[data-platform="linkedin"]');
@@ -211,7 +223,7 @@ const mocks = { "next/link": "import React from 'react';export default function 
     assert.equal(calls.findLast((c) => c.resource === "skills/onboarding").body.consent, true);
 
     // Reload resumes from server state: a half-done profile lands on step 2.
-    profile = fresh(); profile._identity = true; profile.accounts = [acct("github", { state: "declared_none", authMethod: "none", ownership: "unavailable" })];
+    profile = fresh(); profile._identity = true; profile.accounts = [];
     await page.goto(origin + "/student/onboarding"); await page.getByRole("heading", { name: "Developer platforms" }).waitFor();
     await page.goto(origin + "/student/onboarding?github=error&code=GITHUB_ACCOUNT_IN_USE"); await page.getByText("This GitHub account is already linked to another student.").waitFor();
 
@@ -223,9 +235,12 @@ const mocks = { "next/link": "import React from 'react';export default function 
     await ghm.getByRole("button", { name: "Refresh data" }).click(); await ghm.getByText(/once every 10 minutes\. Try again in about 9 minutes/).waitFor();
     await page.locator('.st-si-card[data-platform="huggingface"]').getByText("Sync failed", { exact: true }).waitFor();
     await page.getByText("The platform was unavailable. The next sync will retry automatically.").waitFor();
-    const lim = page.locator('.st-si-card[data-platform="linkedin"]');
-    await lim.getByRole("button", { name: "Disconnect" }).click(); await lim.getByRole("button", { name: "Keep it" }).click();
-    await lim.getByRole("button", { name: "Disconnect" }).click(); await lim.getByRole("button", { name: "Disconnect LinkedIn" }).click(); await lim.getByText("Not provided", { exact: true }).waitFor();
+    // Required platforms have no Disconnect; optional ones do.
+    for (const required of ["github", "leetcode", "linkedin"])
+      assert.equal(await page.locator(`.st-si-card[data-platform="${required}"]`).getByRole("button", { name: "Disconnect", exact: true }).count(), 0, required + " cannot be disconnected");
+    const hfm = page.locator('.st-si-card[data-platform="huggingface"]');
+    await hfm.getByRole("button", { name: "Disconnect", exact: true }).click(); await hfm.getByRole("button", { name: "Keep it" }).click();
+    await hfm.getByRole("button", { name: "Disconnect", exact: true }).click(); await hfm.getByRole("button", { name: "Disconnect Hugging Face" }).click(); await hfm.getByText("Not provided", { exact: true }).waitFor();
     const picker = page.locator("#featured");
     await picker.getByText("Pinned on GitHub").first().waitFor(); await picker.getByText("1 of 3 selected").waitFor();
     for (const name of ["charlie", "delta", "echo-service-with-a-long-repository-name"]) await picker.getByRole("checkbox", { name: new RegExp(name) }).click();
