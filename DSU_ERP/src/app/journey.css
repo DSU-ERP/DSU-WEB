@@ -1,7 +1,7 @@
 /* The reference-image journey has separate, editable architectural chapters.
    Base styles are the complete no-JS / reduced-motion experience. */
 .eyebrow{display:flex;align-items:center;gap:9px;font:9px/1.5 var(--mono);letter-spacing:.055em}
-.eyebrow-square,.status-dot{display:inline-block;width:4px;height:4px;background:var(--red);flex:none}
+.eyebrow-square,.status-dot{display:inline-block;width:4px;height:4px;background:var(--accent);flex:none}
 .scene-actions{display:flex;align-items:center;gap:24px}
 .architectural-journey{position:relative}
 .journey-stage{position:relative}
@@ -25,14 +25,14 @@
 .hero-bottom>span{font:8px/1.7 var(--mono);text-align:right;color:var(--muted)}
 .chapter-detail-content{border-top:1px solid var(--line);padding-top:24px;display:grid;grid-template-columns:1fr 1.65fr;gap:45px}
 .detail-index{display:flex;align-items:flex-start;gap:25px}
-.detail-index>span{font-size:42px;line-height:.95;letter-spacing:-.06em;color:var(--red)}
+.detail-index>span{font-size:42px;line-height:.95;letter-spacing:-.06em;color:var(--accent-ink)}
 .detail-index>p{font-size:14px;line-height:1.4}
 .detail-index small{display:block;font:7px/1.5 var(--mono);letter-spacing:.06em;color:var(--muted);margin-top:8px}
 .detail-editorial{display:flex;align-items:flex-start;justify-content:space-between;gap:30px}
 .detail-editorial h3{font:9px/1.4 var(--mono);letter-spacing:.03em}
 .detail-editorial p{font-size:12px;line-height:1.7;color:var(--muted);margin-top:9px;max-width:290px}
 .detail-editorial .detail-functions{font:9px/1.9 var(--mono);max-width:235px;margin-top:0}
-.detail-functions span{color:var(--red);margin:0 5px}
+.detail-functions span{color:var(--accent-ink);margin:0 5px}
 
 
 
@@ -67,9 +67,9 @@
 .journey-navigation nav>a{display:flex;position:relative;gap:8px;align-items:center;padding:16px 0;font:8px var(--mono);color:var(--muted);flex:1;min-width:22px}
 .journey-navigation nav>a[aria-current]{color:var(--ink);flex:2.2}
 .chapter-link-label{display:none;white-space:nowrap}.journey-navigation a[aria-current] .chapter-link-label{display:inline}
-.journey-navigation nav i{position:absolute;inset:auto 0 4px;height:1px;background:var(--line)}.journey-navigation a[aria-current] i{background:var(--red)}
+.journey-navigation nav i{position:absolute;inset:auto 0 4px;height:1px;background:var(--line)}.journey-navigation a[aria-current] i{background:var(--accent)}
 .journey-enhanced .journey-progress{display:block;position:absolute;inset:auto 0 0;height:2px;z-index:5}
-.journey-progress span{display:block;height:100%;background:var(--red);transform:scaleX(0);transform-origin:left}
+.journey-progress span{display:block;height:100%;background:var(--accent);transform:scaleX(0);transform-origin:left}
 @media(min-width:1800px){.journey-enhanced .campus-hero h1{font-size:min(10.8vw,16vh)}.journey-enhanced .chapter-heading h2{font-size:72px}.journey-enhanced .chapter-description{font-size:14px;max-width:300px}.journey-enhanced .chapter-detail-content{bottom:110px;padding-top:30px}.detail-editorial p{font-size:14px;max-width:360px}}
 @media(max-width:1100px){.detail-editorial{display:block}.detail-editorial .detail-functions{max-width:none;margin-top:12px}.chapter-detail-content{grid-template-columns:1fr 1.3fr;gap:30px}.journey-scroll-hint{font-size:7px}.journey-navigation nav{gap:12px}}
 @media(max-width:767px){
@@ -113,7 +113,7 @@
 .merge-caption{display:grid;place-items:center;min-height:30px}
 .merge-caption>p{grid-area:1 / 1}
 .merge-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font:9px/1.8 var(--mono);color:var(--muted)}
-.merge-legend b{font-weight:400;color:var(--red);margin-right:5px}
+.merge-legend b{font-weight:400;color:var(--accent-ink);margin-right:5px}
 .merge-result{display:none;align-items:center;justify-content:center;gap:10px;font:10px var(--mono);letter-spacing:.05em}
 .journey-enhanced .system-merge{position:absolute;inset:92px var(--gutter) 82px;display:grid;grid-template-columns:minmax(240px,.55fr) minmax(0,1.45fr);grid-template-rows:minmax(0,1fr) 36px;align-items:center;gap:12px 28px;padding:0;border:0;visibility:hidden;pointer-events:none}
 .journey-enhanced .merge-heading{grid-column:1;grid-row:1;text-align:left;justify-self:start;max-width:420px}

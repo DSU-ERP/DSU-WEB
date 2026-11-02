@@ -128,7 +128,7 @@ html:has(.po-shell) {
   background: var(--po-highlight);
   font-weight: 600;
   border-radius: 0.3125rem;
-  border-left: 3px solid #d9252a;
+  border-left: 3px solid #f5cf1d;
   padding-left: calc(0.75rem - 3px);
 }
 .po-shell .erp-sidebar-bottom {
@@ -889,14 +889,14 @@ html:has(.po-shell) {
   flex-shrink: 0;
 }
 .po-shell .erp-sidebar nav a[aria-current="page"] svg {
-  color: #d9252a;
+  color: #8a6d00;
 }
 .po-shell .erp-sidebar nav a[aria-current="page"]::after {
   content: "";
   width: 0.3125rem;
   height: 0.3125rem;
   margin-left: auto;
-  background: #d9252a;
+  background: #f5cf1d;
   flex-shrink: 0;
 }
 .po-dark .erp-sidebar nav a svg {
@@ -925,14 +925,14 @@ html:has(.po-shell) {
    identical shade that keeps 4.5:1 contrast on the tinted sidebar, where the
    exact logo red measures 4.32 to 4.42:1. */
 .po-shell .erp-sidebar nav a.po-nav-friday {
-  color: #d02329;
+  color: #7a5f00;
 }
 .po-shell .erp-sidebar nav a.po-nav-friday svg {
-  color: #d9252a;
+  color: #8a6d00;
 }
 .po-dark .erp-sidebar nav a.po-nav-friday,
 .po-dark .erp-sidebar nav a.po-nav-friday svg {
-  color: #ff8a8d;
+  color: #f5d84a;
 }
 
 .po-resize {
@@ -958,10 +958,10 @@ html:has(.po-shell) {
 .po-resize:hover::after,
 .po-resize:focus-visible::after,
 .po-resizing .po-resize::after {
-  background: #d9252a;
+  background: #f5cf1d;
 }
 .po-resize:focus-visible {
-  outline: 2px solid #d9252a;
+  outline: 2px solid #8a6d00;
   outline-offset: -2px;
 }
 .po-resizing {
@@ -2768,7 +2768,7 @@ html:has(.po-shell) {
 }
 
 /* ── Shared: prevent content from exceeding viewport ── */
-.po-shell .erp-main > * { max-width: 100%; }
+.po-shell .erp-main > *, .po-shell .po-route > * { max-width: 100%; }
 
 /* ══ MOBILE: < 640px ══════════════════════════════════════════════════════ */
 @media (max-width: 639px) {
@@ -3023,9 +3023,9 @@ html:has(.po-shell) {
 @media (min-width: 1536px) {
   /* Content max-width: don't let it stretch infinitely */
   .po-overview-intel,
-  .po-shell .erp-main > .erp-panel,
-  .po-shell .erp-main > .po-filters,
-  .po-shell .erp-main > .po-heading {
+  .po-shell .po-route > .erp-panel,
+  .po-shell .po-route > .po-filters,
+  .po-shell .po-route > .po-heading {
     max-width: 90rem;
   }
 
@@ -3280,7 +3280,7 @@ html:has(.po-shell) {
 
 /* Active group: highlight the toggle */
 .po-nav-group[data-active] > .po-nav-toggle {
-  color: var(--po-accent, #d9252a);
+  color: var(--po-accent, #8a6d00);
 }
 
 /* Collapsed sidebar: hide group labels, center toggle icons */
@@ -3404,4 +3404,18 @@ html:has(.po-shell) {
 
 @media (prefers-reduced-motion: reduce) {
   .po-mobile-drawer { animation: none; }
+}
+
+/* ── Motion: page transitions and the Lottie loader ──────────────────────
+   Only opacity and transform animate, so the browser composites them on the
+   GPU without re-laying out the page. */
+.po-route {
+  animation: po-route-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes po-route-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .po-route { animation: none; }
 }

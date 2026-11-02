@@ -1,0 +1,36 @@
+/* Full-screen loading view (CampusLoader renders it on <body>). Only opacity
+   animates, so it stays smooth while the next page is being prepared. */
+.campus-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  font-family: Geist, Inter, Arial, sans-serif;
+  /* A short delay keeps fast page loads from flashing the screen. */
+  animation: campus-loader-in 0.25s ease 0.12s backwards;
+}
+.campus-loader-anim {
+  width: min(32rem, 88vw);
+  aspect-ratio: 4 / 1;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.campus-loader-anim[data-ready] { opacity: 1; }
+.campus-loader-anim svg { display: block; }
+.campus-loader-label {
+  margin: 0;
+  font-size: 0.875rem;
+  letter-spacing: 0.01em;
+  opacity: 0.65;
+  animation: campus-loader-pulse 1.5s ease-in-out infinite;
+}
+@keyframes campus-loader-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes campus-loader-pulse { 0%, 100% { opacity: 0.65; } 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  .campus-loader, .campus-loader-label { animation: none; }
+}

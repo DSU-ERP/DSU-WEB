@@ -1,4 +1,4 @@
-export const DESIGN = { background: '#FAFAF8', secondary: '#F3F3F0', text: '#151515', muted: '#737373', guide: '#D7D7D4', accent: '#D9252A' } as const;
+export const DESIGN = { background: '#FAFAF8', secondary: '#F3F3F0', text: '#151515', muted: '#737373', guide: '#D7D7D4', accent: '#F5CF1D' } as const;
 export const CAPABILITIES = [
   { name: 'Admissions', detail: 'The beginning of every student journey.', category: 'STUDENT LIFECYCLE' },
   { name: 'Academics', detail: 'Learning, teaching, and academic progress.', category: 'ACADEMIC WORKFLOWS' },

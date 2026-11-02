@@ -15,7 +15,7 @@ function ReferenceDatum() {
       <path opacity=".35" d="M153 491 L492 687 M143 485 L163 497 M482 681 L502 693 M551 686 L847 515 M541 680 L561 692 M837 509 L857 521" />
       <path opacity=".5" d="M500 335 V420 M460 398 L540 352 M459 351 L541 399" />
     </g>
-    <g fill="#D9252A">{[[182,464],[478,293],[817,489],[521,660],[500,375]].map(([x,y])=><rect key={x} x={x-2.5} y={y-2.5} width="5" height="5"/>)}</g>
+    <g fill="#F5CF1D">{[[182,464],[478,293],[817,489],[521,660],[500,375]].map(([x,y])=><rect key={x} x={x-2.5} y={y-2.5} width="5" height="5"/>)}</g>
     <text className="datum-monogram" x="500" y="295" textAnchor="middle">DSU</text>
     <text className="datum-title" x="500" y="722" textAnchor="middle">ARCHITECTURAL REFERENCE PENDING</text>
     <text className="datum-subtitle" x="500" y="744" textAnchor="middle">TEMPORARY REGISTRATION STUDY · NOT THE COLLEGE BUILDING</text>

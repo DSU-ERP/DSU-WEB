@@ -215,3 +215,8 @@
 @media (prefers-reduced-motion: reduce) {
   .st-calm-shell > .st-sidebar, .st-calm-shell .st-nav-group > a, .st-home-launcher a, .st-home-primary { transition: none; }
 }
+
+/* DSU yellow marks the current page in the sidebar. */
+.st-calm-shell .st-nav-group > a[aria-current="page"] { box-shadow: inset 3px 0 var(--st-yellow); }
+.st-calm-shell .st-nav-group > a[aria-current="page"] > svg { color: var(--st-gold); }
+.st-calm-shell > .st-sidebar > .st-brand { font-size: inherit; letter-spacing: normal; }

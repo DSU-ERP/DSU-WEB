@@ -1,12 +1,12 @@
 "use client";
 import { useActionState } from "react";
 import { signIn } from "./actions";
-import type { Portal } from "@/shared/auth/portal";
-export function LoginForm({ portal }: { portal: Portal }) {
+// One form for every role: after sign-in, /workspace opens the student or
+// placement officer workspace that the account is authorised for.
+export function LoginForm() {
   const [state, action, pending] = useActionState(signIn, { error: "" });
   return (
     <form action={action} className="erp-form">
-      <input type="hidden" name="portal" value={portal} />
       <label htmlFor="email">University email</label>
       <input
         id="email"
@@ -30,16 +30,11 @@ export function LoginForm({ portal }: { portal: Portal }) {
         {state.error}
       </p>
       <button className="erp-primary" disabled={pending}>
-        {pending
-          ? "Signing in…"
-          : portal === "student"
-            ? "Enter student workspace →"
-            : "Enter placement workspace →"}
+        {pending ? "Signing in…" : "Sign in →"}
       </button>
       <p className="erp-muted">
-        {portal === "student"
-          ? "New here? Create a student account below. Use the email held in your university records for automatic profile matching."
-          : "Placement officer access is assigned by your campus administrator."}
+        Students and placement officers sign in here. You&apos;ll go straight
+        to the workspace your account has access to.
       </p>
     </form>
   );

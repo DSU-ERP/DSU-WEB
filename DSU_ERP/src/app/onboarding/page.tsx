@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { StudentBrand } from "@/features/student/components/StudentBrand";
 import { redirect } from "next/navigation";
 import { backendApi } from "@/shared/http/backend";
 import { CampusError } from "@/shared/http/errors";
@@ -25,8 +26,8 @@ export default async function Page() {
   return (
     <main className="st-app st-registration">
       <header>
-        <Link className="st-brand" href="/">
-          DSU <small>/ YOUR WORKSPACE</small>
+        <Link className="st-brand" href="/" aria-label="Dayananda Sagar University — home">
+          <StudentBrand label="YOUR WORKSPACE" />
         </Link>
         <form action={signOut}>
           <button className="st-button st-button-secondary">Sign out</button>

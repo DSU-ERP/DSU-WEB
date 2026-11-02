@@ -26,6 +26,7 @@ import { signOut } from "@/app/login/actions";
 import { STUDENT_MODULES } from "../lib/types";
 import { NotificationBell } from "@/shared/notifications/Notifications";
 import { InterviewShell } from "./InterviewShell";
+import { StudentBrand } from "./StudentBrand";
 const icons = {
   dashboard: LayoutDashboard,
   chart: ChartNoAxesCombined,
@@ -122,12 +123,7 @@ export function StudentShell({
         </a>
         <header className="st-si-frame-bar">
           <span className="st-brand">
-            <span className="st-brand-mark">
-              D<span />
-            </span>
-            <span>
-              DSU <small>/ STUDENT</small>
-            </span>
+            <StudentBrand />
           </span>
           <div className="st-si-frame-actions">
             <span className="st-si-frame-name">
@@ -185,12 +181,7 @@ export function StudentShell({
         aria-label="Student workspace navigation"
       >
         <Link className="st-brand" href="/student/dashboard">
-          <span className="st-brand-mark">
-            D<span />
-          </span>
-          <span>
-            DSU <small>/ STUDENT</small>
-          </span>
+          <StudentBrand />
         </Link>
         <nav aria-label="Student modules" tabIndex={0}>
           {["Workspace", "Placement kit", "Campus", "Account"].map((group) => (

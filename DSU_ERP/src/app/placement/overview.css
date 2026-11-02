@@ -1,6 +1,6 @@
 /* Dashboard composition is scoped to overview; navigation is shared by officers. */
-.po-shell { --po-brand: #b6222b; --po-warning: #845b16; --po-warning-bg: #fbf5e9; }
-.po-dark { --po-brand: #ff858c; --po-warning: #e6bc72; --po-warning-bg: #30291c; }
+.po-shell { --po-yellow: #f5cf1d; --po-brand: #8a6d00; --po-warning: #845b16; --po-warning-bg: #fbf5e9; }
+.po-dark { --po-yellow: #f5d84a; --po-brand: #f5d84a; --po-warning: #e6bc72; --po-warning-bg: #30291c; }
 .po-shell .erp-sidebar { padding: 1.25rem .875rem; gap: .75rem; }
 .po-shell .erp-sidebar > .erp-eyebrow { margin: .25rem .75rem 0; }
 .po-shell .erp-sidebar > .erp-wordmark { padding: .25rem .75rem; }
@@ -11,7 +11,7 @@
 .po-shell .erp-sidebar-bottom { margin-top: auto; padding: .875rem .5rem 0; gap: .625rem; border-top: 1px solid var(--erp-border); flex-shrink: 0; }
 .po-collapsed .po-nav-group-title { display: none; }
 .po-collapsed .po-nav-group + .po-nav-group { padding-top: .5rem; border-top: 1px solid var(--erp-border); }
-.po-shell .erp-sidebar nav a[aria-current=page] { box-shadow: inset 2px 0 var(--po-brand); }
+.po-shell .erp-sidebar nav a[aria-current=page] { box-shadow: inset 2px 0 var(--po-yellow); }
 .po-mobile-nav-toggle { display: none; }
 .po-topbar button { background: none; border: 0; color: inherit; min-height: 44px; padding: .5rem; }
 .po-dark .erp-sidebar .erp-role { background: var(--po-highlight); color: var(--po-text); }
@@ -20,7 +20,7 @@
 .po-mobile-drawer[open] { display: flex; flex-direction: column; gap: 1rem; }
 .po-mobile-drawer nav { min-height: 0; overflow-y: auto; flex: 1; display: grid; align-content: start; gap: .2rem; }
 .po-mobile-drawer nav a { display: flex; align-items: center; gap: .75rem; padding: .75rem; min-height: 44px; border-radius: 4px; font-size: .875rem; }
-.po-mobile-drawer nav a[aria-current=page] { background: var(--po-highlight); font-weight: 600; box-shadow: inset 2px 0 var(--po-brand); }
+.po-mobile-drawer nav a[aria-current=page] { background: var(--po-highlight); font-weight: 600; box-shadow: inset 2px 0 var(--po-yellow); }
 .po-drawer-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .po-shell .po-overview-main { max-width: 112rem; width: 100%; margin-inline: auto; padding: 1.75rem 2rem 2.5rem; }
 .po-overview { --overview-gap: 1.125rem; --po-series-eligible: #48749c; --po-series-placed: #2c775d; --po-series-third: #b16d3e; display: grid; gap: 1.5rem; font-size: .875rem; line-height: 1.55; }
@@ -40,7 +40,7 @@
 .po-filter-scope { color: var(--erp-muted); font-size: .6875rem; margin-top: .65rem; overflow-wrap: anywhere; }
 .po-overview-primary { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--overview-gap); }
 .po-overview-kpi { border: 1px solid var(--erp-border); border-radius: .625rem; padding: 1.125rem 1.25rem; background: var(--po-surface); }
-.po-overview-kpi:first-child { border-top: 2px solid var(--po-brand); padding-top: calc(1.125rem - 1px); }
+.po-overview-kpi:first-child { border-top: 2px solid var(--po-yellow); padding-top: calc(1.125rem - 1px); }
 .po-overview .po-overview-kpi h2 { font-size: .8125rem; font-weight: 500; letter-spacing: 0; margin: 0; }
 .po-overview-kpi strong { display: block; font-size: 2.125rem; line-height: 1.2; font-weight: 500; letter-spacing: -.045em; font-variant-numeric: tabular-nums; margin: .65rem 0; }
 .po-overview-kpi p { font-size: .6875rem; color: var(--erp-muted); }
