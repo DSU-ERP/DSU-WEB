@@ -113,6 +113,7 @@ html:has(.po-shell) {
   transition: width 180ms cubic-bezier(0.25, 1, 0.5, 1);
   padding: 1.75rem 1.375rem;
   gap: 1.25rem;
+  box-shadow: 2px 0 16px rgba(0,0,0,0.05);
 }
 .po-shell .erp-sidebar nav {
   gap: 0.1875rem;
@@ -121,11 +122,14 @@ html:has(.po-shell) {
 .po-shell .erp-sidebar nav a {
   padding: 0.5625rem 0.75rem;
   font-size: 0.75rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .po-shell .erp-sidebar nav a[aria-current="page"] {
   background: var(--po-highlight);
   font-weight: 600;
   border-radius: 0.3125rem;
+  border-left: 3px solid #d9252a;
+  padding-left: calc(0.75rem - 3px);
 }
 .po-shell .erp-sidebar-bottom {
   gap: 0.875rem;
@@ -140,6 +144,13 @@ html:has(.po-shell) {
 .po-topbar button {
   font-size: 0.6875rem;
   cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  border: 1px solid var(--erp-border);
+}
+.po-topbar button:hover {
+  background: var(--po-highlight);
 }
 .po-shell h1 {
   font-size: clamp(1.875rem, 3.5vw, 3.5rem);
@@ -238,6 +249,11 @@ html:has(.po-shell) {
 .po-metrics article {
   padding: 1.375rem;
   border-right: 1px solid var(--erp-border);
+  transition: background 0.15s ease;
+  cursor: default;
+}
+.po-metrics article:hover {
+  background: color-mix(in srgb, var(--po-highlight) 50%, transparent);
 }
 .po-metrics article span {
   display: block;
@@ -257,6 +273,12 @@ html:has(.po-shell) {
 }
 .po-table td {
   vertical-align: top;
+}
+.po-table tbody tr {
+  transition: background 0.1s ease;
+}
+.po-table tbody tr:hover {
+  background: var(--po-highlight);
 }
 .po-table a {
   font-weight: 500;
@@ -364,6 +386,11 @@ html:has(.po-shell) {
   padding: 0.75rem 1.25rem;
   border-radius: 0.3125rem;
   cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+.po-danger:hover {
+  background: #b33030;
+  transform: translateY(-1px);
 }
 .po-note {
   font-size: 0.75rem;
@@ -392,6 +419,11 @@ html:has(.po-shell) {
   border: 1px solid var(--erp-border);
   border-radius: 0.375rem;
   background: var(--po-surface);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.po-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+  transform: translateY(-2px);
 }
 .po-card strong {
   display: block;
@@ -431,10 +463,19 @@ html:has(.po-shell) {
   background: #181d17;
   color: var(--po-text);
 }
+/* ── Dark mode: comprehensive coverage ── */
 .po-dark .erp-sidebar,
 .po-dark .erp-topbar {
   background: #1d231c;
   color: var(--po-text);
+}
+.po-dark .erp-sidebar {
+  border-right-color: #2e3a2c;
+  box-shadow: 2px 0 12px rgba(0,0,0,0.3);
+}
+.po-dark .erp-topbar {
+  border-bottom-color: #2e3a2c;
+  background: rgba(29,35,28,0.92);
 }
 .po-dark .erp-wordmark,
 .po-dark .erp-table,
@@ -446,6 +487,11 @@ html:has(.po-shell) {
 }
 .po-dark .erp-secondary {
   background: transparent;
+  border-color: #4a5546;
+  color: var(--po-text);
+}
+.po-dark .erp-secondary:hover {
+  background: var(--po-highlight);
 }
 .po-dark .erp-table tbody tr:hover {
   background: var(--po-highlight);
@@ -454,12 +500,107 @@ html:has(.po-shell) {
   background: #b7cba6;
   color: #182111;
 }
+.po-dark .erp-primary:hover {
+  background: #caddbb;
+}
 .po-dark .erp-category-panel {
   background: var(--po-surface);
 }
 .po-dark .erp-table a,
 .po-dark .erp-back {
   color: #c6ddae;
+}
+/* Dark: panel surfaces */
+.po-dark .erp-panel {
+  background: var(--po-surface);
+  border-color: var(--erp-border);
+}
+.po-dark .erp-metrics {
+  background: var(--po-surface);
+  border-color: var(--erp-border);
+}
+.po-dark .erp-metrics article {
+  border-right-color: var(--erp-border);
+}
+.po-dark .erp-table th {
+  background: color-mix(in srgb, var(--po-surface) 80%, transparent);
+  border-bottom-color: var(--erp-border);
+}
+.po-dark .erp-table td {
+  border-bottom-color: var(--erp-border);
+}
+/* Dark: form inputs */
+.po-dark .po-shell input,
+.po-dark .po-shell select,
+.po-dark .po-shell textarea {
+  background: color-mix(in srgb, var(--po-surface) 60%, var(--po-highlight));
+  border-color: var(--erp-border);
+  color: var(--po-text);
+}
+.po-dark .erp-form input,
+.po-dark .erp-search input {
+  background: color-mix(in srgb, var(--po-surface) 60%, var(--po-highlight));
+  border-color: var(--erp-border);
+  color: var(--po-text);
+}
+/* Dark: cards */
+.po-dark .po-card {
+  background: var(--po-surface);
+  border-color: var(--erp-border);
+}
+.po-dark .po-kpis {
+  background: var(--po-surface);
+  border-color: var(--erp-border);
+}
+.po-dark .po-kpis article {
+  border-color: var(--erp-border);
+}
+.po-dark .po-metrics {
+  background: var(--po-surface);
+  border-color: var(--erp-border);
+}
+.po-dark .po-metrics article {
+  border-right-color: var(--erp-border);
+}
+/* Dark: muted/secondary text */
+.po-dark .erp-muted,
+.po-dark .erp-eyebrow,
+.po-dark .erp-role {
+  color: var(--erp-muted);
+}
+.po-dark .erp-role {
+  background: color-mix(in srgb, var(--po-highlight) 60%, transparent);
+  color: var(--erp-muted);
+}
+/* Dark: pagination */
+.po-dark .erp-pagination a {
+  color: #c6ddae;
+  border-color: var(--erp-border);
+}
+.po-dark .erp-pagination a:hover {
+  background: var(--po-highlight);
+}
+/* Dark: empty state */
+.po-dark .erp-empty {
+  color: var(--erp-muted);
+}
+/* Dark: form error */
+.po-dark .erp-form-error {
+  color: #f06a6d;
+}
+/* Dark: import form */
+.po-dark .erp-import-form {
+  border-color: var(--erp-border);
+}
+/* Dark: chapter separator */
+.po-dark .erp-departments li > div {
+  background: var(--po-highlight);
+}
+/* Dark: skip link */
+.po-dark .po-skip {
+  background: var(--po-surface);
+  color: var(--po-text);
+  border: 1px solid var(--erp-border);
 }
 @media (max-width: 1000px) {
   .po-shell {
@@ -910,7 +1051,7 @@ html:has(.po-shell) {
    series, and neutral grey marks totals or unknowns. Shape, dash and hatch
    carry the same identity, so colour is never the only cue. */
 .po-shell {
-  --po-series-eligible: #2a78d6;
+  --po-series-eligible: #0284c7;
   --po-series-placed: #158a60;
   --po-series-third: #d4581f;
   --po-series-neutral: #8d9288;
@@ -918,7 +1059,7 @@ html:has(.po-shell) {
   --po-badge-bg: #f2f4ee;
 }
 .po-dark {
-  --po-series-eligible: #3987e5;
+  --po-series-eligible: #38bdf8;
   --po-series-placed: #199e70;
   --po-series-third: #d95926;
   --po-series-neutral: #737b6e;
@@ -1035,10 +1176,15 @@ html:has(.po-shell) {
   background: var(--tone);
   flex: none;
 }
-.po-key.po-tone-eligible,
-.po-bar.po-tone-eligible {
+/* Legend key for eligible: keep stripe pattern for accessibility (no-color cue) */
+.po-key.po-tone-eligible {
   background: repeating-linear-gradient(45deg, var(--tone) 0 2px, transparent 2px 4px);
   box-shadow: inset 0 0 0 1.5px var(--tone);
+}
+/* Bars are solid — stripes are illegible at bar heights */
+.po-bar.po-tone-eligible {
+  background: var(--tone);
+  box-shadow: none;
 }
 .po-key.po-tone-unknown {
   background: repeating-linear-gradient(45deg, var(--tone) 0 1.5px, transparent 1.5px 4px);
@@ -1052,7 +1198,7 @@ html:has(.po-shell) {
 .po-line {
   display: grid;
   grid-template-columns: 2.25rem minmax(0, 1fr);
-  grid-template-rows: 14rem auto;
+  grid-template-rows: 11rem auto;
   margin-top: 0.5rem;
 }
 .po-line-y {
@@ -1140,7 +1286,8 @@ html:has(.po-shell) {
   fill: var(--po-text);
   font-variant-numeric: tabular-nums;
 }
-.po-donut-caption {
+.po-donut-caption,
+.po-donut-label {
   font-size: 0.5625rem;
   fill: var(--erp-muted);
 }
@@ -1673,4 +1820,1588 @@ html:has(.po-shell) {
 }
 .po-ranked-table th small {
   white-space: nowrap;
+}
+
+/* ─── Skeleton loading system (placement portal) ─── */
+@keyframes po-skel-pulse {
+  0%,100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.po-skel {
+  background: var(--po-highlight, #edf1e7);
+  border-radius: 0.25rem;
+  animation: po-skel-pulse 1.5s ease-in-out infinite;
+}
+.po-dark .po-skel {
+  background: color-mix(in srgb, var(--po-highlight) 60%, transparent);
+}
+
+.po-page-skeleton {
+  animation: po-fade-in 0.2s both;
+}
+.po-skel-heading {
+  margin-bottom: 2rem;
+  display: grid;
+  gap: 0.75rem;
+}
+.po-skel-label { height: 0.6875rem; width: 9rem; animation-delay: 0s; }
+.po-skel-title { height: 2.25rem; width: 22rem; max-width: 100%; animation-delay: 0.05s; }
+.po-skel-subtitle { height: 0.875rem; width: 16rem; animation-delay: 0.1s; }
+
+.po-skel-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 0.875rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+.po-skel-metric-card {
+  padding: 1.375rem;
+  border-right: 1px solid var(--erp-border);
+  display: grid;
+  gap: 0.875rem;
+}
+.po-skel-metric-label { height: 0.75rem; width: 75%; animation-delay: 0.06s; }
+.po-skel-metric-value { height: 1.75rem; width: 50%; animation-delay: 0.12s; }
+
+.po-skel-panel {
+  background: white;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  gap: 0.875rem;
+}
+.po-dark .po-skel-panel {
+  background: var(--po-surface);
+}
+.po-skel-panel-head { height: 1.125rem; width: 30%; animation-delay: 0.04s; }
+.po-skel-row { height: 0.875rem; animation-delay: 0.08s; border-radius: 0.2rem; }
+
+@media (max-width: 1000px) {
+  .po-skel-metrics { grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .po-skel { animation: none; opacity: 0.6; }
+}
+
+/* ─── Placement ERP: comprehensive design improvements ─── */
+
+/* Pagination */
+.erp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--erp-border);
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+  flex-wrap: wrap;
+}
+.erp-pagination > div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.erp-pagination a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  color: #243725;
+}
+.erp-pagination a:hover {
+  background: var(--po-highlight, #edf1e7);
+  border-color: #9ab08a;
+}
+
+/* Empty state */
+.erp-empty {
+  padding: 3rem 1.5rem;
+  text-align: center;
+  color: var(--erp-muted);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  border: 1px dashed var(--erp-border);
+  border-radius: 0.375rem;
+  margin: 1.5rem 0;
+}
+
+/* Page heading refinement */
+.erp-page-heading {
+  border-bottom: 1px solid var(--erp-border);
+  padding-bottom: 1.75rem;
+  margin-bottom: 2rem;
+}
+.po-heading {
+  border-bottom: 1px solid var(--erp-border);
+  padding-bottom: 1.5rem;
+  margin-bottom: 1.75rem;
+}
+
+/* Table: sticky header for long tables */
+.erp-table-scroll {
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  overflow: hidden;
+}
+.erp-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #f5f7f1;
+}
+.po-dark .erp-table thead th {
+  background: color-mix(in srgb, var(--po-surface) 90%, transparent);
+}
+
+/* Table link style improvements */
+.po-shell .erp-table a {
+  color: #294a26;
+  font-weight: 500;
+  text-underline-offset: 0.15em;
+}
+.po-shell .erp-table a:hover {
+  text-decoration: underline;
+}
+
+/* Sidebar nav spacing */
+.po-shell .erp-sidebar nav {
+  margin-top: 0.5rem;
+}
+.po-shell .erp-sidebar nav a {
+  border-radius: 0.3125rem;
+  margin-bottom: 0.125rem;
+}
+.po-shell .erp-sidebar nav a:hover {
+  background: color-mix(in srgb, var(--po-highlight) 70%, transparent);
+}
+
+/* Import form improvement */
+.erp-import-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+.erp-import-form input[type="file"] {
+  padding: 0.75rem;
+  border: 1.5px dashed var(--erp-border);
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  background: transparent;
+  width: 100%;
+}
+.erp-import-form input[type="file"]:hover {
+  border-color: #243725;
+  background: #f5f7f1;
+}
+
+/* KPI tiles: hover interaction */
+.po-kpis article {
+  transition: background 0.15s ease;
+  cursor: default;
+}
+.po-kpis article:hover {
+  background: color-mix(in srgb, var(--po-highlight) 50%, transparent);
+}
+
+/* Status badge improvements */
+.po-status {
+  font-family: var(--mono, monospace);
+  letter-spacing: 0.02em;
+}
+.po-status-complete {
+  color: #2a6b47;
+  background: color-mix(in srgb, #2a6b47 10%, transparent);
+  border-color: color-mix(in srgb, #2a6b47 35%, transparent);
+}
+.po-dark .po-status-complete {
+  color: #80c9a0;
+  background: color-mix(in srgb, #80c9a0 12%, transparent);
+  border-color: color-mix(in srgb, #80c9a0 30%, transparent);
+}
+
+/* Po-facts: improved readability */
+.po-facts > div:last-child {
+  border-bottom: 0;
+}
+.po-facts dt {
+  font-weight: 500;
+}
+
+/* Form field improvement in po-form */
+.po-form label {
+  color: var(--erp-muted, #626a61);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+.po-form input:focus,
+.po-form select:focus,
+.po-form textarea:focus {
+  border-color: #243725;
+  box-shadow: 0 0 0 3px rgba(36, 55, 37, 0.1);
+  outline: none;
+}
+.po-dark .po-form input:focus,
+.po-dark .po-form select:focus,
+.po-dark .po-form textarea:focus {
+  border-color: #b7cba6;
+  box-shadow: 0 0 0 3px rgba(183, 203, 166, 0.12);
+}
+
+/* Sidebar bottom */
+.erp-sidebar-bottom {
+  border-top: 1px solid var(--erp-border);
+  padding-top: 1rem;
+}
+.po-dark .erp-sidebar-bottom {
+  border-top-color: #2e3a2c;
+}
+
+/* Chart improvements: donut layout */
+.po-donut-layout .po-legend li {
+  transition: opacity 0.15s ease;
+}
+
+/* Po-card hover */
+.po-card {
+  transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+.po-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.07);
+}
+
+/* Category card heading */
+.po-category-card h2 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Filter controls: button alignment */
+.po-filters button.erp-primary,
+.po-filters a.erp-secondary {
+  align-self: flex-end;
+  margin-top: 0;
+}
+
+/* Inline expand summary style */
+.erp-table details summary {
+  cursor: pointer;
+  color: var(--erp-muted);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.15s ease;
+}
+.erp-table details summary:hover {
+  color: #243725;
+}
+.po-dark .erp-table details summary:hover {
+  color: #c6ddae;
+}
+
+/* Eyebrow label - make consistent */
+.erp-eyebrow {
+  font-weight: 500;
+  letter-spacing: 0.1em;
+}
+
+/* Role badge */
+.erp-role {
+  display: inline-block;
+  font-size: 0.5625rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.25rem;
+  background: #e7eddf;
+  color: #435a3a;
+  white-space: nowrap;
+}
+
+/* Section transitions */
+.erp-main {
+  animation: po-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Dark mode topbar */
+.po-dark .erp-topbar {
+  box-shadow: 0 1px 0 var(--erp-border);
+}
+.po-dark .po-topbar button {
+  border-color: var(--erp-border);
+  color: var(--erp-muted);
+}
+.po-dark .po-topbar button:hover {
+  background: var(--po-highlight);
+  color: var(--po-text);
+}
+
+/* Drives and company pages: section dividers */
+.po-record-heading {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--erp-border);
+  margin-bottom: 1.25rem;
+}
+
+/* Intelligence profile avatar */
+.po-avatar {
+  font-size: 1.125rem;
+  border: 1px solid var(--erp-border);
+}
+
+/* Lazy improvement: give tables a breath */
+.po-shell .erp-table {
+  font-size: 0.8125rem;
+}
+.po-shell .erp-table th {
+  font-size: 0.625rem;
+  letter-spacing: 0.07em;
+}
+.po-shell .erp-table td {
+  padding: 0.875rem 0.875rem;
+}
+
+/* ─── Chart & Data visualization polish ─── */
+
+/* Chart figure: complement erp-panel (which already provides border/bg/padding) */
+.po-chart {
+  border-radius: 0.5rem;      /* slightly more rounded than erp-panel's 0.375rem */
+  overflow: hidden;
+}
+.po-chart figcaption {
+  margin-bottom: 0.75rem;
+}
+.po-chart figcaption h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-bottom: 0.1875rem;
+}
+.po-chart-def {
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+  line-height: 1.6;
+  max-width: 48rem;
+}
+
+/* ── Donut chart (Placement Status) animations ── */
+
+/* Entire donut SVG: spin-reveal on mount */
+@keyframes po-donut-reveal {
+  from { opacity: 0; transform: scale(0.82) rotate(-30deg); }
+  to   { opacity: 1; transform: scale(1)   rotate(0deg); }
+}
+.po-chart-donut .po-donut {
+  animation: po-donut-reveal 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: center;
+}
+
+/* Each arc segment fades in with slight stagger */
+@keyframes po-arc-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.po-chart-donut .po-arc:nth-child(1) { animation: po-arc-in 0.4s 0.15s both; }
+.po-chart-donut .po-arc:nth-child(2) { animation: po-arc-in 0.4s 0.25s both; }
+.po-chart-donut .po-arc:nth-child(3) { animation: po-arc-in 0.4s 0.35s both; }
+.po-chart-donut .po-arc:nth-child(4) { animation: po-arc-in 0.4s 0.45s both; }
+
+/* Legend rows: stagger */
+.po-chart-donut .po-donut-layout .po-legend li:nth-child(1) { animation: po-fade-up 0.3s 0.2s both; }
+.po-chart-donut .po-donut-layout .po-legend li:nth-child(2) { animation: po-fade-up 0.3s 0.28s both; }
+.po-chart-donut .po-donut-layout .po-legend li:nth-child(3) { animation: po-fade-up 0.3s 0.36s both; }
+.po-chart-donut .po-donut-layout .po-legend li:nth-child(4) { animation: po-fade-up 0.3s 0.44s both; }
+
+/* Arc hover: subtle highlight */
+.po-arc {
+  transition: opacity 0.2s ease;
+  cursor: pointer;
+}
+.po-chart-donut .po-donut:hover .po-arc { opacity: 0.7; }
+.po-chart-donut .po-donut:hover .po-arc:hover { opacity: 1; }
+
+/* ── Bar chart (Departments) animations ── */
+
+/* Bars grow from left via scaleX */
+@keyframes po-bar-grow {
+  from { transform: scaleX(0); opacity: 0.6; }
+  to   { transform: scaleX(1); opacity: 1; }
+}
+.po-chart-bars .po-bar {
+  transform-origin: left center;
+  animation: po-bar-grow 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Stagger bar rows by row index */
+.po-chart-bars .po-bar-row:nth-child(1) .po-bar { animation-delay: 0.05s; }
+.po-chart-bars .po-bar-row:nth-child(2) .po-bar { animation-delay: 0.10s; }
+.po-chart-bars .po-bar-row:nth-child(3) .po-bar { animation-delay: 0.15s; }
+.po-chart-bars .po-bar-row:nth-child(4) .po-bar { animation-delay: 0.20s; }
+.po-chart-bars .po-bar-row:nth-child(5) .po-bar { animation-delay: 0.25s; }
+.po-chart-bars .po-bar-row:nth-child(6) .po-bar { animation-delay: 0.30s; }
+.po-chart-bars .po-bar-row:nth-child(7) .po-bar { animation-delay: 0.35s; }
+.po-chart-bars .po-bar-row:nth-child(8) .po-bar { animation-delay: 0.40s; }
+.po-chart-bars .po-bar-row:nth-child(n+9) .po-bar { animation-delay: 0.45s; }
+
+/* Bar value fade in with bar */
+@keyframes po-bar-value-in {
+  from { opacity: 0; transform: translateX(-4px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.po-chart-bars .po-bar-value { animation: po-bar-value-in 0.35s 0.4s both; }
+
+/* Bar labels: slide in */
+.po-chart-bars .po-bar-label { animation: po-fade-up 0.3s 0.05s both; }
+
+/* Bar hover: brighter */
+.po-bar {
+  transition: opacity 0.15s ease, filter 0.15s ease;
+  border-radius: 0 3px 3px 0;
+}
+.po-bar:hover { filter: brightness(1.1); opacity: 1 !important; }
+
+/* ── Line chart (Progress) animations ── */
+
+/* Polyline draw: stroke-dasharray trick */
+@keyframes po-line-draw {
+  from { stroke-dashoffset: 9999; }
+  to   { stroke-dashoffset: 0; }
+}
+.po-chart-line .po-series {
+  stroke-dasharray: 9999;
+  stroke-dashoffset: 9999;
+  animation: po-line-draw 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.po-chart-line .po-series.po-tone-offers { animation-delay: 0.1s; }
+.po-chart-line .po-series.po-tone-drives { animation-delay: 0.2s; }
+
+/* Data marks: pop in after line */
+@keyframes po-mark-pop {
+  from { opacity: 0; transform: scale(0); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.po-chart-line .po-mark {
+  animation: po-mark-pop 0.25s 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.po-mark {
+  transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.po-mark:hover { transform: scale(2) !important; }
+
+/* Chart legend: entrance */
+.po-chart .po-legend li:nth-child(1) { animation: po-fade-in 0.25s 0.1s both; }
+.po-chart .po-legend li:nth-child(2) { animation: po-fade-in 0.25s 0.18s both; }
+.po-chart .po-legend li:nth-child(3) { animation: po-fade-in 0.25s 0.26s both; }
+
+/* KPI tile: counter pop-in */
+@keyframes po-kpi-in {
+  from { opacity: 0; transform: translateY(8px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.po-kpis article:nth-child(1)  { animation: po-kpi-in 0.3s 0.05s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(2)  { animation: po-kpi-in 0.3s 0.09s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(3)  { animation: po-kpi-in 0.3s 0.13s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(4)  { animation: po-kpi-in 0.3s 0.17s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(5)  { animation: po-kpi-in 0.3s 0.21s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(6)  { animation: po-kpi-in 0.3s 0.25s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(7)  { animation: po-kpi-in 0.3s 0.29s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(8)  { animation: po-kpi-in 0.3s 0.33s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(9)  { animation: po-kpi-in 0.3s 0.37s cubic-bezier(0.22,1,0.36,1) both; }
+.po-kpis article:nth-child(10) { animation: po-kpi-in 0.3s 0.41s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* Chart empty: improved */
+.po-chart-empty {
+  background: color-mix(in srgb, var(--po-highlight, #edf1e7) 40%, transparent);
+  border-radius: 0.25rem;
+  border-style: dashed;
+  animation: po-fade-in 0.3s both;
+}
+
+/* ── Reduced motion: kill all chart animations ── */
+@media (prefers-reduced-motion: reduce) {
+  .po-chart-donut .po-donut,
+  .po-chart-donut .po-arc,
+  .po-chart-bars .po-bar,
+  .po-chart-bars .po-bar-value,
+  .po-chart-bars .po-bar-label,
+  .po-chart-line .po-series,
+  .po-chart-line .po-mark,
+  .po-chart .po-legend li,
+  .po-kpis article {
+    animation: none !important;
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+}
+
+/* KPI tile accent indicators */
+.po-kpis {
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+.po-kpis article {
+  border-bottom: 3px solid transparent;
+}
+.po-kpis article:has(.po-tone-placed):hover { border-bottom-color: var(--po-series-placed); }
+.po-kpis article:has(.po-tone-eligible):hover { border-bottom-color: var(--po-series-eligible); }
+.po-kpis article:has(.po-tone-drives):hover { border-bottom-color: var(--po-series-third); }
+
+/* Bar chart: rounded bars */
+.po-bar {
+  border-radius: 0 2px 2px 0;
+  transition: opacity 0.15s ease;
+}
+.po-bar:hover {
+  opacity: 0.8;
+}
+
+/* Donut: subtle hover */
+.po-arc {
+  transition: opacity 0.15s ease;
+}
+
+/* Line chart: mark hover */
+.po-mark {
+  transition: transform 0.15s ease;
+}
+.po-mark:hover {
+  transform: scale(1.5);
+}
+
+/* Category cards: improved header */
+.po-category-card {
+  border-radius: 0.5rem;
+}
+.po-card.po-category-card strong {
+  font-size: 2.25rem;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  color: var(--po-text);
+}
+
+/* Card grid improvement */
+.po-card-grid {
+  gap: 1.25rem;
+}
+
+/* Student search bar improvement */
+.po-student-search-row input {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.po-student-search-row input:focus {
+  border-color: #243725;
+  box-shadow: 0 0 0 3px rgba(36, 55, 37, 0.1);
+  outline: none;
+}
+.po-dark .po-student-search-row input:focus {
+  border-color: #b7cba6;
+  box-shadow: 0 0 0 3px rgba(183, 203, 166, 0.12);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CHART REDESIGN — Placement Status (Donut) + Departments (Bar)
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Donut chart ── */
+.po-donut { width: 10rem; height: 10rem; }
+
+.po-donut-total {
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  fill: var(--po-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.po-donut-label {
+  font-size: 0.5rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  fill: var(--erp-muted);
+}
+
+.po-chart-donut .po-arc { stroke-width: 1.5; }
+
+/* ── Donut layout ── */
+.po-donut-layout {
+  align-items: center;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+/* ── Status legend ── */
+.po-status-legend {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  flex: 1 1 12rem;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  justify-content: center;
+}
+
+.po-status-legend li {
+  display: grid;
+  grid-template-columns: 0.4375rem 1fr auto auto;
+  grid-template-rows: auto 3px;
+  align-items: center;
+  column-gap: 0.5rem;
+  row-gap: 0.25rem;
+  padding: 0.4375rem 0;
+  border-bottom: 1px solid var(--erp-border);
+}
+
+.po-status-legend li:last-child { border-bottom: none; }
+
+.po-sl-dot {
+  grid-row: 1; grid-column: 1;
+  width: 0.4375rem; height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--tone);
+  flex: none;
+}
+
+.po-sl-label {
+  grid-row: 1; grid-column: 2;
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+  line-height: 1.3;
+}
+
+.po-sl-count {
+  grid-row: 1; grid-column: 3;
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  color: var(--po-text);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.po-sl-pct {
+  grid-row: 1; grid-column: 4;
+  font-size: 0.6875rem;
+  color: var(--erp-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.75rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.po-sl-track {
+  grid-row: 2; grid-column: 2 / -1;
+  height: 3px;
+  background: var(--po-highlight, #edf1e7);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.po-dark .po-sl-track {
+  background: color-mix(in srgb, var(--po-highlight) 70%, transparent);
+}
+
+.po-sl-fill {
+  display: block;
+  height: 100%;
+  min-width: 2px;
+  background: var(--tone);
+  border-radius: 99px;
+  transform-origin: left center;
+  animation: po-sl-grow 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+@keyframes po-sl-grow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.po-status-legend li:nth-child(1) .po-sl-fill { animation-delay: 0.20s; }
+.po-status-legend li:nth-child(2) .po-sl-fill { animation-delay: 0.28s; }
+.po-status-legend li:nth-child(3) .po-sl-fill { animation-delay: 0.36s; }
+.po-status-legend li:nth-child(4) .po-sl-fill { animation-delay: 0.44s; }
+
+.po-status-legend li:nth-child(1) { animation: po-fade-up 0.25s 0.15s both; }
+.po-status-legend li:nth-child(2) { animation: po-fade-up 0.25s 0.22s both; }
+.po-status-legend li:nth-child(3) { animation: po-fade-up 0.25s 0.29s both; }
+.po-status-legend li:nth-child(4) { animation: po-fade-up 0.25s 0.36s both; }
+
+/* ── Bar chart (Departments) ── */
+.po-chart-bars .po-bars {
+  gap: 0;
+  margin-top: 0.5rem;
+}
+
+.po-chart-bars .po-bar-row {
+  grid-template-columns: minmax(2.75rem, 5.5rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--erp-border);
+}
+
+.po-chart-bars .po-bar-row:last-child { border-bottom: none; }
+
+.po-chart-bars .po-bar-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--po-text);
+  padding-top: 0.125rem;
+}
+
+.po-chart-bars .po-bar-set {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.po-chart-bars .po-bar-track {
+  height: 0.875rem;
+  gap: 0.375rem;
+  align-items: center;
+}
+
+.po-chart-bars .po-bar {
+  height: 100%;
+  border-radius: 0 3px 3px 0;
+  min-width: 2px;
+}
+
+.po-chart-bars .po-bar-value {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--erp-muted);
+  min-width: 2rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Bars legend */
+.po-chart-bars > .po-legend {
+  margin-bottom: 0;
+  gap: 0.3rem 0.875rem;
+  font-size: 0.6875rem;
+}
+
+/* ── Chart pair: give donut slightly more room ── */
+.po-chart-pair {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 1.25rem;
+}
+
+/* ── Reduced motion: disable new animations ── */
+@media (prefers-reduced-motion: reduce) {
+  .po-status-legend li,
+  .po-sl-fill {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* Student profile avatar improvement */
+.po-avatar {
+  background: color-mix(in srgb, var(--po-highlight) 70%, var(--po-surface));
+  color: var(--po-text);
+  border-radius: 0.5rem;
+  font-size: 1.25rem;
+}
+
+/* Identity card improvement */
+.po-identity {
+  padding: 0.875rem;
+  background: color-mix(in srgb, var(--po-highlight) 30%, transparent);
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+}
+
+/* Ranked table: number emphasis */
+.po-rank {
+  font-size: 1rem;
+  color: var(--po-text);
+  font-family: var(--mono);
+}
+
+/* Import form area: improved */
+.erp-panel:has(.erp-import-form) {
+  background: color-mix(in srgb, var(--po-highlight, #edf1e7) 20%, white);
+}
+.po-dark .erp-panel:has(.erp-import-form) {
+  background: var(--po-surface);
+}
+
+/* Panel section: improved headings */
+.erp-section-heading {
+  border-bottom: 1px solid var(--erp-border);
+  padding-bottom: 0.875rem;
+  margin-bottom: 1.25rem;
+}
+.erp-section-heading h2 {
+  font-size: 1rem;
+}
+
+/* Import warnings: polished */
+.po-import-warnings li {
+  border-radius: 0.25rem;
+}
+
+/* Timeline: improved */
+.po-timeline li {
+  border-left: 2px solid var(--erp-border);
+  padding: 0.875rem 1.25rem;
+  position: relative;
+}
+.po-timeline li::before {
+  content: '';
+  position: absolute;
+  left: -0.3125rem;
+  top: 1.25rem;
+  width: 0.375rem;
+  height: 0.375rem;
+  background: var(--erp-border);
+  border-radius: 50%;
+}
+
+/* Hiring progress */
+.po-hiring {
+  padding: 1rem 0;
+}
+.po-hiring progress {
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.po-hiring progress::-webkit-progress-bar {
+  background: var(--po-highlight);
+  border-radius: 3px;
+}
+.po-hiring progress::-webkit-progress-value {
+  background: #2f7a55;
+  border-radius: 3px;
+}
+
+/* ─── Placement portal animation system ─── */
+@keyframes po-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes po-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes po-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Main content entrance */
+.erp-main { animation: po-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Metrics stagger */
+.po-metrics article:nth-child(1) { animation: po-fade-up 0.3s 0.05s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-metrics article:nth-child(2) { animation: po-fade-up 0.3s 0.10s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-metrics article:nth-child(3) { animation: po-fade-up 0.3s 0.15s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-metrics article:nth-child(4) { animation: po-fade-up 0.3s 0.20s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-metrics article:nth-child(n+5) { animation: po-fade-up 0.3s 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Card grid stagger */
+.po-card-grid .po-card:nth-child(1) { animation: po-fade-up 0.3s 0.06s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-card-grid .po-card:nth-child(2) { animation: po-fade-up 0.3s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-card-grid .po-card:nth-child(3) { animation: po-fade-up 0.3s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Table rows */
+.po-table tbody tr:nth-child(1) { animation: po-fade-in 0.2s 0.05s both; }
+.po-table tbody tr:nth-child(2) { animation: po-fade-in 0.2s 0.09s both; }
+.po-table tbody tr:nth-child(3) { animation: po-fade-in 0.2s 0.13s both; }
+.po-table tbody tr:nth-child(4) { animation: po-fade-in 0.2s 0.17s both; }
+.po-table tbody tr:nth-child(n+5) { animation: po-fade-in 0.2s 0.20s both; }
+
+/* Button press micro-interaction */
+.erp-primary:active  { transform: scale(0.97) translateY(0); transition-duration: 0.08s; }
+.erp-secondary:active { transform: scale(0.97) translateY(0); transition-duration: 0.08s; }
+.po-danger:active { transform: scale(0.97) translateY(0); transition-duration: 0.08s; }
+
+/* Input focus glow */
+.po-shell input:focus,
+.po-shell select:focus,
+.po-shell textarea:focus {
+  box-shadow: 0 0 0 3px rgba(114, 135, 96, 0.15);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* ERP panel entrance within po-shell */
+.po-shell .erp-panel:nth-child(1) { animation: po-fade-up 0.35s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-shell .erp-panel:nth-child(2) { animation: po-fade-up 0.35s 0.14s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.po-shell .erp-panel:nth-child(n+3) { animation: po-fade-up 0.35s 0.20s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .erp-main, .po-metrics article, .po-card-grid .po-card,
+  .po-table tbody tr, .po-shell .erp-panel {
+    animation: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   PLACEMENT ERP — COMPREHENSIVE RESPONSIVE SYSTEM
+   All 14 sections: mobile, tablet, desktop, ultrawide.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Shared: table scroll always available ── */
+.po-shell .erp-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  max-width: 100%;
+}
+
+/* ── Shared: prevent content from exceeding viewport ── */
+.po-shell .erp-main > * { max-width: 100%; }
+
+/* ══ MOBILE: < 640px ══════════════════════════════════════════════════════ */
+@media (max-width: 639px) {
+
+  /* Page heading: stack title + actions */
+  .po-heading {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  .po-heading h1 {
+    font-size: 1.375rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .po-heading h2 { font-size: 1.125rem !important; }
+
+  /* Actions: wrap & fill */
+  .po-actions {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+  }
+
+  .po-actions .erp-primary,
+  .po-actions .erp-secondary,
+  .po-actions .po-danger {
+    font-size: 0.8125rem !important;
+    padding: 0.5rem 0.875rem !important;
+  }
+
+  /* Filters: stack vertically, full width inputs */
+  .po-filters {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 0.5rem !important;
+  }
+
+  .po-filters select,
+  .po-filters input[type="text"],
+  .po-filters input[type="search"],
+  .po-filters input[type="date"] {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 1rem !important;
+  }
+
+  /* ── Overview KPI tiles: 2 columns ── */
+  .po-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .po-kpis article { padding: 0.875rem 1rem !important; }
+  .po-kpis strong { font-size: 1.375rem !important; }
+
+  /* ── Overview metrics ── */
+  .po-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  /* ── Chart pair: single column ── */
+  .po-chart-pair {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  /* ── Donut chart: stack SVG above legend ── */
+  .po-donut-layout {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 1.25rem !important;
+  }
+
+  .po-donut { width: 10rem !important; height: 10rem !important; }
+  .po-donut-total { font-size: 1.125rem !important; }
+
+  .po-status-legend {
+    width: 100% !important;
+    flex: none !important;
+  }
+
+  .po-sl-pct { min-width: 2.75rem !important; }
+
+  /* ── Bar chart: compact labels ── */
+  .po-chart-bars .po-bar-row {
+    grid-template-columns: minmax(2.75rem, 5rem) minmax(0, 1fr) !important;
+    gap: 0.5rem !important;
+    padding: 0.625rem 0 !important;
+  }
+
+  .po-chart-bars .po-bar-label { font-size: 0.75rem !important; }
+  .po-chart-bars .po-bar-track { height: 0.875rem !important; }
+  .po-chart-bars .po-bar-value { font-size: 0.6875rem !important; min-width: 1.75rem !important; }
+
+  /* ── Line chart: shorter ── */
+  .po-line { grid-template-rows: 9rem auto !important; }
+
+  /* ── Legend: tighter ── */
+  .po-legend { gap: 0.375rem 0.875rem !important; font-size: 0.6875rem !important; }
+  .po-key { width: 0.625rem !important; height: 0.625rem !important; }
+
+  /* ── Split layouts: single column ── */
+  .po-split { grid-template-columns: 1fr !important; gap: 0.875rem !important; }
+
+  /* ── Card grid: single column ── */
+  .po-card-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Tables ── */
+  .po-shell .erp-table th {
+    font-size: 0.5625rem !important;
+    white-space: nowrap !important;
+    padding: 0.625rem 0.625rem !important;
+  }
+
+  .po-shell .erp-table td {
+    padding: 0.75rem 0.625rem !important;
+    font-size: 0.8125rem !important;
+  }
+
+  /* ── Pagination: compact ── */
+  .erp-pagination {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 0.25rem !important;
+    font-size: 0.75rem !important;
+  }
+
+  /* ── Forms ── */
+  .po-form { grid-template-columns: 1fr !important; }
+
+  .po-form input,
+  .po-form select,
+  .po-form textarea { font-size: 1rem !important; width: 100% !important; }
+
+  /* Form actions: stack */
+  .po-form-actions,
+  .po-form > [class*="actions"] {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+
+  /* ── Intel section ── */
+  .po-intel-grid { grid-template-columns: 1fr !important; }
+  .po-intel-panel { padding: 1rem !important; }
+
+  /* ── Categories ── */
+  .po-category-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Student analytics ── */
+  .po-readiness { grid-template-columns: 1fr !important; }
+
+  /* ── Department chart: narrower ── */
+  .po-departments-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Overview intel: compress KPI heading ── */
+  .po-overview-intel .po-kpis { margin: 1rem 0 !important; }
+
+  /* ── Batch/test specific ── */
+  .erp-batch-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .erp-batch-tabs { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; white-space: nowrap !important; }
+  .erp-batch-tabs a { padding: 0.5rem 0.75rem !important; font-size: 0.75rem !important; }
+  .erp-batch-filters { flex-direction: column !important; gap: 0.5rem !important; }
+  .erp-batch-filters label { flex-direction: column !important; align-items: flex-start !important; }
+  .erp-batch-filters select,
+  .erp-batch-filters input { width: 100% !important; font-size: 1rem !important; }
+
+  /* ── Student profile ── */
+  .erp-student-detail-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Imports ── */
+  .po-import-form { max-width: 100% !important; }
+  .po-file-input { padding: 1.5rem 1rem !important; }
+
+  /* ── F.R.I.D.A.Y. assistant ── */
+  .fr-welcome { padding: 1.5rem 1rem 4rem !important; }
+  .fr-welcome h2 { font-size: 1.375rem !important; }
+  .fr-starters { grid-template-columns: 1fr !important; }
+  .fr-main-inner { width: calc(100% - 1.5rem) !important; }
+
+  /* ── Student tools ── */
+  .po-tools-grid { grid-template-columns: 1fr !important; }
+
+  /* ── Assistant / company / drive detail ── */
+  .po-detail-grid { grid-template-columns: 1fr !important; }
+  .po-profile-cols { grid-template-columns: 1fr !important; }
+
+  /* ── Modals and dialogs ── */
+  .po-dialog,
+  [role="dialog"] {
+    width: calc(100vw - 2rem) !important;
+    max-width: 100% !important;
+    margin: 1rem !important;
+  }
+
+  /* ── Company reports ── */
+  .po-reports-layout { grid-template-columns: 1fr !important; }
+
+  /* ── Miscellaneous panels ── */
+  .po-shell .erp-panel { padding: 1.125rem 1rem !important; }
+  .po-shell .erp-panel h2 { font-size: 1rem !important; }
+}
+
+/* ══ LARGE MOBILE: 480–639px ══════════════════════════════════════════════ */
+@media (min-width: 480px) and (max-width: 639px) {
+  .po-chart-pair { grid-template-columns: 1fr !important; }
+  .po-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .po-donut { width: 10rem !important; height: 10rem !important; }
+}
+
+/* ══ TABLET: 640–1023px ═══════════════════════════════════════════════════ */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Page heading: allow wrap */
+  .po-heading { flex-wrap: wrap !important; gap: 0.75rem !important; }
+  /* KPI: fluid */
+  .po-kpis { grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr)) !important; }
+  /* Card grid: 2 col */
+  .po-card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  /* Filters: allow wrap */
+  .po-filters { flex-wrap: wrap !important; }
+  /* Intel grid: 2-col max */
+  .po-intel-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  /* Tables: keep scrollable */
+  .po-shell .erp-table td { padding: 0.875rem 0.75rem !important; }
+  /* Category grid: 2 col */
+  .po-category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
+
+/* ── Narrow tablet: chart pair stacks ── */
+@media (min-width: 640px) and (max-width: 799px) {
+  .po-chart-pair { grid-template-columns: 1fr !important; gap: 1rem !important; }
+  .po-donut-layout { flex-direction: row !important; align-items: center !important; }
+  .po-donut { width: 10rem !important; height: 10rem !important; }
+}
+
+/* ══ COMPACT DESKTOP: 1024–1279px ════════════════════════════════════════ */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  /* Chart pair: narrower columns */
+  .po-chart-pair {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) !important;
+    gap: 1rem !important;
+  }
+
+  /* KPI tiles: fluid */
+  .po-kpis { grid-template-columns: repeat(auto-fill, minmax(10.5rem, 1fr)) !important; }
+
+  /* Main padding */
+  .po-shell .erp-main { padding: 2rem 1.75rem !important; }
+}
+
+/* ══ LARGE DESKTOP: ≥ 1536px ═════════════════════════════════════════════ */
+@media (min-width: 1536px) {
+  /* Content max-width: don't let it stretch infinitely */
+  .po-overview-intel,
+  .po-shell .erp-main > .erp-panel,
+  .po-shell .erp-main > .po-filters,
+  .po-shell .erp-main > .po-heading {
+    max-width: 90rem;
+  }
+
+  /* KPI tiles: more columns */
+  .po-kpis { grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr)) !important; }
+
+  /* Chart pair: give bar chart more room */
+  .po-chart-pair {
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) !important;
+  }
+}
+
+/* ══ ULTRAWIDE: ≥ 2000px ═════════════════════════════════════════════════ */
+@media (min-width: 2000px) {
+  html:has(.po-shell) { font-size: clamp(100%, calc(100% + min(0.4vw, 6px)), 130%); }
+}
+
+/* ══ TOUCH DEVICES: coarse pointer ═══════════════════════════════════════ */
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .erp-primary,
+  .erp-secondary,
+  .po-danger,
+  .erp-pagination button,
+  .po-topbar button {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  /* Remove hover-only states */
+  .po-card:hover,
+  .po-metrics article:hover {
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Bar hover: touch-safe */
+  .po-bar:hover { filter: none; opacity: 1; }
+  .po-arc { cursor: default; }
+
+  /* Table row hover: disabled */
+  .po-shell .erp-table tbody tr:hover { background: transparent; }
+}
+
+/* ══ PRINT ════════════════════════════════════════════════════════════════ */
+@media print {
+  .erp-sidebar,
+  .erp-topbar,
+  .po-resize,
+  .po-mobile-backdrop,
+  .po-filters,
+  .po-actions,
+  .erp-pagination { display: none !important; }
+
+  .erp-workspace { margin: 0 !important; }
+  .erp-main { padding: 0 !important; }
+  .erp-panel { border: 1px solid #ccc !important; box-shadow: none !important; }
+  .erp-table { font-size: 0.75rem !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DESKTOP SIDEBAR RESTORE (≥ 1024px)
+   Below 1024px the sidebar becomes an overlay drawer (see workspace.css).
+   At 1024px+ we restore the persistent vertical sidebar, overriding the
+   legacy max-width: 1000px horizontal-bar rule that still lives above.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@media (min-width: 1024px) {
+  .po-shell .erp-sidebar {
+    position: sticky !important;
+    top: 0 !important;
+    height: 100svh !important;
+  }
+
+  .po-shell .erp-sidebar nav {
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+
+  .po-shell .erp-sidebar-bottom {
+    flex-direction: column !important;
+    margin-top: auto !important;
+  }
+
+  .po-topbar > span,
+  .po-topbar-identity { display: block !important; }
+}
+
+/* ── Short viewports (≤ 750px height) on desktop: compress vertical spacing ── */
+@media (max-height: 750px) and (min-width: 1024px) {
+  .po-shell .erp-sidebar nav a { padding: 0.5rem 0.75rem !important; }
+  .po-shell .erp-main { padding: 1.25rem 1.5rem !important; }
+  .po-kpis article { padding: 0.875rem 1rem !important; }
+  .po-kpis strong { font-size: 1.375rem !important; }
+  .po-chart { margin: 1rem 0 !important; }
+  .po-kpis { margin: 1rem 0 !important; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   DONUT CHART — PREMIUM VISUAL UPGRADE
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Arc: smoother, slightly wider gap between segments */
+.po-chart-donut .po-arc {
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+}
+
+/* Donut SVG: subtle drop shadow for depth */
+.po-chart-donut .po-donut {
+  filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.08));
+}
+
+.po-dark .po-chart-donut .po-donut {
+  filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.35));
+}
+
+/* Center text: tighter tracking + stronger weight */
+.po-donut-total {
+  font-weight: 700;
+  letter-spacing: -0.06em;
+}
+
+/* Hover: dim siblings, lift hovered arc outward */
+.po-chart-donut .po-donut:hover .po-arc {
+  opacity: 0.55;
+  transition: opacity 0.18s ease;
+}
+
+.po-chart-donut .po-donut:hover .po-arc:hover {
+  opacity: 1;
+  filter: brightness(1.08);
+  transition: opacity 0.12s ease, filter 0.12s ease;
+}
+
+/* Arc entrance: scale + fade */
+@keyframes po-arc-reveal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.po-chart-donut .po-arc:nth-child(1) { animation: po-arc-reveal 0.4s 0.1s both; }
+.po-chart-donut .po-arc:nth-child(2) { animation: po-arc-reveal 0.4s 0.2s both; }
+.po-chart-donut .po-arc:nth-child(3) { animation: po-arc-reveal 0.4s 0.3s both; }
+.po-chart-donut .po-arc:nth-child(4) { animation: po-arc-reveal 0.4s 0.4s both; }
+
+/* Donut figcaption */
+.po-chart-donut figcaption { margin-bottom: 0.5rem !important; }
+
+/* ── Reduced motion: new animations ── */
+@media (prefers-reduced-motion: reduce) {
+  .po-chart-donut .po-arc,
+  .po-status-legend li,
+  .po-status-legend li .po-sl-fill {
+    animation: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TOPBAR: DESKTOP / MOBILE TOGGLE BUTTONS
+   po-desktop-nav-toggle: shown only on desktop (≥ 1024px)
+   po-mobile-nav-toggle:  shown only on mobile/tablet (< 1024px)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.po-desktop-nav-toggle {
+  display: none; /* hidden below 1024px — mobile drawer button takes over */
+}
+
+.po-mobile-nav-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+}
+
+@media (min-width: 1024px) {
+  .po-desktop-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4375rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+  }
+  .po-mobile-nav-toggle { display: none; }
+}
+
+/* Topbar centre identity label */
+.po-topbar-identity {
+  flex: 1;
+  text-align: center;
+  font: 0.5rem/1 var(--mono);
+  letter-spacing: 0.08em;
+  color: var(--po-muted, #696d65);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   COLLAPSIBLE NAV GROUPS
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.po-nav-group {
+  display: contents; /* groups participate in the nav flow without extra box */
+}
+
+.po-nav-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: inherit;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.po-nav-toggle:hover {
+  background: var(--po-highlight);
+}
+
+.po-nav-chevron {
+  margin-left: auto;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+  opacity: 0.55;
+}
+
+.po-nav-toggle[aria-expanded="true"] .po-nav-chevron {
+  transform: rotate(180deg);
+}
+
+.po-nav-children {
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  padding-left: 1.375rem;
+}
+
+.po-nav-children[hidden] { display: none; }
+
+/* Active group: highlight the toggle */
+.po-nav-group[data-active] > .po-nav-toggle {
+  color: var(--po-accent, #d9252a);
+}
+
+/* Collapsed sidebar: hide group labels, center toggle icons */
+.po-collapsed .po-nav-toggle .po-nav-label,
+.po-collapsed .po-nav-chevron {
+  display: none;
+}
+
+.po-collapsed .po-nav-toggle {
+  justify-content: center;
+  padding: 0.625rem;
+  gap: 0;
+}
+
+.po-collapsed .po-nav-children {
+  display: none;
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   MOBILE / TABLET DIALOG DRAWER
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Dialog is hidden by default (UA stylesheet). Only show when open. */
+.po-mobile-drawer[open] {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: min(18rem, 88vw);
+  height: 100dvh;
+  height: 100vh; /* fallback */
+  margin: 0;
+  padding: 1.375rem 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  background: var(--po-surface, #fafaf8);
+  border: none;
+  border-right: 1px solid var(--erp-border);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  z-index: 300;
+  animation: po-drawer-slide-in 0.25s cubic-bezier(0.25, 1, 0.5, 1) both;
+}
+
+.po-mobile-drawer::backdrop {
+  background: rgba(0, 0, 0, 0.45);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+@keyframes po-drawer-slide-in {
+  from { transform: translateX(-100%); }
+  to   { transform: translateX(0); }
+}
+
+.po-dark .po-mobile-drawer[open] {
+  background: #1d231c;
+  border-right-color: #2e3a2c;
+}
+
+.po-drawer-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--erp-border);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.po-drawer-account {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--erp-border);
+  font-size: 0.8125rem;
+}
+
+/* Dialog nav links: full horizontal layout */
+.po-mobile-drawer nav a {
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  padding: 0.625rem 0.75rem !important;
+  gap: 0.75rem !important;
+  border-radius: 0.375rem !important;
+  font-size: 0.875rem !important;
+  justify-content: flex-start !important;
+}
+
+.po-mobile-drawer nav a .po-nav-label {
+  position: static !important;
+  display: inline !important;
+  width: auto !important;
+  height: auto !important;
+  overflow: visible !important;
+  clip: auto !important;
+  clip-path: none !important;
+}
+
+.po-mobile-drawer .po-nav-toggle .po-nav-label,
+.po-mobile-drawer .po-nav-chevron {
+  display: inline-flex !important;
+}
+
+.po-mobile-drawer .po-nav-toggle {
+  justify-content: flex-start !important;
+  padding: 0.625rem 0.75rem !important;
+  gap: 0.625rem !important;
+}
+
+.po-mobile-drawer .po-nav-children {
+  display: flex !important;
+  padding-left: 1.375rem !important;
+}
+
+.po-mobile-drawer .po-nav-children[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .po-mobile-drawer { animation: none; }
 }

@@ -90,6 +90,20 @@ export function StudentShell({
     window.addEventListener("keydown", key);
     return () => window.removeEventListener("keydown", key);
   }, []);
+  // Close drawer and reset collapsed when viewport goes to desktop.
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 1023px)");
+    const handler = (e: MediaQueryListEvent) => {
+      if (!e.matches) { setDrawer(false); }
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
+  // Lock body scroll while mobile drawer is open.
+  useEffect(() => {
+    document.documentElement.style.overflow = drawer ? "hidden" : "";
+    return () => { document.documentElement.style.overflow = ""; };
+  }, [drawer]);
   const changeTheme = () => {
     const next = theme === "light" ? "dark" : "light";
     setTheme(next);

@@ -1529,3 +1529,105 @@
     scroll-margin-bottom: 15rem;
   }
 }
+
+/* ─── F.R.I.D.A.Y. visual polish additions ─── */
+
+/* Header bar: glass effect */
+.fr-bar {
+  backdrop-filter: blur(12px);
+  background: color-mix(in srgb, var(--fr-canvas) 90%, transparent);
+}
+
+/* Welcome heading animation */
+@keyframes fr-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fr-welcome > * {
+  animation: fr-fade-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.fr-welcome > *:nth-child(2) { animation-delay: 0.07s; }
+.fr-welcome > *:nth-child(3) { animation-delay: 0.14s; }
+.fr-welcome > *:nth-child(4) { animation-delay: 0.21s; }
+.fr-welcome > *:nth-child(5) { animation-delay: 0.28s; }
+
+/* Conversation turns: subtle entrance */
+@keyframes fr-turn-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fr-turn {
+  animation: fr-turn-in 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Starter button improvements */
+.fr-starter {
+  border: 1px solid transparent;
+  transition: background-color 150ms var(--fr-ease), color 150ms var(--fr-ease), border-color 150ms var(--fr-ease);
+}
+.fr-starter:not(:disabled):hover {
+  border-color: var(--fr-line);
+}
+
+/* Composer textarea: focus ring */
+.fr-composer textarea:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--fr-accent);
+}
+
+/* Message reply: improved readability */
+.fr-reply {
+  border-radius: 0.375rem;
+}
+.fr-turn--user .fr-question {
+  background: var(--fr-user-bg);
+  border: 1px solid var(--fr-line);
+  padding: 0.875rem 1rem;
+  border-radius: 0.5rem 0.5rem 0.125rem 0.5rem;
+}
+.po-dark .fr-turn--user .fr-question {
+  background: color-mix(in srgb, var(--fr-user-bg) 30%, var(--fr-surface));
+}
+
+/* Thinking indicator pulse */
+@keyframes fr-thinking-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+.fr-thinking .fr-marker,
+.fr-live .fr-marker {
+  animation: fr-thinking-pulse 1.2s ease-in-out infinite;
+}
+
+/* Icon button: enhanced */
+.fr-icon-btn {
+  transition: background 150ms var(--fr-ease), border-color 150ms var(--fr-ease), color 150ms var(--fr-ease), transform 0.1s ease;
+}
+.fr-icon-btn:active {
+  transform: scale(0.93);
+}
+
+/* Primary button: active press */
+.fr-btn--primary:active:not(:disabled),
+.fr-btn--outline:active:not(:disabled) {
+  transform: scale(0.97);
+  transition-duration: 80ms;
+}
+
+/* Strip: subtle separator */
+.fr-strip {
+  border-radius: 0.25rem;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fr-welcome > *,
+  .fr-turn {
+    animation: none !important;
+  }
+  .fr-thinking .fr-marker,
+  .fr-live .fr-marker {
+    animation: none;
+    opacity: 1;
+  }
+}

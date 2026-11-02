@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DSU Student Onboarding - 5 Stage Registration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #0d0d20;
+      color: #e0e0e0;
+      min-height: 100vh;
+      margin: 0;
+    }
+    
+    .st-app { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    
+    .st-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; padding-bottom: 1rem; border-bottom: 1px solid #333;
+    }
+    
+    .st-brand { color: #e94560; text-decoration: none; }
+    .st-brand small { color: #666; font-size: 0.75rem; }
+    
+    .st-button {
+      padding: 0.75rem 1.25rem; border-radius: 6px; font-weight: 500; cursor: pointer; border: none; transition: opacity 0.2s;
+    }
+    .st-button-secondary { background: #333; color: #e0e0e0; }
+    .st-button-primary { background: #e94560; color: white; }
+    .st-button:hover { opacity: 0.9; }
+    .st-button:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .st-panel { background: #16213e; border-radius: 12px; padding: 1.5rem; margin: 1rem 0; border: 1px solid #333; }
+    .st-panel h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 1rem; }
+    .st-panel h2 { font-size: 1.4rem; font-weight: 500; margin-bottom: 0.5rem; }
+    .st-eyebrow { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.15em; color: #666; margin-bottom: 0.5rem; }
+    .st-muted { color: #555; font-size: 0.875rem; }
+    
+    .st-error { background: #4a1a1a; color: #ff6b6b; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; display: none; }
+    .st-error.visible { display: block; }
+    .st-success { background: #1a3a2e; color: #4cd964; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; display: none; }
+    .st-success.visible { display: block; }
+    
+    .st-registration-steps {
+      display: flex; gap: 0.5rem; margin: 1rem 0; counter-reset: step;
+    }
+    .st-registration-steps li { list-style: none; flex: 1; text-align: center; }
+    .st-registration-steps span {
+      display: block; width: 32px; height: 32px; border-radius: 50%; background: #333; margin: 0 auto 0.5rem; font-size: 1rem; font-weight: bold; counter-increment: step;
+    }
+    .st-registration-steps .active { background: #e94560; color: white; }
+    
+    .st-choice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.5rem; }
+    .st-choice { padding: 0.5rem 0.75rem; background: #333; border-radius: 6px; font-size: 0.8125rem; cursor: pointer; transition: background 0.2s; text-align: center; }
+    .st-choice:hover { background: #444; }
+    .st-choice.active { background: #e94560; color: white; }
+    
+    .st-details dl { display: grid; grid-template-columns: 140px 1fr; gap: 0.75rem 1rem; }
+    .st-details dt { font-size: 0.8125rem; color: #555; }
+    .st-details dd { color: #d0d0d0; }
+    
+    .st-form-grid { display: grid; gap: 0.75rem; }
+    @media (max-width: 640px) { .st-form-grid { grid-template-columns: 1fr; } }
+    
+    .st-profile-links input { width: 100%; padding: 0.5rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0; font-size: 0.875rem; }
+    .st-profile-links input:focus { outline: none; border-color: #e94560; }
+    
+    .st-registration-match { font-size: 0.8125rem; margin-top: 0.5rem; }
+    .st-registration-check { display: flex; align-items: center; gap: 0.5rem; margin: 1rem 0; cursor: pointer; }
+    .st-actions { display: flex; gap: 0.75rem; justify-content: flex-end; margin-top: 1.5rem; }
+    
+    .st-step-circle {
+      width: 32px; height: 32px; border-radius: 50%; background: #333; font-size: 1rem; font-weight: bold; display: flex; align-items: center; justify-content: center; color: #aaa; transition: background 0.2s;
+    }
+    .st-step-circle.active { background: #e94560; color: white; }
+    .st-step-circle.completed { background: #1e56; color: #4cd964; }
+    
+    .st-form.fullwidth { width: 100%; }
+  </style>
+</head>
+<body>
+  <div class="st-app">
+    <header class="st-header">
+      <a class="st-brand" href="/">DSU <small>/ YOUR WORKSPACE</small></a>
+      <div style="display: flex; gap: 0.5rem;">
+        <button id="backBtn" class="st-button st-button-secondary" style="display: none;">Back</button>
+        <button id="signupBtn" class="st-button st-button-primary" style="display: none;">Sign up</button>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Step Indicator -->
+      <div style="display: flex; justify-content: center; gap: 0.75rem; margin: 1rem 0;">
+        <div class="st-step-circle active" data-step="1">1</div>
+        <div class="st-step-circle" data-step="2">2</div>
+        <div class="st-step-circle" data-step="3">3</div>
+        <div class="st-step-circle" data-step="4">4</div>
+        <div class="st-step-circle" data-step="5">5</div>
+      </div>
+      
+      <!-- Stage 1: Profile -->
+      <div id="stage-1" class="st-panel" style="display: block;">
+        <h2>Stage 1 of 5: Personal Profile</h2>
+        <p class="st-eyebrow">Create your account</p>
+        
+        <form id="stage1Form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Full name</label>
+              <input type="text" id="fullName" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Verified email</label>
+              <input type="email" id="email" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Phone</label>
+              <input type="tel" id="phone" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">City</label>
+              <input type="text" id="city" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <label style="display: block; margin-bottom: 0.25rem;">About you</label>
+            <textarea id="bio" rows="3" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0; font-family: inherit; resize: vertical; margin-bottom: 1rem; max-height: 200px;"></textarea>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button type="button" class="st-button st-button-secondary" style="display: inline-block;">Back</button>
+            <button type="submit" class="st-button st-button-primary" style="width: auto;">Continue →</button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Stage 2: Education -->
+      <div id="stage-2" class="st-panel" style="display: none;">
+        <h2>Stage 2 of 5: Education</h2>
+        <p class="st-eyebrow">University record</p>
+        
+        <form id="stage2Form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">USN / enrollment number</label>
+              <input type="text" id="usn" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Department</label>
+              <input type="text" id="department" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Program</label>
+              <select id="program" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+                <option value="">Select program</option>
+                <option>B.Tech - Computer Science</option>
+                <option>B.Tech - Information Science</option>
+                <option>B.Tech - Electronics</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Current semester</label>
+              <input type="number" id="semester" required min="1" max="8" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Year of study</label>
+              <select id="yearOfStudy" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+                <option value="">Select year</option>
+                <option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>Graduated</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Graduation batch</label>
+              <input type="text" id="graduationYear" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <label style="display: block; margin-bottom: 0.25rem;">Specialization</label>
+            <input type="text" id="specialization" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button type="button" class="st-button st-button-secondary">Back</button>
+            <button type="submit" class="st-button st-button-primary">Continue →</button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Stage 3: Interests & Skills -->
+      <div id="stage-3" class="st-panel" style="display: none;">
+        <h2>Stage 3 of 5: Interests & Skills</h2>
+        <p class="st-eyebrow">What you enjoy building</p>
+        <p style="color: #555; margin: 1rem 0; font-size: 0.875rem;">Choose at least one interest</p>
+        
+        <fieldset>
+          <legend>Primary interests</legend>
+          <div class="st-choice-grid" id="interestGrid"></div>
+        </fieldset>
+        
+        <div style="margin: 1rem 0;">
+          <label>Another interest</label>
+          <input type="text" id="customInterest" style="width: 100%; padding: 0.5rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+          <button type="button" class="st-button st-button-secondary" style="padding: 0.5rem 0.75rem; margin-left: 0.5rem;">Add interest</button>
+        </div>
+        
+        <div style="margin: 1rem 0;">
+          <label>Skills and tools</label>
+          <textarea id="skills" rows="3" style="width: 100%; padding: 0.5rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0; font-family: inherit; resize: vertical; margin-bottom: 1rem; max-height: 150px;"></textarea>
+        </div>
+        
+        <div>
+          <label>Certifications and achievements</label>
+          <textarea id="certifications" rows="3" style="width: 100%; padding: 0.5rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0; font-family: inherit; resize: vertical; margin-bottom: 1rem; max-height: 150px;"></textarea>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+          <button type="button" class="st-button st-button-secondary">Back</button>
+          <button type="submit" class="st-button st-button-primary">Continue →</button>
+        </div>
+      </div>
+      
+      <!-- Stage 4: Career Direction -->
+      <div id="stage-4" class="st-panel" style="display: none;">
+        <h2>Stage 4 of 5: Career Direction</h2>
+        <p class="st-eyebrow">Your future path</p>
+        
+        <form id="stage4Form">
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Dream roles</label>
+              <input type="text" id="dreamRoles" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Looking for</label>
+              <select id="internshipPreference" required style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+                <option value="">Choose preference</option>
+                <option>Internships</option><option>Full-time opportunities</option><option>Both internships and full-time roles</option><option>Exploring my options</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">LinkedIn profile</label>
+              <input type="url" id="linkedin" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">GitHub profile</label>
+              <input type="url" id="github" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Portfolio / website</label>
+              <input type="url" id="portfolio" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+            <div>
+              <label style="display: block; margin-bottom: 0.25rem;">Other career profile</label>
+              <input type="url" id="placementProfile" style="width: 100%; padding: 0.75rem; background: #333; border: 1px solid #444; border-radius: 4px; color: #d0d0d0;">
+            </div>
+          </div>
+          
+          <p style="color: #555; margin: 1.5rem 0; font-size: 0.875rem;">Profile links are optional. Never paste passwords or access tokens here.</p>
+          
+          <div style="margin-top: 1rem;">
+            <span>Workspace goals:</span>
+            <div class="st-choice-grid" id="goalGrid"></div>
+          </div>
+          
+          <div style="margin-top: 1rem;">
+            <input type="checkbox" id="notifications" checked style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;">
+            <span>Show campus notifications</span>
+          </div>
+          
+          <div style="display: flex; justify-content: space-between; margin-top: 1rem;">
+            <button type="button" class="st-button st-button-secondary">Back</button>
+            <button type="submit" class="st-button st-button-primary">Save & continue →</button>
+          </div>
+        </form>
+      </div>
+      
+      <!-- Stage 5: Review & Finish -->
+      <div id="stage-5" class="st-panel" style="display: none;">
+        <h2>Stage 5 of 5: Review & Submit</h2>
+        <p class="st-eyebrow">Confirm your details</p>
+        
+        <dl class="st-details" id="profileDetails">
+          <div><dt>Full name</dt><dd id="displayFullName"></dd></div>
+          <div><dt>Email</dt><dd id="displayEmail"></dd></div>
+          <div><dt>USN</dt><dd id="displayUSN"></dd></div>
+          <div><dt>Program</dt><dd id="displayProgram"></dd></div>
+          <div><dt>Department</dt><dd id="displayDepartment"></dd></div>
+          <div><dt>Interests</dt><dd id="displayInterests"></dd></div>
+          <div><dt>Skills</dt><dd id="displaySkills"></dd></div>
+          <div><dt>Dream roles</dt><dd id="displayDreamRoles"></dd></div>
+          <div><dt>GitHub</dt><dd id="displayGitHub"></dd></div>
+          <div><dt>LinkedIn</dt><dd id="displayLinkedIn"></dd></div>
+        </dl>
+        
+        <p style="margin: 2rem 0;">
+          <input type="checkbox" id="confirmConsent" required style="width: 1.25rem; height: 1.25rem; margin-right: 0.5rem;">
+          I confirm these details are accurate and agree to use them to set up my student workspace.
+        </p>
+        
+        <div style="display: flex; justify-content: space-between; margin-top: 2rem;">
+          <button type="button" class="st-button st-button-secondary">Back</button>
+          <button type="submit" class="st-button st-button-primary" id="submitBtn">Submit for verification</button>
+        </div>
+      </div>
+    </main>
+  </div>
+  
+  <script>
+    // Demo data
+    const demoState = {
+      step: 1,
+      fullName: '', email: '', phone: '', city: '',
+      usn: '', department: '', program: '', semester: '', graduationYear: '', specialization: '',
+      interests: [], skills: '', certifications: '',
+      dreamRoles: '', internshipPreference: '', linkedin: '', github: '', portfolio: '', placementProfile: '',
+      notifications: true, consent: false
+    };
+    
+    // Interest options
+    const INTERESTS = [
+      'Software engineering', 'AI & data science', 'Cybersecurity', 'Cloud & infrastructure',
+      'Finance', 'Marketing', 'Business analytics', 'Consulting',
+      'Human resources', 'Operations', 'Design', 'Entrepreneurship'
+    ];
+    
+    // Goal options
+    const GOALS = ['Interview preparation', 'Resume improvement', 'Assessments', 'Placement tracking'];
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      initInterestGrid();
+      // Initialize step navigation
+      initStageNavigation();
+    });
+    
+    function initInterestGrid() {
+      const grid = document.getElementById('interestGrid');
+      INTERESTS.forEach(interest => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'st-choice'; btn.textContent = interest;
+        btn.dataset.interest = interest;
+        btn.addEventListener('click', function() {
+          btn.classList.toggle('active');
+        });
+        grid.appendChild(btn);
+      });
+    }
+    
+    function initStageNavigation() {
+      const stages = ['stage-1', 'stage-2', 'stage-3', 'stage-4', 'stage-5'];
+      const stepCircles = document.querySelectorAll('.st-step-circle');
+      
+      // Show stage 1 by default
+      stages.forEach(id => document.getElementById(id).style.display = 'none');
+      document.getElementById('stage-1').style.display = 'block';
+      stepCircles[0].className = 'st-step-circle active';
+      
+      // Circle click navigation
+      stepCircles.forEach((circle, index) => {
+        circle.addEventListener('click', function() {
+          const targetStep = parseInt(this.dataset.step);
+          // Hide all stages
+          stages.forEach(id => document.getElementById(id).style.display = 'none');
+          // Show target stage
+          document.getElementById('stage-' + targetStep).style.display = 'block';
+          // Update circles
+          stepCircles.forEach((c, i) => {
+            if (i < targetStep - 1) c.className = 'st-step-circle completed';
+            else if (i === targetStep - 1) c.className = 'st-step-circle active';
+            else c.className = 'st-step-circle';
+          });
+        });
+      });
+    }
+    
+    // Initialize interest buttons after a moment
+    setTimeout(initInterestGrid, 100);
+  </script>
+</body>
+</html>

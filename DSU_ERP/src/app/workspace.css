@@ -136,6 +136,7 @@
   border-radius: 0.25rem;
   line-height: 1.4;
   text-align: center;
+  transition: background 0.15s ease, border-color 0.15s ease, transform 0.1s ease;
 }
 .erp-primary {
   background: #243725;
@@ -149,9 +150,11 @@
 }
 .erp-primary:hover {
   background: #344d34;
+  transform: translateY(-1px);
 }
 .erp-secondary:hover {
   background: #edf0e8;
+  transform: translateY(-1px);
 }
 .erp-primary:disabled {
   opacity: 0.6;
@@ -186,6 +189,7 @@
   padding: 0.875rem 0.625rem;
   border-radius: 0.25rem;
   min-height: 2.75rem;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 .erp-sidebar nav a:hover {
   background: #e1e6d9;
@@ -221,6 +225,11 @@
   font: 0.5625rem var(--mono);
   color: #6a7064;
   letter-spacing: 0.04em;
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  backdrop-filter: blur(10px);
+  background: rgba(250,250,248,0.92);
 }
 .erp-status {
   display: flex;
@@ -295,6 +304,7 @@
   padding: 1.75rem;
   margin-bottom: 1.5rem;
   min-width: 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
 }
 .erp-panel h2 {
   font-size: 1.1875rem;
@@ -385,6 +395,12 @@
   border-bottom: 1px solid #ecefe7;
   white-space: nowrap;
 }
+.erp-table tbody tr {
+  transition: background 0.1s ease;
+}
+.erp-table tbody tr:hover {
+  background: #f5f7f1;
+}
 .erp-table td:first-child {
   white-space: normal;
   min-width: 11.25rem;
@@ -409,14 +425,26 @@
   margin-top: 1.5625rem;
   font-size: 0.6875rem;
   color: var(--erp-muted);
+  align-items: center;
 }
 .erp-pagination > div {
   display: flex;
-  gap: 1.25rem;
+  gap: 0.5rem;
 }
 .erp-pagination a {
-  padding: 0.625rem 0;
-  min-height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.875rem;
+  min-height: 2.25rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.25rem;
+  font-size: 0.6875rem;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  color: #243725;
+}
+.erp-pagination a:hover {
+  background: #edf1e7;
+  border-color: #9ab08a;
 }
 .erp-details {
   display: grid;
@@ -490,13 +518,25 @@
   height: 4.375rem;
   background: #ecefe7;
   border-radius: 0.3125rem;
+  animation: erp-skeleton-pulse 1.6s ease-in-out infinite;
 }
 .erp-loading div:nth-child(2) {
   height: 9.375rem;
+  animation-delay: 0.1s;
+}
+.erp-loading div:nth-child(3) {
+  animation-delay: 0.2s;
 }
 .erp-loading span {
   font-size: 0.75rem;
   color: var(--erp-muted);
+}
+@keyframes erp-skeleton-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .erp-loading div { animation: none; }
 }
 @media (max-width: 1050px) {
   .erp-sidebar {
@@ -737,4 +777,251 @@
   border-radius: 6px;
   padding: 10px 14px;
   overflow-wrap: anywhere;
+}
+
+/* ─── ERP Animation system ─── */
+@keyframes erp-fade-up {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes erp-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes erp-scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* Login page entrance */
+.erp-login-intro { animation: erp-fade-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-login-form  { animation: erp-fade-up 0.4s 0.1s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Workspace page content */
+.erp-main { animation: erp-fade-up 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Metrics stagger */
+.erp-metrics article:nth-child(1) { animation: erp-fade-up 0.3s 0.06s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-metrics article:nth-child(2) { animation: erp-fade-up 0.3s 0.12s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-metrics article:nth-child(3) { animation: erp-fade-up 0.3s 0.18s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Panel entrance */
+.erp-panel:nth-child(1) { animation: erp-fade-up 0.35s 0.08s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-panel:nth-child(2) { animation: erp-fade-up 0.35s 0.14s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-panel:nth-child(3) { animation: erp-fade-up 0.35s 0.20s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.erp-panel:nth-child(n+4) { animation: erp-fade-up 0.35s 0.24s cubic-bezier(0.22, 1, 0.36, 1) both; }
+
+/* Table rows */
+.erp-table tbody tr:nth-child(1) { animation: erp-fade-in 0.2s 0.05s both; }
+.erp-table tbody tr:nth-child(2) { animation: erp-fade-in 0.2s 0.09s both; }
+.erp-table tbody tr:nth-child(3) { animation: erp-fade-in 0.2s 0.13s both; }
+.erp-table tbody tr:nth-child(4) { animation: erp-fade-in 0.2s 0.17s both; }
+.erp-table tbody tr:nth-child(n+5) { animation: erp-fade-in 0.2s 0.20s both; }
+
+/* Button press */
+.erp-primary:active  { transform: scale(0.97) translateY(0); transition-duration: 0.08s; }
+.erp-secondary:active { transform: scale(0.97) translateY(0); transition-duration: 0.08s; }
+
+/* Input focus glow */
+.erp-form input:focus,
+.erp-search input:focus {
+  outline: none;
+  border-color: #243725;
+  box-shadow: 0 0 0 3px rgba(36, 55, 37, 0.1);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+/* Sidebar nav transition already applied above */
+
+/* Batch tabs hover */
+.erp-batch-tabs a {
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.erp-batch-tabs a:not([aria-current=page]):hover {
+  background: #f0f4ea;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .erp-login-intro, .erp-login-form, .erp-main,
+  .erp-metrics article, .erp-panel, .erp-table tbody tr {
+    animation: none !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   RESPONSIVE LAYOUT SYSTEM
+   Mobile drawer navigation + adaptive layouts across all breakpoints.
+   Overrides the earlier <700px horizontal-bar sidebar with a proper
+   fixed overlay drawer at < 768px.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* Body scroll lock when mobile nav is open */
+html.po-nav-open { overflow: hidden; }
+
+/* ── Mobile drawer backdrop ── */
+.po-mobile-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 199;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.28s ease;
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* ── Mobile/tablet: < 1024px — dialog drawer replaces sidebar ── */
+@media (max-width: 1023px) {
+  html { font-size: 100%; }
+
+  /* Shell: block layout so sidebar is out of flow */
+  .erp-shell { display: block !important; }
+
+  /* Sidebar: hidden on mobile — the <dialog> po-mobile-drawer handles navigation */
+  .erp-sidebar { display: none !important; }
+
+  /* Workspace: full width */
+  .erp-workspace {
+    margin-left: 0 !important;
+    width: 100% !important;
+    min-height: 100svh !important;
+  }
+
+  /* Topbar: mobile header */
+  .erp-topbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 30 !important;
+    height: 3.25rem !important;
+    padding: 0 0.875rem !important;
+    gap: 0.5rem !important;
+    display: flex !important;
+    align-items: center !important;
+  }
+
+  /* Topbar title */
+  .erp-topbar > span,
+  .po-topbar-identity {
+    flex: 1 !important;
+    text-align: center !important;
+    font-size: 0.5rem !important;
+    letter-spacing: 0.08em !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+    max-width: none !important;
+    display: block !important;
+  }
+
+  /* Topbar mobile nav toggle */
+  .po-mobile-nav-toggle {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.375rem !important;
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.6875rem !important;
+    border-radius: 0.375rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Topbar theme button */
+  .po-topbar-theme-btn {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.25rem !important;
+    padding: 0.375rem 0.625rem !important;
+    font-size: 0.625rem !important;
+    border-radius: 0.375rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .po-topbar-theme-label {
+    display: none !important; /* icon only on very narrow */
+  }
+
+  /* Main content */
+  .erp-main {
+    padding: 1.25rem 1rem !important;
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+  }
+
+  /* Page heading */
+  .erp-page-heading {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.625rem !important;
+  }
+
+  .erp-page-heading h1 { font-size: 1.5rem !important; }
+
+  /* Panels */
+  .erp-panel {
+    padding: 1.125rem 1rem !important;
+    border-radius: 0.375rem !important;
+  }
+
+  /* Metrics grid: 2 columns */
+  .erp-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .erp-metrics article { padding: 1rem !important; }
+  .erp-metrics strong  { font-size: 1.625rem !important; }
+
+  /* Tables: horizontal scroll with shadow affordance */
+  .erp-table-scroll {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Form inputs */
+  .erp-form { grid-template-columns: 1fr !important; }
+  .erp-form input,
+  .erp-form select,
+  .erp-form textarea { font-size: 1rem !important; }
+
+  /* Details grid: 1 column */
+  .erp-details { grid-template-columns: 1fr !important; }
+
+  /* Batch students: forced scroll on mobile */
+  .erp-batch-students { min-width: 100% !important; overflow-x: auto !important; }
+
+  /* Batch metrics: 2 col */
+  .erp-batch-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+
+  /* Batch tabs: compact */
+  .erp-batch-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .erp-batch-tabs a { padding: 0.5rem 0.75rem !important; white-space: nowrap !important; }
+}
+
+/* ── Compact desktop: 1024–1279px ── */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .erp-main { padding: 2rem 1.75rem !important; }
+}
+
+/* ── Topbar theme label: show on tablet+ ── */
+@media (min-width: 640px) {
+  .po-topbar-theme-label { display: inline !important; }
+}
+
+/* ── Table scroll shadows (scroll affordance cue) ── */
+.erp-table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ── Touch target minimum sizes ── */
+@media (hover: none) and (pointer: coarse) {
+  .erp-primary,
+  .erp-secondary,
+  .erp-topbar button,
+  .erp-pagination button,
+  .erp-batch-tabs a {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
 }
