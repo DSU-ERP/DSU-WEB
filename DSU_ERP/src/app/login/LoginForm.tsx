@@ -1,5 +1,6 @@
 "use client";
 import { useActionState } from "react";
+import Link from "next/link";
 import { signIn } from "./actions";
 // One form for every role: after sign-in, /workspace opens the student or
 // placement officer workspace that the account is authorised for.
@@ -26,6 +27,9 @@ export function LoginForm() {
         required
         maxLength={256}
       />
+      <Link href="/forgot-password" className="erp-forgot">
+        Forgot password?
+      </Link>
       <p className="erp-form-error" role="alert">
         {state.error}
       </p>

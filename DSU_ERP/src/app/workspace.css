@@ -115,6 +115,17 @@
   font-size: 0.75rem;
   overflow: hidden;
 }
+.erp-forgot {
+  align-self: flex-end;
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.erp-forgot:hover,
+.erp-forgot:focus-visible {
+  color: #1b211b;
+}
 .erp-form-error {
   min-height: 1.125rem;
   color: #ae292a;

@@ -19,6 +19,9 @@ export async function GET(request: NextRequest) {
         ? await client.auth.verifyOtp({ token_hash: hash, type: "email" })
         : null;
     if (result && !result.error) {
+      // A password reset requested in this browser opens the new-password page.
+      if (request.cookies.get("dsu-password-reset")?.value === "1")
+        return confirmationRedirect("/reset-password", origin);
       // A company contact who signed up from an invitation in this browser
       // returns to it. The token shape is checked, so this is not an open redirect.
       const invite = request.cookies.get("dsu-company-invite")?.value || "";

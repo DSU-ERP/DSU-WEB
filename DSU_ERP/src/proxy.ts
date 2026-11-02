@@ -56,6 +56,8 @@ export const config = {
     "/admin/:path*",
     "/join/:path*",
     "/login",
+    "/forgot-password",
+    "/reset-password",
     "/workspace",
     "/access",
     '/onboarding',
