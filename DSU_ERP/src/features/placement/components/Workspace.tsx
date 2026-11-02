@@ -12,6 +12,7 @@ import {
   ChartLine,
   ChevronDown,
   FileText,
+  Inbox,
   LayoutGrid,
   ListChecks,
   ListOrdered,
@@ -28,6 +29,7 @@ import {
 } from "lucide-react";
 import { SECTIONS } from "@/features/placement/lib/types";
 import { signOut } from "@/app/login/actions";
+import { NotificationBell } from "@/shared/notifications/Notifications";
 
 const ICONS: Record<string, LucideIcon> = {
   overview: LayoutGrid,
@@ -168,6 +170,12 @@ export function Workspace({ children, competencyTesting = false }: { children: R
       current: path === "/placement/student-analytics",
     },
     {
+      href: "/placement/drive-requests",
+      label: "Drive requests",
+      Icon: Inbox,
+      current: matchesRoute(path, "/placement/drive-requests"),
+    },
+    {
       href: "/placement/students-ranking",
       label: "Students Ranking",
       Icon: ListOrdered,
@@ -215,7 +223,7 @@ export function Workspace({ children, competencyTesting = false }: { children: R
         id={mobile ? "placement-mobile-nav" : "placement-nav"}
         aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}
       >
-        {["assistants/friday", "overview", "companies", "drives"].map(link)}
+        {["assistants/friday", "overview", "companies", "drives", "drive-requests"].map(link)}
         {NAV_GROUPS.map(({ id, label, Icon, routes }) => {
           const open = openGroups.includes(id);
           const controls = `po-${mobile ? "mobile" : "desktop"}-${id}-links`;
@@ -373,6 +381,7 @@ export function Workspace({ children, competencyTesting = false }: { children: R
             <Menu size={17} aria-hidden="true" />Menu
           </button>
           <span className="po-topbar-identity">TRAINING & PLACEMENT CELL</span>
+          <NotificationBell className="po-topbar-bell" />
           <button
             type="button"
             className="po-topbar-theme-btn"

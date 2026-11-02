@@ -8,7 +8,8 @@ import {
   openRouterKey,
 } from "./config";
 import { FRIDAY_SYSTEM_PROMPT, FRIDAY_VOICE_HINT } from "./prompt";
-import { FRIDAY_TOOLS, createToolContext, runTool, toolLabel } from "./tools";
+import { FRIDAY_TOOLS, FRIDAY_TOOL_NAMES, createToolContext, runTool, toolLabel } from "./tools";
+import { toolErrorCategory, type FridayTrace } from "@/features/admin/lib/officer-trace";
 import {
   assembleToolCalls,
   explainUpstream,
@@ -72,7 +73,11 @@ export async function* runFriday(opts: {
   message: string;
   spoken: boolean;
   signal: AbortSignal;
+  // Agent workflow trace (Admin portal). Records each model round and tool
+  // call as it really runs; never prompts, arguments or results.
+  trace?: FridayTrace;
 }): AsyncGenerator<FridayEvent> {
+  const trace = opts.trace;
   const or = client();
 
   const messages: ChatMessages[] = [
@@ -101,7 +106,11 @@ export async function* runFriday(opts: {
       state: iteration === 0 ? "preparing" : "responding",
     };
 
-    const response = await or.chat.send(
+    const round = iteration + 1;
+    const model = trace?.open("model.call", "model", `Model call ${round}`);
+    let response: Awaited<ReturnType<typeof or.chat.send>>;
+    try {
+      response = await or.chat.send(
       {
         chatRequest: {
           model: FRIDAY_MODEL,
@@ -115,9 +124,14 @@ export async function* runFriday(opts: {
         },
       },
       { signal: opts.signal },
-    );
+      );
+    } catch (error) {
+      model?.end("failed", { iteration: round }, opts.signal.aborted ? "cancelled" : "model_provider");
+      throw error;
+    }
 
     if (!(Symbol.asyncIterator in response)) {
+      model?.end("failed", { iteration: round }, "model_provider");
       yield {
         type: "error",
         message: "The model provider returned a non-streaming response.",
@@ -135,6 +149,7 @@ export async function* runFriday(opts: {
       if (opts.signal.aborted) break;
 
       if (chunk.error) {
+        model?.end("failed", { iteration: round }, "model_provider");
         yield {
           type: "error",
           message: chunk.error.message || "The model provider returned an error.",
@@ -165,11 +180,20 @@ export async function* runFriday(opts: {
     }
 
     if (opts.signal.aborted) {
+      model?.end("failed", { iteration: round }, "cancelled");
       yield { type: "status", state: "stopped" };
       return;
     }
 
     const assembled = assembleToolCalls(fragments);
+    model?.end("completed", {
+      iteration: round,
+      toolCalls: assembled.length,
+      decision: assembled.length ? "call_tools" : "answer",
+      ...(finish ? { reason: finish } : {}),
+      ...(typeof usage?.promptTokens === "number" ? { tokensIn: usage.promptTokens } : {}),
+      ...(typeof usage?.completionTokens === "number" ? { tokensOut: usage.completionTokens } : {}),
+    });
     if (!assembled.length) {
       if (usage) yield { type: "usage", usage };
       if (!answer.trim() && finish === "length") {
@@ -198,6 +222,7 @@ export async function* runFriday(opts: {
     });
 
     yield { type: "status", state: "retrieving" };
+    const toolRound = trace?.open("tools", "tool", `Tool round ${round}`);
 
     for (const call of calls) {
       if (opts.signal.aborted) {
@@ -206,11 +231,15 @@ export async function* runFriday(opts: {
       }
       const label = toolLabel(call.function.name);
       yield { type: "tool_status", label, state: "running" };
+      const known = FRIDAY_TOOL_NAMES.includes(call.function.name) || call.function.name.startsWith("competency_");
+      const toolStep = trace?.open(known ? `tool:${call.function.name}` : "tool:unknown", "tool", label, toolRound?.seq);
 
       const parsed = parseToolArguments(call.function.arguments);
       const result = parsed.ok
         ? await runTool(call.function.name, parsed.args, tools)
         : ({ ok: false, error: "The tool arguments were not valid JSON." } as const);
+      toolStep?.end(result.ok ? "completed" : "failed", { tool: known ? call.function.name.slice(0, 60) : "unknown", iteration: round },
+        result.ok ? undefined : toolErrorCategory(result.error));
 
       while (linked < tools.profiles.length && linked < MAX_PROFILE_LINKS) {
         const p = tools.profiles[linked++];
@@ -232,10 +261,13 @@ export async function* runFriday(opts: {
       });
     }
 
+    toolRound?.end("completed", { count: calls.length, iteration: round });
+    trace?.flush();
     // Text produced before a tool call is scaffolding, not the final answer.
     answer = "";
   }
 
+  trace?.record("loop.limit", "guard", "Tool round limit reached", "failed", { count: MAX_TOOL_ITERATIONS }, "loop_limit");
   yield {
     type: "error",
     message:

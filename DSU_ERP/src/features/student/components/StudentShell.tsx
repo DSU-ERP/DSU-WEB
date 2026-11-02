@@ -17,15 +17,14 @@ import {
   Search,
   Sun,
   Moon,
-  Bell,
   Menu,
   X,
   PanelLeftClose,
   CodeXml,
 } from "lucide-react";
 import { signOut } from "@/app/login/actions";
-import { STUDENT_MODULES, type Notice } from "../lib/types";
-import { studentFetch } from "../lib/client";
+import { STUDENT_MODULES } from "../lib/types";
+import { NotificationBell } from "@/shared/notifications/Notifications";
 import { InterviewShell } from "./InterviewShell";
 const icons = {
   dashboard: LayoutDashboard,
@@ -60,10 +59,7 @@ export function StudentShell({
   const [theme, setTheme] = useState("light"),
     [drawer, setDrawer] = useState(false),
     [collapsed, setCollapsed] = useState(false),
-    [term, setTerm] = useState(""),
-    [notices, setNotices] = useState<Notice[]>([]),
-    [noticeLoading, setNoticeLoading] = useState(false),
-    [noticeError, setNoticeError] = useState("");
+    [term, setTerm] = useState("");
   const command = useRef<HTMLDialogElement>(null);
   const modules = [...STUDENT_MODULES, ...(competencyTesting ? [{href:"/student/career-intelligence",label:"Career intelligence",purpose:"Evidence and career development",group:"Workspace",icon:"chart" as const}] : [])];
   const current = [...modules]
@@ -116,17 +112,6 @@ export function StudentShell({
     try {
       localStorage.setItem("dsu-student-collapsed", String(!collapsed));
     } catch {}
-  };
-  const loadNotices = async () => {
-    setNoticeLoading(true);
-    try {
-      setNotices(await studentFetch<Notice[]>("notifications"));
-      setNoticeError("");
-    } catch (error) {
-      setNoticeError((error as Error).message);
-    } finally {
-      setNoticeLoading(false);
-    }
   };
   const focus = /\/test$|\/session\//.test(path);
   if (mode === "onboarding") {
@@ -294,60 +279,7 @@ export function StudentShell({
             >
               {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
             </button>
-            <details
-              className="st-notifications"
-              onToggle={(e) => {
-                if (e.currentTarget.open) void loadNotices();
-              }}
-            >
-              <summary aria-label="Notifications">
-                <Bell size={18} />
-              </summary>
-              <div className="st-popover">
-                <h3>Notifications</h3>
-                {notices.some((n) => !n.read_at) && (
-                  <button
-                    className="st-button st-button-secondary"
-                    onClick={async () => {
-                      try {
-                        await studentFetch("notifications/read", {
-                          method: "POST",
-                          body: {},
-                        });
-                        await loadNotices();
-                      } catch (e) {
-                        setNoticeError((e as Error).message);
-                      }
-                    }}
-                  >
-                    Mark all as read
-                  </button>
-                )}
-                {noticeLoading ? (
-                  <p role="status">Loading your updates…</p>
-                ) : noticeError ? (
-                  <p role="alert">{noticeError}</p>
-                ) : notices.length ? (
-                  notices.map((item) => (
-                    <article key={item.id}>
-                      {item.href ? (
-                        <Link href={item.href}>{item.title}</Link>
-                      ) : (
-                        <strong>{item.title}</strong>
-                      )}
-                      <p>{item.body}</p>
-                      <small>
-                        {new Date(item.created_at).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", dateStyle: "medium" })}
-                      </small>
-                    </article>
-                  ))
-                ) : (
-                  <p>
-                    You’re all caught up. New campus updates will appear here.
-                  </p>
-                )}
-              </div>
-            </details>
+            <NotificationBell className="st-notifications" />
             <details className="st-account">
               <summary aria-label="Account menu">
                 <span className="st-avatar st-avatar-small">

@@ -1,0 +1,395 @@
+/* Company portal additions on top of the placement workspace theme. */
+.co-company {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 1.25rem 0 1.5rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.po-collapsed .co-company {
+  display: none;
+}
+.co-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(18rem, 1fr);
+  gap: 1.5rem;
+  align-items: start;
+}
+.co-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  background: var(--po-surface);
+  margin-bottom: 1.5rem;
+}
+.co-stats > a,
+.co-stats > div {
+  padding: 1rem 1.25rem;
+  color: inherit;
+  display: grid;
+  gap: 0.25rem;
+}
+.co-stats > * + * {
+  border-left: 1px solid var(--erp-border);
+}
+.co-stats > a:hover {
+  background: var(--po-highlight);
+}
+.co-stats span {
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+}
+.co-stats strong {
+  font-size: 1.5rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.co-steps {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  max-width: 64ch;
+}
+.co-steps strong {
+  font-weight: 600;
+}
+.co-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 2rem 0 0.75rem;
+}
+.co-section-head h2 {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+/* Drive request form */
+.cp-form {
+  display: grid;
+  gap: 1.25rem;
+}
+.cp-form fieldset {
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  padding: 1.25rem;
+  margin: 0;
+  min-width: 0;
+  background: var(--po-surface);
+}
+.cp-form legend {
+  font-size: 0.875rem;
+  font-weight: 600;
+  padding: 0 0.375rem;
+}
+.cp-form .cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 1rem;
+}
+.cp-form label {
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  align-content: start;
+}
+.cp-form .cp-wide {
+  grid-column: 1 / -1;
+}
+.cp-form .cp-hint {
+  font-size: 0.6875rem;
+  color: var(--erp-muted);
+  line-height: 1.5;
+}
+.cp-rounds {
+  display: grid;
+  gap: 0.5rem;
+}
+.cp-rounds > div {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.cp-rounds span {
+  font: 0.75rem var(--mono, ui-monospace, monospace);
+  color: var(--erp-muted);
+  width: 1.5rem;
+}
+.cp-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--po-text);
+  cursor: pointer;
+}
+.cp-icon-button:hover {
+  background: var(--po-highlight);
+}
+.cp-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+.cp-upload input[type="file"] {
+  font-size: 0.75rem;
+  max-width: 100%;
+}
+.cp-warnings {
+  margin: 0.5rem 0 0;
+  padding-left: 1.125rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--cp-warn);
+}
+.cp-sticky-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.875rem 0;
+  background: color-mix(in srgb, var(--po-surface, #fff) 92%, transparent);
+  border-top: 1px solid var(--erp-border);
+}
+.cp-sticky-actions .erp-muted {
+  margin-left: auto;
+  font-size: 0.75rem;
+}
+/* Applicants */
+.cp-results {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.375rem;
+  background: var(--po-highlight);
+}
+.cp-results label {
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  min-width: 10rem;
+}
+.cp-results .cp-remarks {
+  flex: 1;
+  min-width: 14rem;
+}
+.cp-applicants td input[type="checkbox"],
+.cp-applicants th input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+}
+.cp-applicants .cp-contact {
+  display: grid;
+  gap: 0.125rem;
+  font-size: 0.75rem;
+}
+.cp-round-trail {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+}
+.cp-round-trail span {
+  padding: 0.0625rem 0.375rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.1875rem;
+}
+.cp-round-trail .is-pass { color: var(--cp-good); }
+.cp-round-trail .is-fail { color: var(--cp-bad); }
+.cp-round-trail .is-absent { color: var(--cp-warn); }
+/* Company FRIDAY */
+.co-chat {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  min-height: calc(100svh - 4rem);
+}
+.co-chat-list {
+  border-right: 1px solid var(--erp-border);
+  padding: 1.25rem 1rem;
+  display: grid;
+  align-content: start;
+  gap: 0.5rem;
+}
+.co-chat-list ul {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.125rem;
+}
+.co-chat-list button.co-thread {
+  width: 100%;
+  text-align: left;
+  border: 0;
+  background: transparent;
+  padding: 0.5rem 0.625rem;
+  border-radius: 0.25rem;
+  font-size: 0.8125rem;
+  color: var(--po-text);
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.co-chat-list button.co-thread[aria-current="true"],
+.co-chat-list button.co-thread:hover {
+  background: var(--po-highlight);
+}
+.co-chat-main {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  min-height: 0;
+}
+.co-chat-messages {
+  padding: 2rem clamp(1rem, 4vw, 3rem);
+  overflow-y: auto;
+  display: grid;
+  align-content: start;
+  gap: 1.25rem;
+}
+.co-chat-intro {
+  max-width: 60ch;
+}
+.co-chat-intro h1 {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  margin: 0 0 0.5rem;
+}
+.co-msg {
+  max-width: 72ch;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.co-msg-user {
+  justify-self: end;
+  background: var(--po-highlight);
+  border: 1px solid var(--erp-border);
+  border-radius: 0.5rem;
+  padding: 0.625rem 0.875rem;
+}
+.co-chat-form {
+  display: flex;
+  gap: 0.625rem;
+  padding: 1rem clamp(1rem, 4vw, 3rem) 1.5rem;
+  border-top: 1px solid var(--erp-border);
+}
+.co-chat-form textarea {
+  flex: 1;
+  min-height: 2.75rem;
+  max-height: 10rem;
+  resize: vertical;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid var(--erp-border);
+  border-radius: 0.25rem;
+  background: var(--po-surface);
+  color: var(--po-text);
+  font: inherit;
+  font-size: 0.875rem;
+}
+.co-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.co-suggestions button {
+  border: 1px solid var(--erp-border);
+  background: var(--po-surface);
+  color: var(--po-text);
+  border-radius: 0.25rem;
+  padding: 0.4375rem 0.75rem;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.co-suggestions button:hover {
+  background: var(--po-highlight);
+}
+/* Join */
+.co-join form {
+  display: grid;
+  gap: 0.75rem;
+  max-width: 26rem;
+  margin-top: 1.25rem;
+}
+.co-join label {
+  display: grid;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.co-join input {
+  min-height: 2.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #c6ccc0;
+  border-radius: 0.25rem;
+  font: inherit;
+  font-size: 0.875rem;
+}
+.co-join-choice {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2rem;
+  max-width: 60rem;
+  margin-top: 1.5rem;
+}
+.co-join-choice section {
+  border-top: 1px solid var(--erp-border);
+  padding-top: 1rem;
+}
+.co-join-choice h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+}
+@media (max-width: 1000px) {
+  .co-dashboard,
+  .co-join-choice {
+    grid-template-columns: 1fr;
+  }
+  .co-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .co-stats > :nth-child(3) {
+    border-left: 0;
+  }
+  .co-stats > :nth-child(n + 3) {
+    border-top: 1px solid var(--erp-border);
+  }
+  .co-chat {
+    grid-template-columns: 1fr;
+  }
+  .co-chat-list {
+    border-right: 0;
+    border-bottom: 1px solid var(--erp-border);
+  }
+}
+.cp-form .cp-upload label.erp-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}

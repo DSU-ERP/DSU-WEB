@@ -5,15 +5,17 @@ import { backendApi } from "@/shared/http/backend";
 import { CampusError } from "@/shared/http/errors";
 import { describeFailure } from "@/shared/http/diagnostics";
 import { skillsProfile } from "@/features/student/lib/server";
+import { initialNotifications } from "@/shared/notifications/server";
 import {
   Dashboard,
   type DashboardData,
 } from "@/features/student/components/Dashboard";
 export default async function Page() {
   // Both reads travel together; the skills profile is optional for the page.
-  const [dashboard, skills] = await Promise.allSettled([
+  const [dashboard, skills, notices] = await Promise.allSettled([
     backendApi<{ data: DashboardData }>("/student/dashboard"),
     skillsProfile(),
+    initialNotifications(),
   ]);
   if (dashboard.status === "rejected") {
     const error = dashboard.reason;
@@ -33,6 +35,7 @@ export default async function Page() {
       data={dashboard.value.data}
       skills={skills.status === "fulfilled" ? skills.value : null}
       skillsError={skillsError}
+      notices={notices.status === "fulfilled" ? notices.value : null}
     />
     {competencyTestingEnabled() && (
       <section className="st-panel">

@@ -4,6 +4,8 @@ import { ArrowRight, ArrowUpRight, Mic, Sparkles, MessageSquare, CalendarDays, C
 import type { Notice, OfficialStudent } from "../lib/types";
 import type { SkillsProfile } from "../lib/skills";
 import { SkillsDashboard } from "./TechnicalProfile";
+import { NotificationsPanel } from "@/shared/notifications/Notifications";
+import type { NotificationList } from "@/shared/notifications/types";
 import { academicStanding, activitySeries, deadlineLabel, readinessChecklist, statusText, type ActivityDay } from "../lib/progress";
 export type DashboardData = {
   official: OfficialStudent;
@@ -123,7 +125,7 @@ function ActivityStrip({ activity }: { activity: ActivityDay[] }) {
     </div>
   );
 }
-export function Dashboard({ data, skills, skillsError }: { data: DashboardData; skills?: SkillsProfile | null; skillsError?: string }) {
+export function Dashboard({ data, skills, skillsError, notices = null }: { data: DashboardData; skills?: SkillsProfile | null; skillsError?: string; notices?: NotificationList | null }) {
   // /student/onboarding is now skills onboarding; profile setup (registration)
   // lives at /onboarding.
   const next = data.next.href === "/student/onboarding" ? { ...data.next, href: "/onboarding" } : data.next;
@@ -218,7 +220,7 @@ export function Dashboard({ data, skills, skillsError }: { data: DashboardData; 
             <Link className="st-home-text-link" href="/student/resume">{data.resume ? "View career report" : "Explore career report"}<ArrowRight size={14} /></Link>
           </section>
 
-          {data.notifications.length > 0 && <section className="st-home-section" aria-labelledby="home-updates-title"><header><h2 id="home-updates-title">Campus updates</h2></header><div className="st-home-rows">{data.notifications.map((notice) => <article key={notice.id}>{notice.href ? <Link href={notice.href}><h3>{notice.title}</h3></Link> : <h3>{notice.title}</h3>}<p>{notice.body}</p>{!notice.read_at && <span className="st-home-unread">Unread</span>}</article>)}</div></section>}
+          <NotificationsPanel initial={notices} className="st-home-notices" empty="You are all caught up. Drive invitations, selections and campus notices will appear here." />
         </aside>
       </div>
       {skills !== undefined && <SkillsDashboard profile={skills} error={skillsError} />}

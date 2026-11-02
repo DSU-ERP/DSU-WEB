@@ -4,6 +4,8 @@ import { officerSession, placementRead } from "@/features/placement/lib/server";
 import { JOB_CATEGORIES, text, type Report, type Row } from "@/features/placement/lib/types";
 import { ChangeForm, DeleteRecord } from "@/features/placement/components/Controls";
 import { Metrics, Table } from "@/features/placement/components/UI";
+import { CompanyAccessPanel } from "@/features/placement/components/CompanyRequests";
+import { companyAccess } from "@/features/placement/lib/company";
 export default async function CompanyEditor({
   params,
 }: {
@@ -14,9 +16,12 @@ export default async function CompanyEditor({
     newRecord = id === "new";
   if (!newRecord && !/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const company = newRecord ? {} : await placementRead<Row>("company", { id });
-  const drives = newRecord
-    ? null
-    : await placementRead<Report>("drives", { company: id, limit: "100" });
+  const [drives, access] = newRecord
+    ? [null, null]
+    : await Promise.all([
+        placementRead<Report>("drives", { company: id, limit: "100" }),
+        companyAccess(id).catch(() => null),
+      ]);
   const fields = [
     ["name", "Company name", "text"],
     ["short_name", "Short name", "text"],
@@ -78,6 +83,14 @@ export default async function CompanyEditor({
               Schedule a drive for this company +
             </Link>
           </section>
+          {access && (
+            <CompanyAccessPanel
+              companyId={id}
+              companyName={text(company.name)}
+              defaultEmail={typeof company.hr_email === "string" ? company.hr_email : undefined}
+              access={access}
+            />
+          )}
         </>
       )}
       <section className="erp-panel">

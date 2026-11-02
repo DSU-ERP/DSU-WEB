@@ -121,7 +121,7 @@ const entry = `import React from 'react';import {createRoot} from 'react-dom/cli
 import {Workspace} from '@/features/placement/components/Workspace';import {FridayChat} from '@/features/assistant/components/FridayChat';
 createRoot(document.getElementById('root')).render(<Workspace><FridayChat initialHistory={${JSON.stringify(history)}} initialCapabilities={${JSON.stringify(capabilities)}} focusBatch="2026"/></Workspace>);`;
 
-const mock = {
+const mock = {...require("./harness-server-mocks.cjs"),
   "next/link": `import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
   "next/navigation": `export const useRouter=()=>({push:p=>location.assign(p),refresh(){}});export const usePathname=()=>location.pathname;`,
   "@/app/login/actions": `export async function signOut(){window.__signedOut=true}`,

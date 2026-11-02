@@ -7,6 +7,8 @@ import { DriveCreator } from "@/features/placement/components/DriveImport";
 import { DriveCandidates } from "@/features/placement/components/DriveCandidates";
 import { DeleteRecord } from "@/features/placement/components/Controls";
 import { Metrics, Filters, Pagination } from "@/features/placement/components/UI";
+import { DriveAudiencePanel } from "@/features/placement/components/CompanyRequests";
+import { driveAudience } from "@/features/placement/lib/company";
 export default async function DrivePage({
   params,
   searchParams,
@@ -57,8 +59,12 @@ export default async function DrivePage({
         )}
       </>
     );
-  const report = await placementRead<Report>("drive", { ...query, id }),
-    drive = report.drive as Row;
+  const [report, audience] = await Promise.all([
+    placementRead<Report>("drive", { ...query, id }),
+    // Older backends have no audience endpoint; the drive page still works.
+    driveAudience(id).catch(() => null),
+  ]);
+  const drive = report.drive as Row;
   if (!companies.rows.some((c) => c.id === drive.company_id))
     companies.rows.unshift({
       id: drive.company_id,
@@ -112,8 +118,15 @@ export default async function DrivePage({
           "openings",
         ]}
       />
+      {audience && <DriveAudiencePanel driveId={id} state={audience} />}
       <details className="erp-panel">
         <summary>Edit drive, dates, rounds and eligibility</summary>
+        {audience?.audienceMode && (
+          <p className="erp-muted">
+            This drive has a chosen audience. The CGPA, backlog and branch fields below are shown to students for reference; who can apply is
+            decided by the audience above.
+          </p>
+        )}
         <DriveEditor
           drive={drive}
           companies={companies.rows}

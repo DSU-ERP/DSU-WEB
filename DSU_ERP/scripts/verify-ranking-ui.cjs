@@ -98,7 +98,7 @@ function Page(){
   return <><RankingHeader overview={overview}/><RankingSummary overview={overview}/><RankingTabs query={q}/><RankingFilters overview={overview} query={q}/><RankingTable data={data} query={q} topicLabel={overview.topics.find(t=>t.code===q.topic)?.label}/></>;
 }
 createRoot(document.getElementById('root')).render(<Workspace><Page/></Workspace>);`;
-const mocks = {
+const mocks = {...require("./harness-server-mocks.cjs"),
   'next/link': `import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
   'next/navigation': `const router={push:path=>location.assign(path),refresh:()=>{}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;`,
   '@/app/login/actions': `export async function signOut(){}`,

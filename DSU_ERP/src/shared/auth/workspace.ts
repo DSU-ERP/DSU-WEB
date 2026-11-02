@@ -5,10 +5,10 @@ import { backendApi } from "@/shared/http/backend";
 import { signInAgain } from "@/shared/auth/session";
 import { CampusError } from "@/shared/http/errors";
 
-export type WorkspaceRole = "student" | "placement_officer";
+export type WorkspaceRole = "student" | "placement_officer" | "company" | "admin";
 export type WorkspaceAccess = {
   role: WorkspaceRole | null;
-  home: "/student" | "/student/onboarding" | "/placement" | "/access" | "/onboarding";
+  home: "/student" | "/student/onboarding" | "/placement" | "/company" | "/admin" | "/access" | "/onboarding";
   // Students only: skills onboarding (docs/STUDENT-INTELLIGENCE.md section 4)
   // must be completed before the rest of the student workspace. Older backends
   // omit it, which means nothing is required.

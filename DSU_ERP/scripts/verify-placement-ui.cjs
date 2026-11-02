@@ -325,7 +325,7 @@ else if(section==='drive-pool')content=<DriveCandidates drive={drive} rows={[{..
 else if(section==='assistants')content=<AssistantChat assistant='friday' initialHistory={[]} batches={['2028']} initialDiagnostics={{mode:'Fixture data'}}/>;
 else {if(['students','ranking','points','github','domain','tests','talent'].includes(section))data.rows=[student];if(section==='companies')data.rows=[company];if(section==='drives')data.rows=[drive];if(['offers','multiple-offers'].includes(section))data.rows=[];content=<><h1>{SECTIONS[section]?.title||section}</h1><ReportFilters section={section} data={data} query={query}/><ReportBody section={section} data={data} query={query}/></>;}
 createRoot(document.getElementById('root')).render(<Workspace>{content}</Workspace>);`;
-const mock = {
+const mock = {...require("./harness-server-mocks.cjs"),
   "next/link": `import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
   "next/navigation": `const router={push:path=>location.assign(path),refresh:()=>{window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;`,
   "@/app/login/actions": `export async function signOut(){window.__signedOut=true}`,

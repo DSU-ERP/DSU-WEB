@@ -10,6 +10,8 @@ import "../workspace.css";
 import "./placement.css";
 import "./overview.css";
 import "./ranking.css";
+import "./company-portal.css";
+import "@/shared/notifications/notifications.css";
 export const dynamic = "force-dynamic";
 export default async function PlacementLayout({
   children,

@@ -399,6 +399,51 @@ export const FRIDAY_TOOLS = [
   {
     type: "function" as const,
     function: {
+      name: "drive_detail",
+      description:
+        "Full details of one recruitment drive: company, role, package and CTC breakup, stipend, bond, work mode, dates, rounds, who receives it (audience), application counts and whether applicants are shared with the company. Pass a drive id returned by list_drives or pending_reviews.",
+      parameters: {
+        type: "object",
+        properties: { id: { type: "string", description: "Drive id from list_drives" } },
+        required: ["id"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "company_detail",
+      description:
+        "A recruiting company's record: industry, headquarters, website, about, HR contact, roles they hire for, their drives, and whether they have company portal access.",
+      parameters: {
+        type: "object",
+        properties: { name: { type: "string", description: "Company name or part of it" } },
+        required: ["name"],
+        additionalProperties: false,
+      },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "pending_reviews",
+      description:
+        "Drive requests that companies submitted through the company portal and that wait for the placement officer's review, plus counts by review status.",
+      parameters: { type: "object", properties: {}, required: [], additionalProperties: false },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
+      name: "my_notifications",
+      description: "The officer's unread notifications: new drive requests, round results companies recorded and other updates.",
+      parameters: { type: "object", properties: {}, required: [], additionalProperties: false },
+    },
+  },
+  {
+    type: "function" as const,
+    function: {
       name: "placement_overview",
       description:
         "University-wide placement statistics: placed and unplaced counts, placement percentage, offer counts, average, highest and median package, drive and company totals, and per-department comparison.",
@@ -444,6 +489,14 @@ export function toolLabel(name: string): string {
       return "Checking skills profiles";
     case "list_drives":
       return "Retrieving recruitment drives";
+    case "drive_detail":
+      return "Opening drive details";
+    case "company_detail":
+      return "Opening company record";
+    case "pending_reviews":
+      return "Checking drive requests";
+    case "my_notifications":
+      return "Checking notifications";
     case "placement_overview":
       return "Retrieving placement statistics";
     case "eligibility_rules":
@@ -760,6 +813,7 @@ export async function runTool(
           data: {
             total: data.pagination?.total ?? null,
             drives: (data.rows ?? []).slice(0, 25).map((d) => ({
+              id: d.id,
               company: d.company,
               title: d.title,
               status: d.status,
@@ -768,6 +822,103 @@ export async function runTool(
               drive_date: d.drive_date,
               drive_url: d.id ? `/placement/drives/${d.id}` : undefined,
             })),
+          },
+        };
+      }
+
+      case "drive_detail": {
+        const id = str(args.id, 36);
+        if (!id || !UUID.test(id)) return { ok: false, error: "Use a drive id returned by list_drives." };
+        const [report, audience] = await withTimeout(
+          Promise.all([
+            placementRead<Report>("drive", { id, limit: "1" }),
+            backendApi<{ data: Row }>(`/placement/drives/${id}/audience`).then((r) => r.data).catch(() => null),
+          ]),
+        );
+        const d = (report.drive ?? {}) as Row;
+        const pick = (keys: string[]) => Object.fromEntries(keys.filter((k) => d[k] !== undefined).map((k) => [k, d[k]]));
+        return {
+          ok: true,
+          data: {
+            company: report.company,
+            drive: pick([
+              "title", "status", "published", "origin", "batch", "academic_year", "employment_type", "job_category", "openings",
+              "package_lpa", "ctc_fixed_lpa", "ctc_variable_lpa", "stipend_monthly", "internship_months", "bond_months", "bond_details",
+              "work_mode", "joining_date", "location", "skills", "required_documents", "rounds", "drive_date", "registration_deadline",
+              "min_cgpa", "max_backlogs", "branches", "min_attendance", "description",
+            ]),
+            counts: report.counts,
+            audience: audience
+              ? {
+                  chosen_by_officer: audience.audienceMode,
+                  students: audience.size,
+                  rules: audience.rules,
+                  applicants_shared_with_company: audience.released,
+                  consenting_applicants: audience.consenting,
+                  company_has_portal: audience.hasPortal,
+                }
+              : "unavailable",
+            drive_url: `/placement/drives/${id}`,
+          },
+        };
+      }
+
+      case "company_detail": {
+        const name = str(args.name, 100);
+        if (!name) return { ok: false, error: "Give a company name." };
+        const list = await withTimeout(placementRead<Report>("companies", { search: name, limit: "5" }));
+        const rows = list.rows ?? [];
+        if (!rows.length) return { ok: true, data: { status: "not_found" } };
+        if (rows.length > 1 && !rows.some((r) => String(r.name).toLowerCase() === name.toLowerCase()))
+          return { ok: true, data: { status: "ambiguous", candidates: rows.map((r) => ({ name: r.name, industry: r.industry })) } };
+        const match = rows.find((r) => String(r.name).toLowerCase() === name.toLowerCase()) ?? rows[0];
+        const companyId = String(match.id);
+        const [company, drives, access] = await withTimeout(
+          Promise.all([
+            placementRead<Row>("company", { id: companyId }),
+            placementRead<Report>("drives", { company: companyId, limit: "25" }),
+            backendApi<{ data: { members: Row[] } }>(`/placement/companies/${companyId}/access`).then((r) => r.data).catch(() => null),
+          ]),
+        );
+        return {
+          ok: true,
+          data: {
+            status: "found",
+            company: Object.fromEntries(
+              ["name", "industry", "headquarters", "website", "about", "hiring_roles", "job_categories", "hr_name", "hr_email", "hr_phone", "active"]
+                .map((k) => [k, company[k]]),
+            ),
+            portal_members: access ? access.members.filter((m) => m.active).length : "unavailable",
+            drives: (drives.rows ?? []).map((d) => ({ id: d.id, title: d.title, status: d.status, package_lpa: d.package_lpa, drive_date: d.drive_date })),
+          },
+        };
+      }
+
+      case "pending_reviews": {
+        const data = await withTimeout(backendApi<{ data: { counts: Row; rows: Row[] } }>("/placement/company-requests?status=submitted"));
+        return {
+          ok: true,
+          data: {
+            counts: data.data.counts,
+            waiting: data.data.rows.slice(0, 25).map((r) => ({
+              company: r.company,
+              title: r.title,
+              kind: r.kind === "change" ? "change to a live drive" : "new drive",
+              package_lpa: r.packageLpa,
+              submitted_at: r.submittedAt,
+              review_url: `/placement/drive-requests/${r.id}`,
+            })),
+          },
+        };
+      }
+
+      case "my_notifications": {
+        const data = await withTimeout(backendApi<{ data: { unread: number; rows: Row[] } }>("/notifications"));
+        return {
+          ok: true,
+          data: {
+            unread: data.data.unread,
+            notifications: data.data.rows.slice(0, 20).map((n) => ({ title: n.title, body: n.body, created_at: n.created_at })),
           },
         };
       }

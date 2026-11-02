@@ -159,7 +159,7 @@ const pages={
  'drive-import':()=><Workspace><h1>Create a placement drive.</h1><DriveCreator companies={[company]} options={options}/></Workspace>,
 };
 import{depositMedia}from"@/features/student/lib/media";if(location.pathname.endsWith("/room"))depositMedia(session.id,window.__makeInterviewMedia());createRoot(document.getElementById('root')).render(<React.StrictMode>{pages[route]()}</React.StrictMode>);`;
-const mocks = {
+const mocks = {...require("./harness-server-mocks.cjs"),
   "next/link": "import React from'react';export default function Link({children,prefetch,scroll,...p}){return React.createElement('a',p,children)}",
   "next/navigation": "export const usePathname=()=>location.pathname.endsWith('/room')?'/student/interview/session/fixture':location.pathname.endsWith('/chat')?'/student/friday':location.pathname;export const useSearchParams=()=>new URLSearchParams(location.search);const router={push:p=>{window.__pushed=p},replace:p=>{window.__pushed=p},refresh:()=>{}};export const useRouter=()=>router;",
   "@/app/login/actions": "export async function signOut(){}",

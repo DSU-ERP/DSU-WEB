@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { BriefcaseBusiness, MapPin, CalendarDays, X } from "lucide-react";
+import { BriefcaseBusiness, MapPin, CalendarDays, FileText, X } from "lucide-react";
 import { studentFetch } from "../lib/client";
 import { PageTitle, Metric, Empty, ErrorNote } from "./UI";
 import { applicationStage, deadlineLabel, statusText } from "../lib/progress";
@@ -36,15 +36,82 @@ export type Opportunity = {
   skills: string;
   required_documents: string;
   original_pdf_url: string | null;
+  origin?: "officer" | "company";
+  audience_mode?: boolean;
+  employment_type?: string | null;
+  job_category?: string | null;
+  openings?: number | null;
+  ctc_fixed_lpa?: string | number | null;
+  ctc_variable_lpa?: string | number | null;
+  stipend_monthly?: string | number | null;
+  internship_months?: number | null;
+  bond_months?: number | null;
+  bond_details?: string | null;
+  work_mode?: string | null;
+  joining_date?: string | null;
+  company_industry?: string | null;
+  company_website?: string | null;
+  company_about?: string | null;
+  company_headquarters?: string | null;
+  jd_file?: { id: string; filename: string; size: number } | null;
   eligibility: { eligible: boolean; gaps: string[]; basis: string };
   application: { status: string; current_round: number } | null;
 };
+type ResumeFile = { id: string; filename: string; size: number; created_at: string };
+const EMPLOYMENT: Record<string, string> = {
+  "full-time": "Full-time",
+  internship: "Internship",
+  "internship-ppo": "Internship with pre-placement offer",
+  contract: "Contract",
+};
+const WORK_MODE: Record<string, string> = { onsite: "On-site", hybrid: "Hybrid", remote: "Remote" };
+const rupees = (value: string | number) => `₹${Number(value).toLocaleString("en-IN")}`;
+// The fields a student shares by applying, shown before they confirm.
+export const SHARED_FIELDS =
+  "your name, USN, branch, batch, CGPA, current backlogs, application status, college email and phone number";
+export async function openFile(id: string) {
+  const { url } = await studentFetch<{ url: string }>(`files/${id}/link`);
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+const readBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result).split(",")[1] || "");
+    reader.onerror = () => reject(new Error("The file could not be read."));
+    reader.readAsDataURL(file);
+  });
 export type OpportunityList = {
   rows: Opportunity[];
   total: number;
   page: number;
   limit: number;
 };
+function offerFacts(drive: Opportunity): [string, string | null | undefined][] {
+  const facts: [string, string | null | undefined][] = [
+    ["Role type", drive.employment_type ? EMPLOYMENT[drive.employment_type] || drive.employment_type : null],
+    ["Job category", drive.job_category],
+    ["Openings", drive.openings ? String(drive.openings) : null],
+    ["Total CTC", `${drive.package_lpa} LPA`],
+  ];
+  if (drive.ctc_fixed_lpa !== null && drive.ctc_fixed_lpa !== undefined) facts.push(["Fixed pay", `${drive.ctc_fixed_lpa} LPA`]);
+  if (drive.ctc_variable_lpa !== null && drive.ctc_variable_lpa !== undefined) facts.push(["Variable pay", `${drive.ctc_variable_lpa} LPA`]);
+  if (drive.stipend_monthly !== null && drive.stipend_monthly !== undefined)
+    facts.push([
+      "Internship stipend",
+      `${rupees(drive.stipend_monthly)} per month${drive.internship_months ? ` for ${drive.internship_months} month${drive.internship_months === 1 ? "" : "s"}` : ""}`,
+    ]);
+  facts.push(["Work mode", drive.work_mode ? WORK_MODE[drive.work_mode] || drive.work_mode : null]);
+  facts.push(["Joining", drive.joining_date?.slice(0, 10)]);
+  facts.push([
+    "Service agreement",
+    drive.bond_months === null || drive.bond_months === undefined
+      ? drive.bond_details || null
+      : drive.bond_months === 0
+        ? "No bond"
+        : `${drive.bond_months} month${drive.bond_months === 1 ? "" : "s"}${drive.bond_details ? `. ${drive.bond_details}` : ""}`,
+  ]);
+  return facts;
+}
 export function PlacementBoard({
   initial,
   driveId,
@@ -58,6 +125,10 @@ export function PlacementBoard({
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
     [confirmed, setConfirmed] = useState(false),
+    [consent, setConsent] = useState(false),
+    [resumes, setResumes] = useState<{ rows: ResumeFile[]; storage: boolean } | null>(null),
+    [resumeId, setResumeId] = useState(""),
+    [uploading, setUploading] = useState(false),
     [filter, setFilter] = useState<Filter>("all");
   const matches = (drive: Opportunity, value: Filter) =>
     value === "eligible"
@@ -72,9 +143,12 @@ export function PlacementBoard({
   const open = async (id: string) => {
     setError("");
     setConfirmed(false);
+    setConsent(false);
     try {
-      setSelected(await studentFetch<Opportunity>(`opportunities/${id}`));
+      const drive = await studentFetch<Opportunity>(`opportunities/${id}`);
+      setSelected(drive);
       dialog.current?.showModal();
+      if (!drive.application) await loadResumes();
     } catch (e) {
       setError((e as Error).message);
     }
@@ -98,14 +172,49 @@ export function PlacementBoard({
       setBusy(false);
     }
   };
+  const loadResumes = async (select?: string) => {
+    try {
+      const list = await studentFetch<{ rows?: ResumeFile[]; storage?: boolean }>("resumes");
+      const rows = Array.isArray(list?.rows) ? list.rows : [];
+      setResumes({ rows, storage: list?.storage === true });
+      setResumeId(select || rows[0]?.id || "");
+    } catch {
+      setResumes({ rows: [], storage: false });
+    }
+  };
+  const uploadResume = async (file: File | undefined) => {
+    if (!file) return;
+    if (!/\.pdf$/i.test(file.name)) return setError("Choose a PDF resume.");
+    if (file.size > 10 * 1024 * 1024) return setError("Choose a PDF of 10 MB or less.");
+    setUploading(true);
+    setError("");
+    try {
+      const saved = await studentFetch<{ file?: { id: string } }>("documents", {
+        method: "POST",
+        body: { filename: file.name, kind: "resume", data: await readBase64(file) },
+      });
+      await loadResumes(saved.file?.id);
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
+  const resumeRequired = selected?.origin === "company";
   const apply = async (withdraw = false) => {
     if (!selected || !confirmed) return;
+    if (!withdraw && (!consent || (resumeRequired && !resumeId))) return;
     setBusy(true);
     setError("");
     try {
       await studentFetch(
         `opportunities/${selected.id}/${withdraw ? "withdraw" : "apply"}`,
-        { method: "POST", body: { confirmed: true } },
+        {
+          method: "POST",
+          body: withdraw
+            ? { confirmed: true }
+            : { confirmed: true, consent: true, resumeFileId: resumeId || null },
+        },
       );
       await open(selected.id);
       await load(data.page);
@@ -247,7 +356,7 @@ export function PlacementBoard({
               ? "Switch to All to see every published opportunity on this page."
               : search
               ? "Try a company name, role or a broader term."
-              : "Published drives for your batch will appear here. Your placement office manages publication."}
+              : "Drives the placement office shares with you will appear here."}
           </Empty>
         </div>
       )}
@@ -331,6 +440,33 @@ export function PlacementBoard({
                   </section>
                 ) : null;
               })()}
+              {(selected.company_about || selected.company_industry || selected.company_headquarters || selected.company_website) && (
+                <section className="st-company-about" aria-label={`About ${selected.company}`}>
+                  <h3>About {selected.company}</h3>
+                  {selected.company_about && <p className="st-muted st-preserve">{selected.company_about}</p>}
+                  <p className="st-muted">
+                    {[selected.company_industry, selected.company_headquarters].filter(Boolean).join(" · ")}
+                    {selected.company_website && (
+                      <>
+                        {selected.company_industry || selected.company_headquarters ? " · " : ""}
+                        <a href={selected.company_website} target="_blank" rel="noopener noreferrer">
+                          {selected.company_website.replace(/^https?:\/\//, "").replace(/\/$/, "")}
+                        </a>
+                      </>
+                    )}
+                  </p>
+                </section>
+              )}
+              <h3>The offer</h3>
+              <dl className="st-details">
+                {offerFacts(selected).map(([title, value]) => (
+                  <div key={title}>
+                    <dt>{title}</dt>
+                    <dd>{value || "Not specified"}</dd>
+                  </div>
+                ))}
+              </dl>
+              <h3>Schedule and eligibility</h3>
               <dl className="st-details">
                 {[
                   ["Location", selected.location],
@@ -341,19 +477,23 @@ export function PlacementBoard({
                       ? `${selected.registration_deadline.slice(0, 10)} · ${deadlineLabel(selected.registration_deadline).text}`
                       : null,
                   ],
-                  ["CGPA requirement", `${selected.min_cgpa}+`],
-                  ["Current backlogs allowed", String(selected.max_backlogs)],
-                  [
-                    "Minimum attendance",
-                    selected.min_attendance === null ||
-                    selected.min_attendance === undefined
-                      ? "No limit"
-                      : `${Number(selected.min_attendance)}%`,
-                  ],
-                  [
-                    "Permitted branches",
-                    selected.branches.join(", ") || "All branches",
-                  ],
+                  ...(selected.audience_mode
+                    ? [["Who can apply", "Students the placement office selected for this drive"]]
+                    : [
+                        ["CGPA requirement", `${selected.min_cgpa}+`],
+                        ["Current backlogs allowed", String(selected.max_backlogs)],
+                        [
+                          "Minimum attendance",
+                          selected.min_attendance === null ||
+                          selected.min_attendance === undefined
+                            ? "No limit"
+                            : `${Number(selected.min_attendance)}%`,
+                        ],
+                        [
+                          "Permitted branches",
+                          selected.branches.join(", ") || "All branches",
+                        ],
+                      ]),
                 ].map(([title, value]) => (
                   <div key={title}>
                     <dt>{title}</dt>
@@ -384,6 +524,15 @@ export function PlacementBoard({
                   <p className="st-muted">{selected.required_documents}</p>
                 </>
               )}
+              {selected.jd_file && (
+                <button
+                  type="button"
+                  className="st-button st-button-secondary"
+                  onClick={() => void openFile(selected.jd_file!.id).catch((e) => setError((e as Error).message))}
+                >
+                  <FileText size={15} aria-hidden="true" /> Open the job description (PDF)
+                </button>
+              )}
               {selected.original_pdf_url && (
                 <a
                   className="st-button st-button-secondary"
@@ -410,6 +559,52 @@ export function PlacementBoard({
                 <p className="st-muted">{selected.eligibility.basis}</p>
               </section>
               <div className="st-form">
+                {!selected.application && selected.eligibility.eligible && (
+                  <fieldset className="st-apply-share">
+                    <legend>Resume to share{resumeRequired ? "" : " (optional)"}</legend>
+                    {resumes === null ? (
+                      <p className="st-muted">Loading your resumes…</p>
+                    ) : resumes.rows.length ? (
+                      <select
+                        className="st-input"
+                        value={resumeId}
+                        onChange={(e) => setResumeId(e.target.value)}
+                        aria-label="Resume to share"
+                      >
+                        {!resumeRequired && <option value="">Do not attach a resume</option>}
+                        {resumes.rows.map((resume, index) => (
+                          <option key={resume.id} value={resume.id}>
+                            {resume.filename}, uploaded {resume.created_at.slice(0, 10)}
+                            {index === 0 ? " (latest)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <p className="st-muted">
+                        {resumes.storage
+                          ? "You have no resume PDF yet. Upload one to apply."
+                          : "Resume uploads are not available right now. Contact the placement office."}
+                      </p>
+                    )}
+                    {resumes?.storage && (
+                      <label className="st-upload-link">
+                        <input
+                          type="file"
+                          accept="application/pdf,.pdf"
+                          disabled={uploading}
+                          onChange={(e) => void uploadResume(e.target.files?.[0])}
+                        />
+                        {uploading ? "Uploading…" : resumes.rows.length ? "Upload a different resume" : "Upload a resume PDF"}
+                      </label>
+                    )}
+                    <label>
+                      <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} />
+                      I agree to share {SHARED_FIELDS}
+                      {resumeId ? ", and the selected resume," : ""} with {selected.company} once the placement office
+                      releases applicants for this drive.
+                    </label>
+                  </fieldset>
+                )}
                 <label>
                   <input
                     type="checkbox"
@@ -426,7 +621,8 @@ export function PlacementBoard({
                     <button
                       className="st-button"
                       disabled={
-                        !selected.eligibility.eligible || !confirmed || busy
+                        !selected.eligibility.eligible || !confirmed || !consent ||
+                        (resumeRequired && !resumeId) || busy || uploading
                       }
                       onClick={() => void apply()}
                     >

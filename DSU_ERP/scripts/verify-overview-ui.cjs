@@ -33,7 +33,7 @@ if(query.search==='matched'){data.summary.students=1;charts.kpis.totalStudents=1
 if(query.state==='populated'){data.recent=[{id:'offer-1',student_id:'student-1',name:'Fixture Student',usn:'TEST001',company:'Fixture Recruiting Company',title:'Graduate engineer',package_lpa:8,status:'accepted',department:'CSE',batch:'2026',category:'regular',active:true}];data.companies=[{name:'Fixture Recruiting Company',offers:1,hired:1,accepted:1,average:8}];data.summary.average=8;data.summary.highest=8;data.summary.median=8;}
 function Fixture(){const [liveCharts,setCharts]=React.useState(charts);window.__updateDepartments=rows=>setCharts(previous=>({...previous,departments:rows}));return <Workspace competencyTesting={query.testing==='true'}><PlacementOverview data={data} charts={query.state==='error'?null:liveCharts} query={query} today='2026-10-26' environment='Visual QA · synthetic fixtures'/></Workspace>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
-const mocks={
+const mocks={...require("./harness-server-mocks.cjs"),
  'next/link':`import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
  'next/navigation':`const router={push:path=>location.assign(path),refresh:()=>{window.__refreshes=(window.__refreshes||0)+1}};export const useRouter=()=>router;export const usePathname=()=>location.pathname;`,
  '@/app/login/actions':`export async function signOut(){}`,
@@ -73,15 +73,15 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await page.setViewportSize({width:390,height:844});await open();
   const menu=page.getByRole('button',{name:'Menu',exact:true});await menu.click();
   const dialog=page.getByRole('dialog');assert.ok(await dialog.isVisible());
-  assert.equal(await dialog.locator('nav a').count(),15,'all normal-runtime officer routes are preserved');
+  assert.equal(await dialog.locator('nav a').count(),16,'all normal-runtime officer routes are preserved');
   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await menu.evaluate(e=>e===document.activeElement));
   await menu.click();await dialog.getByRole('link',{name:'Placement overview',exact:true}).click();await page.locator('.po-overview').waitFor();assert.equal(await dialog.isVisible(),false);
   await page.setViewportSize({width:1440,height:900});await open();
   await page.getByRole('button',{name:'Collapse sidebar'}).click();assert.ok(await page.locator('.po-collapsed').count());
-  assert.equal(await page.locator('#placement-nav a').count(),15);
+  assert.equal(await page.locator('#placement-nav a').count(),16);
   await page.getByRole('button',{name:'Expand sidebar'}).click();
   await page.screenshot({path:path.join(dir,'navigation-offers-expanded.png')});
-  const routes=['assistants/friday','overview','companies','drives','offers','multiple-offers','departments','batch','categories','student-analytics','students-ranking','company-reports','tests','imports','student-tools'];
+  const routes=['assistants/friday','overview','companies','drives','drive-requests','offers','multiple-offers','departments','batch','categories','student-analytics','students-ranking','company-reports','tests','imports','student-tools'];
   const nav=page.locator('#placement-nav');
   assert.deepEqual(await nav.locator('a').evaluateAll(elements=>elements.map(e=>e.getAttribute('href'))),routes.map(route=>'/placement/'+route));
   assert.equal(await nav.locator('a').first().innerText(),'F.R.I.D.A.Y.');

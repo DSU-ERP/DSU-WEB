@@ -8,6 +8,8 @@ import {
 import { CampusError } from "@/shared/http/errors";
 import type { OverviewCharts as ChartsData } from "@/features/placement/lib/intelligence";
 import { PlacementOverview } from "@/features/placement/components/Overview";
+import { NotificationsPanel } from "@/shared/notifications/Notifications";
+import { initialNotifications } from "@/shared/notifications/server";
 import { competencyTestingEnabled } from "@/features/competency/server";
 import {
   SECTIONS,
@@ -31,7 +33,7 @@ export default async function PlacementSection({
     query = queryFrom(await searchParams);
   // Use one cohort scope for both report and chart aggregation.
   const overviewQuery = Object.fromEntries(["batch", "department", "search"].flatMap(key => query[key] ? [[key, query[key]]] : []));
-  const [data, charts] = await Promise.all([
+  const [data, charts, notices] = await Promise.all([
     placementRead<Report>(config.resource, section === "overview" ? overviewQuery : query),
     section === "overview"
       ? placementOverviewCharts(overviewQuery).then(
@@ -42,12 +44,20 @@ export default async function PlacementSection({
           },
         )
       : null,
+    section === "overview" ? initialNotifications() : null,
   ]);
-  if (section === "overview") return <PlacementOverview
+  if (section === "overview") return <>
+    <NotificationsPanel
+      initial={notices}
+      className="cp-overview-notices"
+      empty="You are all caught up. Drive requests from companies, round results they record and other updates will appear here."
+    />
+    <PlacementOverview
     data={data} charts={charts?.value ?? null} chartError={charts?.error} query={overviewQuery}
     environment={competencyTestingEnabled() ? "Testing · synthetic data" : process.env.NODE_ENV === "development" ? "Local · configured campus data" : undefined}
     today={new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())}
-  />;
+  />
+  </>;
   return (
     <>
       <p className="erp-eyebrow">DSU / PLACEMENT OFFICER</p>

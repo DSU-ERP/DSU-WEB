@@ -72,7 +72,7 @@ if(route.endsWith('/onboarding')){mode='onboarding';page=<SkillsOnboarding initi
 else if(route.endsWith('/connections'))page=<Connections initial={profile} github={q.get('github')||undefined} githubCode={q.get('code')||undefined} preview={q.get('preview')==='1'}/>;
 else page=<Dashboard data={data} skills={q.get('skills')==='error'?null:profile} skillsError={q.get('skills')==='error'?'Campus services are temporarily unavailable. Please wait a moment and try again.':undefined}/>;
 createRoot(document.getElementById('root')).render(<StudentShell name='Asha Target' usn='1DS23CS001' mode={mode}>{page}</StudentShell>);})();`;
-const mocks = { "next/link": "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}", "next/navigation": "export const useSearchParams=()=>new URLSearchParams(location.search);export const usePathname=()=>location.pathname;const router={push:p=>location.assign(p),replace:p=>location.assign(p),refresh:()=>{}};export const useRouter=()=>router;", "@/app/login/actions": "export async function signOut(){}" };
+const mocks = {...require("./harness-server-mocks.cjs"), "next/link": "import React from 'react';export default function Link({children,...props}){return <a {...props}>{children}</a>}", "next/navigation": "export const useSearchParams=()=>new URLSearchParams(location.search);export const usePathname=()=>location.pathname;const router={push:p=>location.assign(p),replace:p=>location.assign(p),refresh:()=>{}};export const useRouter=()=>router;", "@/app/login/actions": "export async function signOut(){}" };
 
 (async () => {
   let server, browser;

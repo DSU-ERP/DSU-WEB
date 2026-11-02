@@ -13,6 +13,8 @@ import {
 } from "@/features/assistant/lib/engine";
 import { fridayCapabilities } from "@/features/assistant/lib/config";
 import { CampusError } from "@/shared/http/errors";
+import { userSession } from "@/shared/auth/session";
+import { startOfficerTrace } from "@/features/admin/lib/officer-trace";
 import { sameOrigin } from "@/features/placement/lib/request";
 import type { Row } from "@/features/placement/lib/types";
 
@@ -57,7 +59,9 @@ export async function POST(req: NextRequest) {
 
   try {
     // Authorisation is checked here and again inside every Supabase call.
+    const identityStarted = Date.now();
     await officerSession();
+    const identityMs = Date.now() - identityStarted;
 
     const raw = await readBody(req);
     if (raw === null) return json({ error: "Request is too large." }, 413);
@@ -98,9 +102,22 @@ export async function POST(req: NextRequest) {
         503,
       );
 
+    // Agent workflow trace for the Admin portal (metadata only).
+    const trace = startOfficerTrace(await userSession(), { chars: message.length });
+    trace.record("input", "input", "Officer question received", "completed", { chars: message.length, history: Array.isArray(input.history) ? input.history.length : 0 });
+    trace.span("identity", "auth", "Placement officer session", "completed", new Date(identityStarted), new Date(identityStarted + identityMs));
+
     // Per-user rate limit, reusing the existing assistant limiter.
     // A fresh id per call: replaying a client id must not bypass the rate limit.
-    await placementMutate("assistant.request", {}, crypto.randomUUID());
+    const limit = trace.open("limit", "limit", "Officer request limit (20 a minute)");
+    try {
+      await placementMutate("assistant.request", {}, crypto.randomUUID());
+      limit.end("completed");
+    } catch (error) {
+      limit.end("failed", {}, error instanceof CampusError && error.status === 429 ? "rate_limited" : "database");
+      void trace.finish("failed", error instanceof CampusError && error.status === 429 ? "rate_limited" : "database");
+      throw error;
+    }
 
     // Conversation context. The browser sends the turns currently on screen,
     // so a brand-new conversation is contextual from the second message
@@ -108,6 +125,7 @@ export async function POST(req: NextRequest) {
     // conversation, but it is still shape-checked and bounded here, and the
     // system rules treat message content as data, never as instructions.
     const history = readHistory(input.history);
+    const context = trace.open("context", "context", existing ? "Load the officer's conversation" : "New conversation");
 
     if (existing) {
       // Ownership is enforced in the database; this also rejects another
@@ -115,10 +133,14 @@ export async function POST(req: NextRequest) {
       const conversation = await placementRead<Row>("conversation", {
         id: existing,
       });
-      if (conversation.assistant !== "friday")
+      if (conversation.assistant !== "friday") {
+        context.end("failed", {}, "validation");
+        void trace.finish("failed", "validation");
         return json({ error: "Choose a F.R.I.D.A.Y. conversation." }, 400);
+      }
       conversationId = existing;
     }
+    context.end("completed", { history: history.length });
 
     const controller = new AbortController();
     req.signal.addEventListener("abort", () => controller.abort(), {
@@ -133,20 +155,25 @@ export async function POST(req: NextRequest) {
       async start(ctl) {
         let answer = "";
         let completed = false;
+        let failure: string | null = null;
         try {
           for await (const event of runFriday({
             history,
             message,
             spoken,
             signal: controller.signal,
+            trace,
           })) {
             if (event.type === "done") {
               answer = event.text;
               completed = true;
+              trace.record("output", "output", "Answer streamed", "completed", { chars: event.text.length });
             }
+            if (event.type === "error") failure = failure || "model_provider";
             ctl.enqueue(send(event));
           }
         } catch (error) {
+          failure = controller.signal.aborted ? "cancelled" : "model_provider";
           ctl.enqueue(
             send({
               type: "error",
@@ -159,6 +186,7 @@ export async function POST(req: NextRequest) {
         // Only a completed answer is persisted. An interrupted or failed
         // stream is never stored as a successful reply.
         if (completed && answer.trim()) {
+          const persist = trace.open("persist", "persist", "Save the conversation");
           try {
             const id =
               conversationId ||
@@ -186,7 +214,10 @@ export async function POST(req: NextRequest) {
                 `data: ${JSON.stringify({ type: "saved", conversationId: id })}\n\n`,
               ),
             );
+            persist.end("completed");
           } catch {
+            persist.end("failed", {}, "database");
+            failure = failure || "database";
             ctl.enqueue(
               send({
                 type: "error",
@@ -198,6 +229,7 @@ export async function POST(req: NextRequest) {
           }
         }
         ctl.close();
+        void trace.finish(completed && !failure ? "completed" : "failed", completed && !failure ? undefined : failure || "no_answer");
       },
       cancel() {
         controller.abort();

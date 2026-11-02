@@ -14,7 +14,7 @@ export async function proxy(request: NextRequest) {
   // and can refresh cookies itself. Avoid another auth round trip here before
   // every answer, caption-related request and chat message. Pages still refresh
   // in the proxy because Server Components cannot write refreshed cookies.
-  if (path.startsWith("/student/api/")) {
+  if (path.startsWith("/student/api/") || path.startsWith("/company/api/") || path.startsWith("/admin/api/")) {
     response.headers.set("Cache-Control", "private, no-store");
     return response;
   }
@@ -52,6 +52,9 @@ export const config = {
     "/portal/:path*",
     "/placement/:path*",
     "/student/:path*",
+    "/company/:path*",
+    "/admin/:path*",
+    "/join/:path*",
     "/login",
     "/workspace",
     "/access",

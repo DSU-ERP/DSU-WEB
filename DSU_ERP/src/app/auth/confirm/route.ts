@@ -18,8 +18,14 @@ export async function GET(request: NextRequest) {
       : hash
         ? await client.auth.verifyOtp({ token_hash: hash, type: "email" })
         : null;
-    if (result && !result.error)
+    if (result && !result.error) {
+      // A company contact who signed up from an invitation in this browser
+      // returns to it. The token shape is checked, so this is not an open redirect.
+      const invite = request.cookies.get("dsu-company-invite")?.value || "";
+      if (/^[A-Za-z0-9_-]{40,64}$/.test(invite))
+        return confirmationRedirect(`/join/company?token=${encodeURIComponent(invite)}`, origin);
       return confirmationRedirect("/workspace?portal=student", origin);
+    }
   } catch {}
   return confirmationRedirect("/sign-up?verification=failed", origin);
 }

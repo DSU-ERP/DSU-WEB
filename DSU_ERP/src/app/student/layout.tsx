@@ -15,6 +15,8 @@ import "./student.css";
 import "./workspace-polish.css";
 import "./interview/interview-workspace.css";
 import "./skills.css";
+import "./company-drives.css";
+import "@/shared/notifications/notifications.css";
 export const dynamic = "force-dynamic";
 
 /**

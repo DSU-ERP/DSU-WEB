@@ -1,0 +1,63 @@
+/* Drive details from recruiting companies and the apply-with-consent step. */
+.st-company-about {
+  margin: 4px 0 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--st-line);
+}
+.st-company-about h3 {
+  margin-top: 0;
+}
+.st-company-about a {
+  color: var(--st-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.st-apply-share {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid var(--st-line);
+  border-radius: 10px;
+  background: var(--st-bg);
+}
+.st-apply-share legend {
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.st-apply-share > label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.st-apply-share > label input[type="checkbox"] {
+  margin-top: 4px;
+  flex: none;
+}
+.st-upload-link {
+  position: relative;
+  justify-self: start;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--st-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.st-upload-link input[type="file"] {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.st-upload-link:focus-within {
+  outline: 2px solid var(--st-red);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+.st-home-notices {
+  margin-top: 0;
+}
