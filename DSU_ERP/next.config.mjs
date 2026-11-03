@@ -29,6 +29,10 @@ const config = {
   poweredByHeader: false,
   devIndicators: false,
   images: { qualities: [75, 85] },
+  // Next 16.4.3 rejects route handlers (/student/api, OAuth callbacks) that
+  // sit beside the student @gate catch-all slot. Keep the previous matching
+  // until @gate is restructured.
+  deprecated: { looseRouteMatching: true },
   experimental: {
     serverActions: { bodySizeLimit: "12mb" },
     // /student/api passes through proxy.ts, which buffers bodies only up to this
