@@ -1,6 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import { signUp, resendConfirmation } from "./actions";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 export function SignUpForm() {
   const [state, action, pending] = useActionState(signUp, {
     error: "",
@@ -35,8 +36,7 @@ export function SignUpForm() {
         </label>
         <label>
           Password
-          <input
-            type="password"
+          <PasswordInput
             name="password"
             required
             minLength={12}
@@ -46,8 +46,7 @@ export function SignUpForm() {
         </label>
         <label>
           Confirm password
-          <input
-            type="password"
+          <PasswordInput
             name="confirm"
             required
             minLength={12}

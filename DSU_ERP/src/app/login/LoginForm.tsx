@@ -2,6 +2,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { signIn } from "./actions";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 // One form for every role: after sign-in, /workspace opens the student or
 // placement officer workspace that the account is authorised for.
 export function LoginForm() {
@@ -19,10 +20,9 @@ export function LoginForm() {
         placeholder="you@university.edu"
       />
       <label htmlFor="password">Password</label>
-      <input
+      <PasswordInput
         id="password"
         name="password"
-        type="password"
         autoComplete="current-password"
         required
         maxLength={256}

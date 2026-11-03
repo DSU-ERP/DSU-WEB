@@ -1,6 +1,7 @@
 "use client";
 import { useActionState } from "react";
 import { acceptInvite, companySignIn, companySignUp, type JoinState } from "./actions";
+import { PasswordInput } from "@/components/forms/PasswordInput";
 
 const empty: JoinState = { error: "", success: "" };
 
@@ -37,11 +38,11 @@ export function SignInOrCreate({ token }: { token: string }) {
           </label>
           <label>
             Password (at least 12 characters)
-            <input name="password" type="password" required minLength={12} maxLength={256} autoComplete="new-password" />
+            <PasswordInput name="password" required minLength={12} maxLength={256} autoComplete="new-password" />
           </label>
           <label>
             Confirm password
-            <input name="confirm" type="password" required minLength={12} maxLength={256} autoComplete="new-password" />
+            <PasswordInput name="confirm" required minLength={12} maxLength={256} autoComplete="new-password" />
           </label>
           <button className="erp-primary" disabled={signingUp}>
             {signingUp ? "Creating account…" : "Create account"}
@@ -61,7 +62,7 @@ export function SignInOrCreate({ token }: { token: string }) {
           </label>
           <label>
             Password
-            <input name="password" type="password" required maxLength={256} autoComplete="current-password" />
+            <PasswordInput name="password" required maxLength={256} autoComplete="current-password" />
           </label>
           <button className="erp-secondary" disabled={signingIn}>
             {signingIn ? "Signing in…" : "Sign in"}
