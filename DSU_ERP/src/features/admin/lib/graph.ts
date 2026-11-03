@@ -23,7 +23,9 @@ const TERMINALS: Record<string, WorkflowNode> = {
 const PRIORITY: NodeState[] = ["denied", "failed", "running", "completed", "skipped", "pending", "not_run"];
 const COLUMN = 300;
 const ROW = 114;
-const CHILD_ROW = 74;
+const CHILD_ROW = 92; // a child card with its timing line is ~82px tall
+const CHILD_INDENT = 40;
+const CHILD_GAP = 28; // a parent with its toggle button is taller than ROW
 
 /** Steps visible at a point in a replay (all steps when `upto` is null). */
 export function visibleSteps(run: RunDetail | null, upto: number | null = null): RunStep[] {
@@ -136,27 +138,45 @@ export function buildGraph(workflow: Workflow, options: { run?: RunDetail | null
     const r = rank.get(node.id) ?? 0;
     byRank.set(r, [...(byRank.get(r) ?? []), node.id]);
   }
+  // Children of an expanded node are listed in their own band directly below
+  // it, so they never land on a neighbouring node; later rows move down.
+  const childLists = new Map<string, WorkflowNode[]>();
+  const band = new Map<number, number>();
+  for (const node of workflow.nodes) {
+    if (node.parent || !expanded.has(node.id)) continue;
+    const kids = (node.children ?? []).map((id) => workflow.nodes.find((n) => n.id === id)!).filter(Boolean);
+    // Executed children first; in a run only the executed ones unless none ran.
+    const shown = run ? kids.filter((k) => executedKids.has(k.id)) : kids;
+    const list = (shown.length ? shown : kids).sort((a, b) => Number(executedKids.has(b.id)) - Number(executedKids.has(a.id)));
+    if (!list.length) continue;
+    childLists.set(node.id, list);
+    const r = rank.get(node.id) ?? 0;
+    const rows = Math.ceil(list.length / (list.length > 8 ? 2 : 1));
+    band.set(r, Math.max(band.get(r) ?? 0, CHILD_GAP + rows * CHILD_ROW));
+  }
   const position = new Map<string, { x: number; y: number }>();
-  for (const [r, ids] of byRank)
-    ids.forEach((id, i) => position.set(id, { x: i * COLUMN - ((ids.length - 1) * COLUMN) / 2, y: r * ROW }));
+  for (const [r, ids] of byRank) {
+    const shift = [...band].reduce((n, [br, h]) => (br < r ? n + h : n), 0);
+    ids.forEach((id, i) => position.set(id, { x: i * COLUMN - ((ids.length - 1) * COLUMN) / 2, y: r * ROW + shift }));
+  }
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   for (const node of workflow.nodes) {
     if (node.parent) continue;
     const p = position.get(node.id)!;
     const s = states.get(node.id)!;
-    const kids = (node.children ?? []).map((id) => workflow.nodes.find((n) => n.id === id)!).filter(Boolean);
+    const childCount = node.children?.length ?? 0;
     const open = expanded.has(node.id);
-    nodes.push({ ...node, ...p, ...s, childCount: kids.length, expanded: open, terminal: false });
-    if (!open) continue;
-    // Executed children first; in a run only the executed ones unless none ran.
-    const shown = run ? kids.filter((k) => executedKids.has(k.id)) : kids;
-    const list = (shown.length ? shown : kids).sort((a, b) => Number(executedKids.has(b.id)) - Number(executedKids.has(a.id)));
+    nodes.push({ ...node, ...p, ...s, childCount, expanded: open, terminal: false });
+    const list = childLists.get(node.id);
+    if (!open || !list) continue;
     const columns = list.length > 8 ? 2 : 1;
+    // A second column grows outward, away from edges between later rows.
+    const outward = p.x < 0 ? -1 : 1;
     list.forEach((kid, i) => {
       const ks = states.get(kid.id)!;
       nodes.push({
-        ...kid, x: p.x + COLUMN + (i % columns) * (COLUMN - 40), y: p.y + Math.floor(i / columns) * CHILD_ROW,
+        ...kid, x: p.x + CHILD_INDENT + outward * (i % columns) * (COLUMN - 40), y: p.y + ROW + CHILD_GAP + Math.floor(i / columns) * CHILD_ROW,
         ...ks, childCount: 0, expanded: false, terminal: false,
       });
       edges.push({ id: `${node.id}->${kid.id}`, from: node.id, to: kid.id, taken: ks.count > 0, child: true });

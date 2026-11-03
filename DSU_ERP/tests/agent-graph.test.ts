@@ -94,3 +94,30 @@ test("replay shows only the steps up to the cursor, the newest as running", () =
   assert.equal(states.get("context")!.state, "pending");
   assert.equal(states.get("identity")!.state, "running");
 });
+
+test("expanded tools get their own band and never cover neighbouring steps", () => {
+  // Shaped like the officer graph: the round limit and the answer share the
+  // tool round's row, and saving sits on the row below.
+  const tools = Array.from({ length: 12 }, (_, i) => node(`tool:t${i}`, "tool", { parent: "tools" }));
+  const wide: Workflow = {
+    ...officer,
+    nodes: [node("input", "input"), node("model.call", "model"), node("tools", "tool", { children: tools.map((t) => t.id) }), ...tools,
+      node("loop.limit", "guard"), node("output", "output"), node("persist", "persist")],
+    edges: [{ from: "input", to: "model.call" }, { from: "model.call", to: "tools", kind: "branch" }, { from: "tools", to: "model.call", kind: "loop" },
+      { from: "model.call", to: "output", kind: "branch" }, { from: "model.call", to: "loop.limit", kind: "error" }, { from: "output", to: "persist" }],
+  };
+  const steps = [step(1, "input", "completed", { kind: "input" }), step(2, "model.call", "completed"), step(3, "tools", "completed"),
+    step(4, "tool:t0", "completed", { parentSeq: 3 }), step(5, "tool:t1", "completed", { parentSeq: 3 }), step(6, "model.call", "completed"),
+    step(7, "output", "completed"), step(8, "persist", "completed")];
+  // Rendered nodes are 13.5rem wide (children 12.5rem); a parent with its toggle is the tallest.
+  const box = (n: { x: number; y: number; childCount: number; parent?: string }) => ({ x: n.x, y: n.y, w: n.parent ? 200 : 216, h: n.childCount ? 118 : 84 });
+  for (const graph of [buildGraph(wide, { expanded: new Set(["tools"]) }),
+    buildGraph(wide, { run: { ...run("completed", steps), assistant: "officer" }, expanded: new Set(["tools"]) })]) {
+    const boxes = graph.nodes.map((n) => ({ id: n.id, ...box(n) }));
+    for (const [i, a] of boxes.entries())
+      for (const b of boxes.slice(i + 1))
+        assert.ok(a.x + a.w <= b.x || b.x + b.w <= a.x || a.y + a.h <= b.y || b.y + b.h <= a.y, `${a.id} overlaps ${b.id}`);
+    const round = graph.nodes.find((n) => n.id === "tools")!;
+    assert.ok(graph.nodes.filter((n) => n.parent === "tools").every((n) => n.y > round.y), "tools are listed below their round");
+  }
+});

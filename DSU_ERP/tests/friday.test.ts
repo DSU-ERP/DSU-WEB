@@ -9,6 +9,7 @@ import {
   speakable,
   sentences,
   explainUpstream,
+  openRouterProviderBody,
   upstreamFailure,
   parseProfileLink,
   profileLink,
@@ -332,4 +333,27 @@ test("profile_link events are strictly validated", () => {
     { type: "profile_link", id: PID, usn: "T01", name: "A" },
   ];
   for (const event of bad) assert.equal(parseProfileLink(event), null, JSON.stringify(event));
+});
+
+test("raw OpenRouter routing uses snake_case and never allows fallbacks", () => {
+  assert.deepEqual(openRouterProviderBody(["baseten/fp8", "deepinfra/fp8"]), {
+    order: ["baseten/fp8", "deepinfra/fp8"],
+    only: ["baseten/fp8", "deepinfra/fp8"],
+    allow_fallbacks: false,
+  });
+});
+
+test("OpenAI-compatible client errors are explained like SDK errors", () => {
+  // LangChain's ChatOpenAI raises the OpenAI client's APIError shape.
+  class APIError extends Error {
+    status = 429;
+    error = { message: "Rate limited", metadata: { limit_source: "upstream_provider_shared_pool" } };
+    headers = {};
+  }
+  const found = upstreamFailure(new APIError("429 Rate limited"));
+  assert.equal(found?.status, 429);
+  assert.match(explainUpstream(found!.status, found!.body, "baseten/fp8"), /out of capacity/);
+  // A plain object or an error without the client shape is not mistaken for one.
+  assert.equal(upstreamFailure({ status: 429, error: {} }), null);
+  assert.equal(upstreamFailure(Object.assign(new Error("x"), { status: 500 })), null);
 });

@@ -17,6 +17,11 @@ export const FRIDAY_PROVIDERS = parseProviders(
 );
 export const FRIDAY_PROVIDER = FRIDAY_PROVIDERS.join(", ");
 
+/** OpenRouter's OpenAI-compatible API. Overridable for tests and proxies. */
+export function openRouterBaseUrl(): string {
+  return process.env.OPENROUTER_BASE_URL?.trim() || "https://openrouter.ai/api/v1";
+}
+
 export function openRouterKey(): string | null {
   const key = process.env.OPENROUTER_API_KEY?.trim();
   return key ? key : null;

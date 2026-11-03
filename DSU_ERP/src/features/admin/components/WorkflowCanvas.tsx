@@ -154,7 +154,7 @@ export function WorkflowCanvas({
             id: e.id,
             source: e.from,
             target: e.to,
-            sourceHandle: e.child ? "right" : toTerminal ? "left-out" : loop ? "right" : "bottom",
+            sourceHandle: e.child ? "left-out" : toTerminal ? "left-out" : loop ? "right" : "bottom",
             targetHandle: e.child ? "left" : toTerminal ? "right-in" : loop ? "right-in" : "top",
             type: loop ? "default" : "smoothstep",
             label: e.child ? undefined : e.condition,

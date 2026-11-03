@@ -44,12 +44,18 @@ export function CampusLoader({ label = 'Loading…' }: { label?: string }) {
     return () => { cancelled = true; destroy(); };
   }, [surface]);
 
-  if (!surface) return null;
-  return createPortal(
-    <div className="campus-loader" style={surface} role="status" aria-live="polite">
-      <div className="campus-loader-anim" ref={host} data-ready={ready || undefined} aria-hidden="true" />
-      <p className="campus-loader-label">{label}</p>
-    </div>,
-    document.body,
+  return (
+    <>
+      {/* Rendered on the server too, so the status streams before the page. */}
+      <span className="campus-loader-status" role="status" aria-live="polite">{label}</span>
+      {surface &&
+        createPortal(
+          <div className="campus-loader" style={surface} aria-hidden="true">
+            <div className="campus-loader-anim" ref={host} data-ready={ready || undefined} />
+            <p className="campus-loader-label">{label}</p>
+          </div>,
+          document.body,
+        )}
+    </>
   );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ChangeForm } from "./Controls";
+import { CompanyReportTable } from "./CompanyReportTable";
 import {
   Facts,
   Filters,
@@ -347,35 +348,9 @@ export function ReportBody({
           keys={["companies", "drives", "offers", "accepted"]}
         />
         <section className="erp-panel">
-          <Table
-            caption="Company recruitment performance"
+          <CompanyReportTable
             rows={companies}
-            columns={[
-              {
-                key: "name",
-                link: (r) =>
-                  href("drives", query, {
-                    company: String(r.id),
-                    search: undefined,
-                  }),
-              },
-              ...numeric([
-                "drives",
-                "registered",
-                "selected",
-                "selection_percentage",
-                "offers",
-                "hired",
-                "accepted",
-                "acceptance_percentage",
-                "average",
-                "highest",
-                "regular",
-                "dream",
-                "super_dream",
-                "mega",
-              ]),
-            ]}
+            companyHref={(r) => href("drives", query, { company: String(r.id), search: undefined })}
           />
         </section>
       </>

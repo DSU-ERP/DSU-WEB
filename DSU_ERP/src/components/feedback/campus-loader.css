@@ -34,3 +34,13 @@
 @media (prefers-reduced-motion: reduce) {
   .campus-loader, .campus-loader-label { animation: none; }
 }
+/* Screen-reader and server-rendered status text; the visual screen is above. */
+.campus-loader-status {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

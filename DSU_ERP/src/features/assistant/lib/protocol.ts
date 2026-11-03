@@ -40,6 +40,18 @@ export function providerRouting(providers: readonly string[]) {
 }
 
 /**
+ * The same routing in OpenRouter's raw request-body form (snake_case), for
+ * clients that post the body directly, such as LangChain's ChatOpenAI.
+ */
+export function openRouterProviderBody(providers: readonly string[]) {
+  return {
+    order: [...providers],
+    only: [...providers],
+    allow_fallbacks: false as const,
+  };
+}
+
+/**
  * Streamed tool calls arrive fragmented: the name and the JSON arguments are
  * split across chunks and identified only by index. Concatenate per index in
  * arrival order.
@@ -171,9 +183,14 @@ export function upstreamFailure(
   error: unknown,
 ): { status: number; body: string } | null {
   if (!(error instanceof Error)) return null;
-  const e = error as Error & { statusCode?: unknown; body?: unknown };
-  if (typeof e.statusCode !== "number") return null;
-  return { status: e.statusCode, body: typeof e.body === "string" ? e.body : "" };
+  const e = error as Error & { statusCode?: unknown; body?: unknown; status?: unknown; error?: unknown; headers?: unknown };
+  if (typeof e.statusCode === "number")
+    return { status: e.statusCode, body: typeof e.body === "string" ? e.body : "" };
+  // OpenAI-compatible clients (LangChain's ChatOpenAI) carry the HTTP status as
+  // `status` and the parsed `error` object from the response body.
+  if (typeof e.status === "number" && ("error" in e || "headers" in e))
+    return { status: e.status, body: e.error === undefined ? "" : JSON.stringify({ error: e.error }) };
+  return null;
 }
 
 const PROFILE_UUID = /^[\da-f]{8}-(?:[\da-f]{4}-){3}[\da-f]{12}$/i;
