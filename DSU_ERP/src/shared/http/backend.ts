@@ -17,21 +17,44 @@ export async function backendApi<T>(
   let origin: URL;
   try { origin = backendOrigin(); }
   catch { throw new CampusError(503, "Campus services have not been configured correctly.", "BACKEND_NOT_CONFIGURED"); }
-  let response: Response;
-  try {
-    response = await fetch(new URL(`/api/v1${path}`, origin), {
-      method: options.method || "GET", body: options.body,
-      headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": options.contentType || "application/json" } : {}) },
-      cache: "no-store", redirect: "error",
-      signal: AbortSignal.timeout(options.timeoutMs ?? (options.method === "POST" ? 45000 : 20000)),
-    });
-  } catch (error) {
-    const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
-    if (process.env.NODE_ENV === "development") {
-      const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
-      console.warn("Campus backend transport failed", { method: options.method || "GET", timedOut, code: cause?.code });
+  const method = options.method || "GET";
+  const send = async () => {
+    try {
+      return await fetch(new URL(`/api/v1${path}`, origin), {
+        method, body: options.body,
+        headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": options.contentType || "application/json" } : {}) },
+        cache: "no-store", redirect: "error",
+        signal: AbortSignal.timeout(options.timeoutMs ?? (method === "POST" ? 45000 : 20000)),
+      });
+    } catch (error) {
+      const timedOut = error instanceof Error && (error.name === "TimeoutError" || error.name === "AbortError");
+      if (process.env.NODE_ENV === "development") {
+        const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
+        console.warn("Campus backend transport failed", { method, timedOut, code: cause?.code });
+      }
+      throw new CampusError(503, "Campus services are temporarily unavailable. Please try again.", timedOut ? "BACKEND_TIMEOUT" : "BACKEND_UNREACHABLE");
     }
-    throw new CampusError(503, "Campus services are temporarily unavailable. Please try again.", timedOut ? "BACKEND_TIMEOUT" : "BACKEND_UNREACHABLE");
+  };
+  let response = await send();
+  // While a hosted backend wakes up or redeploys, its proxy answers with an
+  // HTML holding page that never reached the API. Reads are retried once.
+  if (!isJson(response) && method === "GET") {
+    logNonJson(path, response, false);
+    await response.body?.cancel().catch(() => {});
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+    response = await send();
   }
+  if (!isJson(response)) logNonJson(path, response, method === "GET");
   return readCampusResponse<T>(response);
+}
+
+function isJson(response: Response) {
+  const type = response.headers.get("content-type")?.split(";")[0].trim().toLowerCase();
+  return type === "application/json" || !!type?.endsWith("+json");
+}
+// Status and content type only: the body, query string and record ids are never logged.
+function logNonJson(path: string, response: Response, retried: boolean) {
+  console.warn("Campus backend returned a non-JSON response", {
+    route: path.split("?")[0].replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ":id"), status: response.status, contentType: response.headers.get("content-type") || "none", retried,
+  });
 }
