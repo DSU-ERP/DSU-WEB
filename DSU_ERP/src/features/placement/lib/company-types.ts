@@ -69,6 +69,8 @@ export type DriveRequest = RequestFields & {
   options: { batches: string[]; departments: string[] };
 };
 export type AudienceSpec = {
+  /** "selected": only the students in `add` receive the drive; filters are ignored. */
+  mode?: "rules" | "selected";
   batches: string[];
   branches: string[];
   min_cgpa?: number | "";
@@ -108,7 +110,7 @@ export type AudienceState = {
   releasedAt: string | null;
   consenting: number;
   size: number;
-  rules: { batches: string[]; branches: string[]; min_cgpa: number | null; max_backlogs: number | null; min_attendance: number | null } | null;
+  rules: { batches: string[]; branches: string[]; min_cgpa: number | null; max_backlogs: number | null; min_attendance: number | null; selected_only?: boolean } | null;
   changes: { add: string[]; remove: string[] } | null;
   hasPortal: boolean;
   options: { batches: string[]; departments: string[] };

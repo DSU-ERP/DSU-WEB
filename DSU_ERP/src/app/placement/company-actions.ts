@@ -20,6 +20,7 @@ async function post<T>(path: string, body: unknown): Promise<ActionResult<T>> {
   }
 }
 const cleanSpec = (spec: AudienceSpec) => ({
+  ...(spec.mode === "selected" ? { mode: "selected" as const } : {}),
   batches: spec.batches,
   branches: spec.branches,
   ...(spec.min_cgpa === "" || spec.min_cgpa === undefined ? {} : { min_cgpa: Number(spec.min_cgpa) }),

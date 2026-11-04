@@ -456,3 +456,58 @@
     align-items: stretch;
   }
 }
+/* Audience: mode switch, one search box, and a full-width student table. */
+.cp-audience-mode p {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+}
+.cp-audience-search {
+  max-width: 36rem;
+}
+.cp-audience-search input {
+  padding-left: 0.75rem;
+}
+.cp-searching {
+  flex: none;
+  font-size: 0.75rem;
+  color: var(--erp-muted);
+}
+.cp-outside {
+  margin-bottom: 0.75rem;
+}
+.cp-outside-title {
+  margin: 0;
+  font-size: 0.6875rem;
+  font-family: var(--mono, ui-monospace, monospace);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--erp-muted);
+}
+/* The table runs to the panel's edges instead of sitting inset inside it. */
+.erp-panel .erp-table-scroll.cp-audience-table {
+  margin-inline: -1.75rem;
+  max-width: none;
+  border-inline: 0;
+  border-radius: 0;
+}
+.erp-panel .erp-table-scroll.cp-audience-table .erp-table th:first-child,
+.erp-panel .erp-table-scroll.cp-audience-table .erp-table td:first-child {
+  padding-left: 1.75rem;
+}
+.erp-panel .erp-table-scroll.cp-audience-table .erp-table th:last-child,
+.erp-panel .erp-table-scroll.cp-audience-table .erp-table td:last-child {
+  padding-right: 1.75rem;
+}
+@media (max-width: 639px) {
+  .erp-panel .erp-table-scroll.cp-audience-table {
+    margin-inline: -1rem;
+  }
+  .erp-panel .erp-table-scroll.cp-audience-table .erp-table th:first-child,
+  .erp-panel .erp-table-scroll.cp-audience-table .erp-table td:first-child {
+    padding-left: 1rem;
+  }
+  .erp-panel .erp-table-scroll.cp-audience-table .erp-table th:last-child,
+  .erp-panel .erp-table-scroll.cp-audience-table .erp-table td:last-child {
+    padding-right: 1rem;
+  }
+}

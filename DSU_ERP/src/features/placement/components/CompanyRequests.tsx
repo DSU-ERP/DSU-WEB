@@ -133,7 +133,9 @@ export function DriveAudiencePanel({ driveId, state }: { driveId: string; state:
           <dt>Who receives this drive</dt>
           <dd>
             {state.audienceMode
-              ? `${state.size} selected student${state.size === 1 ? "" : "s"}${state.rules ? `: batches ${state.rules.batches.join(", ")}${state.rules.branches.length ? `, ${state.rules.branches.join(", ")}` : ", all branches"}${state.rules.min_cgpa !== null ? `, CGPA ${state.rules.min_cgpa}+` : ""}` : ""}${state.changes?.add.length ? `, ${state.changes.add.length} added by hand` : ""}${state.changes?.remove.length ? `, ${state.changes.remove.length} removed` : ""}`
+              ? state.rules?.selected_only
+                ? `Only ${state.size} hand-picked student${state.size === 1 ? "" : "s"}`
+                : `${state.size} selected student${state.size === 1 ? "" : "s"}${state.rules ? `: batches ${state.rules.batches.join(", ")}${state.rules.branches.length ? `, ${state.rules.branches.join(", ")}` : ", all branches"}${state.rules.min_cgpa !== null ? `, CGPA ${state.rules.min_cgpa}+` : ""}` : ""}${state.changes?.add.length ? `, ${state.changes.add.length} added by hand` : ""}${state.changes?.remove.length ? `, ${state.changes.remove.length} removed` : ""}`
               : "Every student in the drive's batch who meets its eligibility criteria"}
           </dd>
         </div>
