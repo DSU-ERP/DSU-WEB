@@ -11,6 +11,9 @@ export type WorkflowNode = {
   functions: string[];
   children?: string[];
   parent?: string;
+  // Recorded step names that are this node's own step (a LangGraph node that
+  // records one step under another name, such as research → research.web).
+  records?: string[];
 };
 export type WorkflowEdge = { from: string; to: string; condition?: string; kind?: "branch" | "error" | "denied" | "loop" };
 export type Workflow = {

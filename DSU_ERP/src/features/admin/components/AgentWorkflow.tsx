@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
-import { buildGraph, graphExtent, leadsTo } from "../lib/graph";
+import { buildGraph, graphExtent, leadsTo, nodeFor } from "../lib/graph";
 import {
   ASSISTANT_LABEL,
   STATUS_LABEL,
@@ -159,7 +159,7 @@ export function AgentWorkflow({
     const set = new Set(expanded);
     if (activeRun)
       for (const node of workflow.nodes)
-        if (node.parent && activeRun.steps.some((s) => s.node === node.id)) set.add(node.parent);
+        if (node.parent && activeRun.steps.some((s) => nodeFor(workflow, s.node) === node.id)) set.add(node.parent);
     return set;
   }, [expanded, activeRun, workflow]);
   const graph = useMemo(() => buildGraph(workflow, { run: activeRun, upto: cursor, expanded: autoExpanded }), [workflow, activeRun, cursor, autoExpanded]);
@@ -169,7 +169,7 @@ export function AgentWorkflow({
     return { width: Math.max(...sizes.map((e) => e.width)), height: Math.max(...sizes.map((e) => e.height)) };
   }, [workflows]);
   const selectedNode = workflow.nodes.find((n) => n.id === selected) ?? null;
-  const selectedSteps = activeRun ? graph.steps.filter((s) => s.node === selected) : [];
+  const selectedSteps = activeRun ? graph.steps.filter((s) => nodeFor(workflow, s.node) === selected) : [];
   const start = activeRun ? Date.parse(activeRun.startedAt) : 0;
   const span = activeRun ? Math.max(activeRun.durationMs ?? 0, ...activeRun.steps.map((s) => (s.endedAt ? Date.parse(s.endedAt) : Date.parse(s.startedAt)) - start), 1) : 1;
   const toolSteps = graph.steps.filter((s) => s.kind === "tool" && s.node !== "tools");
@@ -414,7 +414,7 @@ export function AgentWorkflow({
                 const width = s.durationMs === null ? 0 : (s.durationMs / span) * 100;
                 return (
                   <li key={s.seq} className={`aw-status-${s.status}${s.parentSeq ? " is-nested" : ""}`}>
-                    <button type="button" onClick={() => setSelected(workflow.nodes.some((n) => n.id === s.node) ? s.node : null)}>
+                    <button type="button" onClick={() => { const target = nodeFor(workflow, s.node); setSelected(workflow.nodes.some((n) => n.id === target) ? target : null); }}>
                       <span className="aw-tl-time">+{ms(Math.max(0, offset))}</span>
                       <span className="aw-tl-label" title={s.label}>{s.label}</span>
                       <span className="aw-tl-status" title={STATUS_LABEL[s.status]}>{STATUS_LABEL[s.status]}</span>

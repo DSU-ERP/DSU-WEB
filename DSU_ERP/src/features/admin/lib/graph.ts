@@ -20,7 +20,8 @@ const TERMINALS: Record<string, WorkflowNode> = {
   failed: { id: "failed", kind: "terminal", label: "Run failed", purpose: "The run ended with an error. The failing step shows the category.", inputs: "error", outputs: "error response", functions: [] },
   denied: { id: "denied", kind: "terminal", label: "Access denied", purpose: "The real authorization check refused the request. No data was loaded after this point.", inputs: "account", outputs: "403", functions: [] },
 };
-const PRIORITY: NodeState[] = ["denied", "failed", "running", "completed", "skipped", "pending", "not_run"];
+const GRAPH_END = "__end__";
+const PRIORITY: NodeState[] =["denied", "failed", "running", "completed", "skipped", "pending", "not_run"];
 const COLUMN = 300;
 const ROW = 114;
 const CHILD_ROW = 92; // a child card with its timing line is ~82px tall
@@ -28,6 +29,17 @@ const CHILD_INDENT = 40;
 const CHILD_GAP = 28; // a parent with its toggle button is taller than ROW
 const NODE_W = 216; // rendered card sizes (13.5rem; a parent with its toggle is the tallest)
 const NODE_H = 118;
+
+const owners = new WeakMap<Workflow, Map<string, string>>();
+/** The workflow node a recorded step belongs to (its own id unless a node records it). */
+export function nodeFor(workflow: Workflow, stepNode: string) {
+  let map = owners.get(workflow);
+  if (!map) {
+    map = new Map(workflow.nodes.flatMap((n) => (n.records ?? []).map((r) => [r, n.id] as const)));
+    owners.set(workflow, map);
+  }
+  return map.get(stepNode) ?? stepNode;
+}
 
 /** Steps visible at a point in a replay (all steps when `upto` is null). */
 export function visibleSteps(run: RunDetail | null, upto: number | null = null): RunStep[] {
@@ -45,10 +57,11 @@ export function nodeStates(workflow: Workflow, steps: RunStep[], runFinished: bo
   const states = new Map<string, { state: NodeState; count: number; durationMs: number | null }>();
   for (const node of workflow.nodes) states.set(node.id, { state: runFinished ? "not_run" : "pending", count: 0, durationMs: null });
   for (const step of steps) {
-    const current = states.get(step.node);
+    const id = nodeFor(workflow, step.node);
+    const current = states.get(id);
     if (!current) continue;
     const better = current.count === 0 || PRIORITY.indexOf(step.status) < PRIORITY.indexOf(current.state) ? step.status : current.state;
-    states.set(step.node, {
+    states.set(id, {
       state: better,
       count: current.count + (step.status === "skipped" ? 0 : 1),
       durationMs: step.durationMs === null ? current.durationMs : (current.durationMs ?? 0) + step.durationMs,
@@ -60,7 +73,11 @@ export function nodeStates(workflow: Workflow, steps: RunStep[], runFinished: bo
     const own = states.get(node.id)!;
     if (own.count) continue;
     const kids = node.children.map((id) => states.get(id)!).filter((s) => s && s.count);
-    if (!kids.length) continue;
+    if (!kids.length) {
+      // Steps recorded only as skipped: the node was passed through, not run.
+      if (node.children.some((id) => states.get(id)?.state === "skipped")) states.set(node.id, { state: "skipped", count: 0, durationMs: null });
+      continue;
+    }
     const state = kids.map((k) => k.state).sort((a, b) => PRIORITY.indexOf(a) - PRIORITY.indexOf(b))[0];
     states.set(node.id, { state, count: kids.reduce((n, k) => n + k.count, 0), durationMs: null });
   }
@@ -73,7 +90,8 @@ export function executedPath(workflow: Workflow, steps: RunStep[]) {
   const path: string[] = [];
   for (const step of steps) {
     if (step.status === "skipped" || step.kind === "input" && path.length) continue;
-    const id = parentOf.get(step.node) ?? step.node;
+    const own = nodeFor(workflow, step.node);
+    const id = parentOf.get(own) ?? own;
     if (path[path.length - 1] !== id) path.push(id);
   }
   return path;
@@ -132,8 +150,14 @@ export function buildGraph(workflow: Workflow, options: { run?: RunDetail | null
   const steps = visibleSteps(run, options.upto ?? null);
   const finished = !!run && run.status !== "running" && (options.upto === null || options.upto === undefined || options.upto >= run.steps.length);
   const states = nodeStates(workflow, steps, finished);
+  const path = executedPath(workflow, steps);
+  // LangGraph's END records no step; a completed run reached it.
+  if (finished && run?.status === "completed" && states.has(GRAPH_END) && path.at(-1) !== GRAPH_END) {
+    path.push(GRAPH_END);
+    if (!states.get(GRAPH_END)!.count) states.set(GRAPH_END, { state: "completed", count: 1, durationMs: null });
+  }
   const rank = ranks(workflow);
-  const executedKids = new Set(steps.map((s) => s.node));
+  const executedKids = new Set(steps.map((s) => nodeFor(workflow, s.node)));
   const expanded = options.expanded ?? new Set<string>();
   const byRank = new Map<number, string[]>();
   for (const node of workflow.nodes.filter((n) => !n.parent)) {
@@ -194,7 +218,6 @@ export function buildGraph(workflow: Workflow, options: { run?: RunDetail | null
     nodes.push({ ...TERMINALS[id], x, y: id === "denied" ? y - ROW / 2 : y + ROW / 2, state: reached ? (id === "denied" ? "denied" : "failed") : finished ? "not_run" : "pending",
       count: reached ? 1 : 0, durationMs: reached ? run.durationMs : null, childCount: 0, expanded: false, terminal: true });
   }
-  const path = executedPath(workflow, steps);
   const transitions = takenEdges(workflow, path);
   const last = path[path.length - 1];
   for (const edge of workflow.edges) {

@@ -27,6 +27,7 @@ import {
 import { FRIDAY_SYSTEM_PROMPT, FRIDAY_VOICE_HINT } from "./prompt";
 import { FRIDAY_TOOLS, FRIDAY_TOOL_NAMES, createToolContext, runTool, toolLabel } from "./tools";
 import { toolErrorCategory, type FridayTrace } from "@/features/admin/lib/officer-trace";
+import { COMPETENCY_TOOLS } from "@/features/competency/friday-tools";
 import {
   assembleToolCalls,
   explainUpstream,
@@ -120,7 +121,7 @@ type GraphState = typeof FridayGraphState.State;
  *
  *   START → agent ⇄ tools      (agent → tools when the model requests tools)
  *           agent → END        (the model answered)
- *           agent → limit      (tools still requested after the round limit)
+ *           agent → round_limit (tools still requested after the round limit)
  *
  * Nodes stream FridayEvents through LangGraph's custom stream, so the browser
  * protocol is unchanged. Built per request: the tool context, profile links
@@ -130,8 +131,10 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
   const toolContext = createToolContext();
   let linked = 0;
   const tools = [...FRIDAY_TOOLS] as unknown as Parameters<ChatOpenAI["bindTools"]>[0];
-  let model = chatModel();
-  let withTools = model.bindTools(tools, { tool_choice: "auto" });
+  // Created on the first model call, so the graph can be built (and drawn
+  // for the Admin portal) without credentials.
+  let model: ChatOpenAI | null = null;
+  let withTools: ReturnType<ChatOpenAI["bindTools"]> | null = null;
   let fellBack = false;
 
   async function agent(state: GraphState, config: LangGraphRunnableConfig) {
@@ -144,9 +147,13 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
     const step = trace?.open("model.call", "model", `Model call ${round}`);
     let full: AIMessageChunk | undefined;
     let answer = "";
+    if (!model) {
+      model = chatModel();
+      withTools = model.bindTools(tools, { tool_choice: "auto" });
+    }
     const call = async () => {
       // On the final allowed round the model must answer: no tools are offered.
-      const runnable = iteration < MAX_TOOL_ITERATIONS ? withTools : model;
+      const runnable = iteration < MAX_TOOL_ITERATIONS ? withTools! : model!;
       const stream = await runnable.stream(state.messages, { signal: config.signal });
       for await (const chunk of stream) {
         full = full ? full.concat(chunk) : chunk;
@@ -276,21 +283,54 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
     return {};
   }
 
+  // Path-map keys are the branch labels the Admin portal shows.
   const next = (state: GraphState) => {
     const last = state.messages.at(-1) as AIMessage | undefined;
-    if (!last?.tool_calls?.length) return END;
-    return state.round > MAX_TOOL_ITERATIONS ? "limit" : "tools";
+    if (!last?.tool_calls?.length) return ANSWERED;
+    return state.round > MAX_TOOL_ITERATIONS ? OUT_OF_ROUNDS : WANTS_TOOLS;
   };
 
   return new StateGraph(FridayGraphState)
-    .addNode("agent", agent)
-    .addNode("tools", toolRound)
-    .addNode("limit", limit)
+    .addNode("agent", agent, { metadata: {
+      kind: "model", label: "Agent", purpose: "LangChain ChatOpenAI streams a reply or requests read-only tools. Reasoning text is never streamed, stored or shown.",
+      inputs: "system rules, history, tool results", outputs: "text or tool calls", functions: ["ChatOpenAI.stream", "bindTools"],
+      steps: [{ id: "model.call", kind: "model", label: "Model call", purpose: "One streamed model round; repeats after each tool round.", functions: ["ChatOpenAI.stream"] }],
+    } })
+    .addNode("tools", toolRound, { metadata: {
+      kind: "tool", label: "Tool round", purpose: "Runs every tool the model requested in this round, in order, then returns the results to the agent. Each tool re-checks the officer in the database.",
+      inputs: "tool calls", outputs: "tool results", functions: ["runTool"],
+      steps: [{ id: "tools", kind: "tool", label: "Tool round" }, ...TOOL_STEPS],
+    } })
+    .addNode("round_limit", limit, { metadata: {
+      kind: "guard", label: "Round limit", purpose: `Stops after ${MAX_TOOL_ITERATIONS} tool rounds and asks for a narrower question.`,
+      inputs: "round count", outputs: "error", functions: ["MAX_TOOL_ITERATIONS"],
+      steps: [{ id: "loop.limit", kind: "guard", label: "Round limit reached" }],
+    } })
     .addEdge(START, "agent")
-    .addConditionalEdges("agent", next, { tools: "tools", limit: "limit", [END]: END })
+    .addConditionalEdges("agent", next, { [WANTS_TOOLS]: "tools", [OUT_OF_ROUNDS]: "round_limit", [ANSWERED]: END })
     .addEdge("tools", "agent")
-    .addEdge("limit", END)
+    .addEdge("round_limit", END)
     .compile();
+}
+
+const WANTS_TOOLS = "model requested tools";
+const OUT_OF_ROUNDS = `${MAX_TOOL_ITERATIONS} tool rounds used`;
+const ANSWERED = "model answered";
+
+// Each tool runs inside the tools node and is recorded as its own step.
+const TOOL_STEPS = [...FRIDAY_TOOLS, ...COMPETENCY_TOOLS].map((tool) => ({
+  id: `tool:${tool.function.name}`,
+  kind: "tool",
+  label: tool.function.name,
+  purpose: `${toolLabel(tool.function.name)}. ${tool.function.description}`.slice(0, 400),
+  inputs: Object.keys((tool.function.parameters as { properties?: Record<string, unknown> }).properties || {}).join(", ") || "none",
+  outputs: "bounded JSON result",
+  functions: ["runTool", tool.function.name.startsWith("competency_") ? "runCompetencyTool" : "placementRead / backendApi"],
+}));
+
+/** The officer agent graph, built only to be described (nothing runs). */
+export function officerGraph() {
+  return buildOfficerGraph(undefined);
 }
 
 /**

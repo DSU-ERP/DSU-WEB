@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGraph, executedPath, graphExtent, leadsTo, nodeStates, takenEdges, visibleSteps } from "../src/features/admin/lib/graph";
+import { buildGraph, executedPath, graphExtent, leadsTo, nodeFor, nodeStates, takenEdges, visibleSteps } from "../src/features/admin/lib/graph";
 import type { RunDetail, RunStep, Workflow } from "../src/features/admin/lib/types";
 
 const node = (id: string, kind: string, extra: Record<string, unknown> = {}) =>
@@ -137,4 +137,50 @@ test("expanded tools get their own band and never cover neighbouring steps", () 
     const round = graph.nodes.find((n) => n.id === "tools")!;
     assert.ok(graph.nodes.filter((n) => n.parent === "tools").every((n) => n.y > round.y), "tools are listed below their round");
   }
+});
+
+// A workflow drawn from a compiled LangGraph: recorded steps sit under graph nodes.
+const langgraph: Workflow = {
+  id: "student", title: "Student", version: "student-friday-v3", runtime: "", orchestration: "",
+  nodes: [
+    node("__start__", "input", { children: ["input"] }), node("input", "input", { parent: "__start__" }),
+    node("prepare", "context", { children: ["identity", "context"] }), node("identity", "auth", { parent: "prepare" }), node("context", "context", { parent: "prepare" }),
+    node("route", "route"), node("reply", "output"),
+    node("model", "model", { children: ["model.call"] }), node("model.call", "model", { parent: "model" }),
+    node("persist", "persist"), node("__end__", "output"),
+  ],
+  edges: [{ from: "__start__", to: "prepare" }, { from: "prepare", to: "route" }, { from: "route", to: "reply", kind: "branch" },
+    { from: "route", to: "model", kind: "branch" }, { from: "reply", to: "persist" }, { from: "model", to: "persist" }, { from: "persist", to: "__end__" }],
+};
+
+test("a LangGraph run lights the graph nodes its steps ran in and reaches End when it completes", () => {
+  const steps = [step(1, "input", "completed", { kind: "input" }), step(2, "identity", "completed"), step(3, "context", "completed"),
+    step(4, "route", "completed"), step(5, "reply", "completed"), step(6, "model.call", "skipped"), step(7, "persist", "completed")];
+  const graph = buildGraph(langgraph, { run: run("completed", steps) });
+  assert.deepEqual(graph.path, ["__start__", "prepare", "route", "reply", "persist", "__end__"]);
+  const taken = graph.edges.filter((e) => e.taken && !e.child).map((e) => e.id);
+  assert.deepEqual(taken.sort(), ["__start__->prepare", "persist->__end__", "prepare->route", "reply->persist", "route->reply"]);
+  const state = (id: string) => graph.nodes.find((n) => n.id === id)!.state;
+  // The model step was recorded as skipped on the no-AI branch.
+  assert.deepEqual([state("prepare"), state("model"), state("__end__")], ["completed", "skipped", "completed"]);
+});
+
+test("a node that records one step under another name owns that step", () => {
+  const workflow: Workflow = { ...langgraph, nodes: [...langgraph.nodes, node("research", "retrieval", { records: ["research.web"] })],
+    edges: [...langgraph.edges, { from: "route", to: "research", kind: "branch" }, { from: "research", to: "model" }] };
+  const steps = [step(1, "input", "completed", { kind: "input" }), step(2, "route", "completed"), step(3, "research.web", "completed"), step(4, "model.call", "completed")];
+  const graph = buildGraph(workflow, { run: run("running", steps) });
+  assert.deepEqual(graph.path, ["__start__", "route", "research", "model"]);
+  assert.equal(graph.nodes.find((n) => n.id === "research")!.state, "completed");
+  assert.equal(nodeFor(workflow, "research.web"), "research");
+  assert.equal(nodeFor(workflow, "model.call"), "model.call");
+});
+
+test("a failed LangGraph run does not reach End", () => {
+  const steps = [step(1, "input", "completed", { kind: "input" }), step(2, "identity", "completed"), step(3, "context", "completed"),
+    step(4, "route", "completed"), step(5, "model.call", "failed")];
+  const graph = buildGraph(langgraph, { run: run("failed", steps) });
+  assert.deepEqual(graph.path, ["__start__", "prepare", "route", "model"]);
+  const state = (id: string) => graph.nodes.find((n) => n.id === id)!.state;
+  assert.deepEqual([state("model"), state("__end__")], ["failed", "not_run"]);
 });

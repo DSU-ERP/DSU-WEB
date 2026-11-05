@@ -27,6 +27,7 @@ const result = spawnSync(
     ".qa/unit/tests/agent-graph.test.js",
     "scripts/friday-tools.test.cjs",
     "scripts/friday-graph.test.cjs",
+    "scripts/officer-workflow.test.cjs",
     "scripts/backend-retry.test.cjs",
     "scripts/workspace-routing.test.cjs",
     "scripts/student-performance.test.cjs",

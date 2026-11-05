@@ -164,15 +164,20 @@ export function WorkflowCanvas({
         .filter((e) => byId.has(e.from) && byId.has(e.to))
         .map((e) => {
           const target = byId.get(e.to)!;
+          const source = byId.get(e.from)!;
           const loop = e.kind === "loop";
           const toTerminal = target.terminal;
           const active = mode === "run" && e.taken;
+          // A branch that rejoins several rows lower enters its target from the
+          // side, so it never merges into the main column and reads as a step
+          // it skipped (a greeting reply passing through the model call).
+          const rejoin = !e.child && !loop && !toTerminal && source.x !== target.x && target.y - source.y > 160;
           return {
             id: e.id,
             source: e.from,
             target: e.to,
             sourceHandle: e.child ? "left-out" : toTerminal ? "left-out" : loop ? "right" : "bottom",
-            targetHandle: e.child ? "left" : toTerminal ? "right-in" : loop ? "right-in" : "top",
+            targetHandle: e.child ? "left" : toTerminal ? "right-in" : loop ? "right-in" : rejoin ? (source.x < target.x ? "left" : "right-in") : "top",
             type: loop ? "default" : "smoothstep",
             label: e.child ? undefined : e.condition,
             className: `aw-edge aw-edge-${e.kind ?? "flow"}${active ? " is-taken" : ""}${mode === "run" && !e.taken ? " is-idle" : ""}`,

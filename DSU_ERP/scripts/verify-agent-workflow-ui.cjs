@@ -12,22 +12,6 @@ const root = process.cwd(), dir = path.join(root, ".qa/agent-workflow-ui");
 fs.mkdirSync(dir, { recursive: true });
 const id = (n) => `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
 
-const officer = {
-  id: "officer", title: "Placement Officer F.R.I.D.A.Y.", version: "officer-friday-v1", runtime: "DSU_ERP web app", orchestration: "Custom tool-calling loop.",
-  nodes: [
-    ["input", "input", "Officer question"], ["identity", "auth", "Placement officer session"], ["limit", "limit", "Request limit"], ["context", "context", "Conversation"],
-    ["model.call", "model", "Model call"], ["tools", "tool", "Tool round", { children: ["tool:find_students", "tool:list_drives", "tool:pending_reviews"] }],
-    ["tool:find_students", "tool", "find_students", { parent: "tools" }], ["tool:list_drives", "tool", "list_drives", { parent: "tools" }],
-    ["tool:pending_reviews", "tool", "pending_reviews", { parent: "tools" }], ["loop.limit", "guard", "Round limit"], ["output", "output", "Answer streamed"], ["persist", "persist", "Save conversation"],
-  ].map(([nid, kind, label, extra]) => ({ id: nid, kind, label, purpose: `${label} purpose.`, inputs: "fixture", outputs: "fixture", functions: ["fixture()"], ...(extra || {}) })),
-  edges: [
-    { from: "input", to: "identity" }, { from: "identity", to: "limit" }, { from: "limit", to: "context" }, { from: "limit", to: "failed", kind: "error", condition: "rate limited" },
-    { from: "context", to: "model.call" }, { from: "model.call", to: "tools", kind: "branch", condition: "model requested tools" },
-    { from: "tools", to: "model.call", kind: "loop", condition: "results returned" }, { from: "model.call", to: "output", kind: "branch", condition: "model answered" },
-    { from: "model.call", to: "loop.limit", kind: "error", condition: "4 rounds used" }, { from: "model.call", to: "failed", kind: "error", condition: "provider error" },
-    { from: "output", to: "persist" },
-  ],
-};
 let t = Date.parse("2026-11-02T06:00:00Z");
 const s = (seq, node, kind, status, extra = {}) => {
   const start = (t += 37);
@@ -73,6 +57,16 @@ const summary = (r) => ({ ...r, steps: r.steps.length });
 
 (async () => {
   const backend = await import(pathToFileURL(path.join(root, "..", "..", "DSU-Backend", "src", "modules", "ops", "workflows.js")).href);
+  // The officer graph comes from the web app's compiled LangGraph (engine.ts).
+  const officerOut = path.join(dir, "officer-workflow.cjs");
+  await build({ absWorkingDir: root, entryPoints: ["src/features/admin/lib/officer-workflow.ts"], bundle: true, platform: "node", format: "cjs", outfile: officerOut,
+    logLevel: "silent", packages: "external", plugins: [{ name: "boundaries", setup(b) {
+      const stub = { "server-only": "module.exports={};", "@/shared/http/backend": "module.exports={backendApi:async()=>{throw new Error('unused')}};",
+        "@/features/placement/lib/server": "module.exports={placementRead:async()=>{throw new Error('unused')}};" };
+      b.onResolve({ filter: /.*/ }, (a) => (stub[a.path] ? { path: a.path, namespace: "stub" } : undefined));
+      b.onLoad({ filter: /.*/, namespace: "stub" }, (a) => ({ contents: stub[a.path], loader: "js" }));
+    } }] });
+  const officer = require(officerOut).officerWorkflow();
   const workflows = { student: backend.WORKFLOWS.student, company: backend.WORKFLOWS.company, officer };
   const list = (assistant) => {
     const rows = [...(liveVisible && assistant === "student" ? [liveRun()] : []), ...runs.filter((r) => r.assistant === assistant)].map(summary);
@@ -122,24 +116,29 @@ createRoot(document.getElementById('root')).render(<AdminShell member="admin@fix
     const text = () => page.evaluate(() => document.body.innerText);
     const chooseRun = async (n) => { await page.getByLabel("Choose a recorded run").selectOption(id(n)); await page.locator(".aw-summary").waitFor(); };
 
-    // Architecture: the backend's real student graph, every top-level node plus end states.
+    // Architecture: the student's compiled LangGraph, one box per graph node.
     await page.setViewportSize({ width: 1440, height: 1000 });
     await open();
-    const topLevel = workflows.student.nodes.filter((n) => !n.parent).length;
-    assert.equal(await page.locator(".aw-node").count(), topLevel + 2, "top-level nodes plus failed and denied");
-    await node("identity").click();
-    assert.ok((await page.locator(".aw-panel").innerText()).includes("row-level security"), "panel shows the node's real purpose");
+    const topLevel = workflows.student.nodes.filter((n) => !n.parent).map((n) => n.id).sort();
+    assert.deepEqual(await page.locator(".aw-node").evaluateAll((els) => els.map((e) => e.dataset.node).sort()), topLevel, "exactly the graph's nodes");
+    assert.ok(topLevel.includes("__start__") && topLevel.includes("reply") && topLevel.includes("__end__"));
+    await node("prepare").click();
+    const archPanel = await page.locator(".aw-panel").innerText();
+    assert.ok(archPanel.includes("row-level security") && archPanel.includes("LangGraph node: prepare"), "panel shows the node's metadata");
     assert.ok(await page.getByRole("button", { name: /zoom in/i }).isVisible(), "zoom controls");
-    await node("context").getByRole("button", { name: /1 steps/ }).click();
+    await node("prepare").getByRole("button", { name: /3 steps/ }).click();
     await node("context.placement").waitFor();
-    await node("context").getByRole("button", { name: "Collapse" }).click();
+    await node("prepare").getByRole("button", { name: "Collapse" }).click();
     assert.equal(await node("context.placement").count(), 0, "collapse hides nested steps");
+    assert.ok(await page.locator(".react-flow__edge-text", { hasText: "greeting or no resume for a drive" }).count(), "branch label from the path map");
 
     // A completed run: executed path, skipped branches, timeline, tokens.
     await page.getByRole("tab", { name: "Execution" }).click();
     await chooseRun(1);
     assert.match(await node("model.call").getAttribute("class"), /aw-state-completed/);
-    assert.match(await node("research.web").getAttribute("class"), /aw-state-skipped/);
+    assert.match(await node("research").getAttribute("class"), /aw-state-skipped/);
+    assert.match(await node("reply").getAttribute("class"), /aw-state-not_run/);
+    assert.match(await node("__end__").getAttribute("class"), /aw-state-completed/);
     assert.equal(await page.locator(".aw-timeline li").count(), 12);
     assert.ok((await node("context.placement").count()) === 1, "a group with executed children opens automatically");
     assert.ok((await page.locator(".react-flow__edge.is-taken").count()) >= 8, "taken edges highlighted");
@@ -151,11 +150,13 @@ createRoot(document.getElementById('root')).render(<AdminShell member="admin@fix
     // Denied and failed runs end where the real check refused or failed.
     await chooseRun(2);
     assert.match(await node("identity").getAttribute("class"), /aw-state-denied/);
-    assert.match(await node("denied").getAttribute("class"), /aw-state-denied/);
-    assert.match(await node("context").getAttribute("class"), /aw-state-not_run/);
+    assert.match(await node("prepare").getAttribute("class"), /aw-state-denied/);
+    assert.match(await node("route").getAttribute("class"), /aw-state-not_run/);
+    assert.match(await node("__end__").getAttribute("class"), /aw-state-not_run/);
     assert.ok((await page.locator(".aw-side").innerText()).includes("Authorization denied"));
     await chooseRun(3);
     assert.match(await node("model.call").getAttribute("class"), /aw-state-failed/);
+    assert.match(await node("model").getAttribute("class"), /aw-state-failed/);
     assert.ok((await page.locator(".aw-side").innerText()).includes("timeout"));
 
     // Replay steps through the recorded order.
@@ -168,11 +169,12 @@ createRoot(document.getElementById('root')).render(<AdminShell member="admin@fix
     await page.getByRole("button", { name: "Reset to the full run" }).click();
     assert.ok(await page.getByText("Full run").isVisible());
 
-    // Officer loop: two model rounds, executed tools nested under the round, a failed tool.
+    // Officer loop: the compiled agent ⇄ tools graph, two model rounds, a failed tool.
     await page.getByRole("tab", { name: "Placement Officer" }).click();
     await page.getByLabel("Choose a recorded run").selectOption(id(4));
     await node("tool:list_drives").waitFor();
-    assert.match(await node("model.call").innerText(), /2 times/);
+    assert.ok(await node("round_limit").count(), "the graph's round limit node");
+    assert.match(await node("agent").innerText(), /2 times/, "both model rounds recorded on the agent node");
     assert.equal(await node("tool:find_students").count(), 0, "tools that did not run are not shown in a run");
     assert.match(await node("tool:list_drives").getAttribute("class"), /aw-state-failed/);
     assert.ok(await page.locator(".react-flow__edge.is-taken.aw-edge-loop").count(), "loop edge taken");
@@ -204,8 +206,9 @@ createRoot(document.getElementById('root')).render(<AdminShell member="admin@fix
     assert.deepEqual(errors.filter((e) => !/favicon|Failed to load resource/.test(e)), []);
     console.log(JSON.stringify({
       passed: true, widths: [1440, 1024, 768, 390], themes: ["light", "dark"],
-      checks: ["real backend student graph rendered", "node panel shows real purpose", "zoom controls and expand/collapse", "executed, skipped and not-run states",
-        "taken edges and loop edge", "timeline and token counts", "denied and failed terminals", "replay cursor and reset", "officer tools nested and failed tool shown",
+      checks: ["compiled LangGraph nodes rendered (student, officer)", "node panel shows graph metadata", "path-map branch labels", "zoom controls and expand/collapse",
+        "executed, skipped and not-run states", "taken edges and loop edge", "End reached on completion", "timeline and token counts", "denied and failed nodes",
+        "replay cursor and reset", "officer tools nested and failed tool shown",
         "live run followed from running to completed", "no overflow or em dashes", "no browser errors"],
       screenshots: dir, data: "synthetic local runs; no database access",
     }));
