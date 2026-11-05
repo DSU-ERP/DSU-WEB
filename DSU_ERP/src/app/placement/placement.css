@@ -187,9 +187,11 @@ html:has(.po-shell) {
   align-items: center;
   flex-wrap: wrap;
 }
+/* Equal columns that wrap evenly; the action buttons sit together in the
+   last column of the last row instead of dropping onto a row of their own. */
 .po-filters {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11.5rem), 1fr));
   align-items: end;
   gap: 0.75rem;
   margin: 1.5rem 0;
@@ -198,8 +200,15 @@ html:has(.po-shell) {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  flex: 1 1 9.0625rem;
+  min-width: 0;
   font-size: 0.75rem;
+}
+.po-filter-actions {
+  grid-column: -2 / -1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  gap: 0.5rem;
 }
 .po-shell input,
 .po-shell select,
@@ -496,12 +505,24 @@ html:has(.po-shell) {
 .po-dark .erp-table tbody tr:hover {
   background: var(--po-highlight);
 }
+/* Saturated fill with near-black text: 10.4:1 (WCAG AA needs 4.5:1). */
 .po-dark .erp-primary {
-  background: #b7cba6;
-  color: #182111;
+  background: #9fd486;
+  border-color: #9fd486;
+  color: #0e1a09;
 }
-.po-dark .erp-primary:hover {
-  background: #caddbb;
+.po-dark .erp-primary:hover,
+.po-dark .erp-primary:focus-visible {
+  background: #b4e09f;
+  border-color: #b4e09f;
+  color: #0e1a09;
+}
+/* Busy/disabled: no translucency, which washed the label into the page. */
+.po-dark .erp-primary:disabled {
+  opacity: 1;
+  background: #3a4a33;
+  border-color: #3a4a33;
+  color: #c9d2c1;
 }
 .po-dark .erp-category-panel {
   background: var(--po-surface);
@@ -2804,10 +2825,11 @@ html:has(.po-shell) {
 
   /* Filters: stack vertically, full width inputs */
   .po-filters {
-    flex-direction: column !important;
-    align-items: stretch !important;
-    gap: 0.5rem !important;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.5rem;
   }
+  .po-filter-actions { grid-column: 1 / -1; }
+  .po-filter-actions > * { flex: 1 1 0; }
 
   .po-filters select,
   .po-filters input[type="text"],

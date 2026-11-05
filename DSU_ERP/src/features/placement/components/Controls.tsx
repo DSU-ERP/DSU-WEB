@@ -2,7 +2,7 @@
 import { useActionState, useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { changePlacement, type MutationState } from "@/app/placement/actions";
-import type { Row } from "@/features/placement/lib/types";
+import { academicYearFor, type Row } from "@/features/placement/lib/types";
 
 export function ChangeForm({
   action,
@@ -88,8 +88,60 @@ export function ChangeForm({
     </form>
   );
 }
+/**
+ * Academic year and passing-out batch for the drive form. A new drive's
+ * academic year follows the chosen batch until the officer types their own;
+ * a saved (or PDF-suggested) academic year is never replaced.
+ */
+export function AcademicYearBatch({
+  academicYear,
+  batch,
+  batches,
+}: {
+  academicYear: string;
+  batch: string;
+  batches: string[];
+}) {
+  const [year, setYear] = useState(academicYear || academicYearFor(batch)),
+    custom = useRef(!!academicYear);
+  return (
+    <>
+      <label>
+        Academic year · required
+        <input
+          name="academic_year"
+          pattern="20[0-9]{2}-([0-9]{2}|20[0-9]{2})"
+          placeholder="e.g. 2026-27"
+          required
+          value={year}
+          onChange={(e) => {
+            custom.current = e.target.value.trim() !== "";
+            setYear(e.target.value);
+          }}
+        />
+      </label>
+      <label>
+        Passing-out batch
+        <select
+          aria-label="Passing-out batch"
+          name="batch"
+          required
+          defaultValue={batch}
+          onChange={(e) => {
+            if (!custom.current) setYear(academicYearFor(e.target.value));
+          }}
+        >
+          <option value="">Select batch</option>
+          {batches.map((value) => (
+            <option key={value}>{value}</option>
+          ))}
+        </select>
+      </label>
+    </>
+  );
+}
 export function RoundsInput({
-  initial = ["Assessment", "Interview"],
+  initial = ["Online test"],
 }: {
   initial?: string[];
 }) {

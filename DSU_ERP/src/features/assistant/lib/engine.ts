@@ -20,6 +20,7 @@ import {
   FRIDAY_MODEL,
   FRIDAY_PROVIDER,
   FRIDAY_PROVIDERS,
+  FALLBACK_PROVIDERS,
   openRouterBaseUrl,
   openRouterKey,
 } from "./config";
@@ -69,7 +70,7 @@ export type FridayState =
 export class FridayConfigError extends Error {}
 
 /** The chat model, on OpenRouter with the approved providers only. */
-function chatModel(maxTokens = MAX_OUTPUT_TOKENS, temperature = 0.3): ChatOpenAI {
+function chatModel(maxTokens = MAX_OUTPUT_TOKENS, temperature = 0.3, providers: readonly string[] = FRIDAY_PROVIDERS): ChatOpenAI {
   const apiKey = openRouterKey();
   if (!apiKey)
     throw new FridayConfigError(
@@ -86,8 +87,13 @@ function chatModel(maxTokens = MAX_OUTPUT_TOKENS, temperature = 0.3): ChatOpenAI
     maxRetries: 0,
     // Every request, including follow-ups after tool rounds, carries the same
     // provider list with fallbacks to any other provider disabled.
-    modelKwargs: { provider: openRouterProviderBody(FRIDAY_PROVIDERS) },
+    modelKwargs: { provider: openRouterProviderBody(providers) },
   });
+}
+
+/** OpenRouter answered that none of the requested providers serves the model. */
+function noProviderServes(error: unknown) {
+  return upstreamFailure(error)?.status === 404;
 }
 
 /** Text content of a streamed chunk; reasoning parts are never included. */
@@ -124,8 +130,9 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
   const toolContext = createToolContext();
   let linked = 0;
   const tools = [...FRIDAY_TOOLS] as unknown as Parameters<ChatOpenAI["bindTools"]>[0];
-  const model = chatModel();
-  const withTools = model.bindTools(tools, { tool_choice: "auto" });
+  let model = chatModel();
+  let withTools = model.bindTools(tools, { tool_choice: "auto" });
+  let fellBack = false;
 
   async function agent(state: GraphState, config: LangGraphRunnableConfig) {
     const emit = (event: FridayEvent) => config.writer?.(event);
@@ -135,11 +142,11 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
     emit({ type: "status", state: iteration === 0 ? "preparing" : "responding" });
 
     const step = trace?.open("model.call", "model", `Model call ${round}`);
-    // On the final allowed round the model must answer: no tools are offered.
-    const runnable = iteration < MAX_TOOL_ITERATIONS ? withTools : model;
     let full: AIMessageChunk | undefined;
     let answer = "";
-    try {
+    const call = async () => {
+      // On the final allowed round the model must answer: no tools are offered.
+      const runnable = iteration < MAX_TOOL_ITERATIONS ? withTools : model;
       const stream = await runnable.stream(state.messages, { signal: config.signal });
       for await (const chunk of stream) {
         full = full ? full.concat(chunk) : chunk;
@@ -149,6 +156,19 @@ function buildOfficerGraph(trace: FridayTrace | undefined) {
           answer += text;
           emit({ type: "text_delta", text });
         }
+      }
+    };
+    try {
+      try {
+        await call();
+      } catch (error) {
+        // A misconfigured provider list serves nothing. Before anything has
+        // streamed, switch once to the remaining approved providers.
+        if (fellBack || full || !FALLBACK_PROVIDERS.length || !noProviderServes(error) || config.signal?.aborted) throw error;
+        fellBack = true;
+        model = chatModel(MAX_OUTPUT_TOKENS, 0.3, FALLBACK_PROVIDERS);
+        withTools = model.bindTools(tools, { tool_choice: "auto" });
+        await call();
       }
     } catch (error) {
       step?.end("failed", { iteration: round }, config.signal?.aborted ? "cancelled" : "model_provider");

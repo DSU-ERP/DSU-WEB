@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ChangeForm } from "./Controls";
 import { CompanyReportTable } from "./CompanyReportTable";
+import { departmentLeader } from "@/features/placement/lib/overview";
 import {
   Facts,
   Filters,
@@ -43,7 +44,11 @@ export function ReportFilters({
   data: Report;
   query: Query;
 }) {
-  const fields: Filter[] = [{ key: "search" }];
+  const fields: Filter[] = [
+    section === "companies"
+      ? { key: "search", placeholder: "Search company name…" }
+      : { key: "search" },
+  ];
   if (section !== "companies")
     fields.push({
       key: "batch",
@@ -59,7 +64,12 @@ export function ReportFilters({
   if (section === "companies")
     fields.push(
       { key: "industry", options: data.options.industries },
-      { key: "active", options: ["true", "false"] },
+      {
+        key: "active",
+        options: ["true", "false"],
+        allLabel: "All companies",
+        optionLabels: { true: "Active only", false: "Inactive only" },
+      },
     );
   if (section === "drives")
     fields.push(
@@ -76,8 +86,14 @@ export function ReportFilters({
       { key: "package", title: "Package category", options: PACKAGES },
       {
         key: "inactive",
-        title: "Include inactive offers",
-        options: ["true", "false"],
+        title: "Offers included",
+        // No "All" choice: the backend treats an empty value as active-only.
+        options: ["false", "true"],
+        allLabel: null,
+        optionLabels: {
+          false: "Active offers only",
+          true: "Include inactive offers",
+        },
         defaultValue: section === "offers" ? "true" : "false",
       },
     );
@@ -232,18 +248,12 @@ export function ReportBody({
         <div className="po-card-grid">
           {["placement_percentage", "average", "median", "highest"].map(
             (metric) => {
-              const leader = departments
-                .filter((d) => d[metric] !== null && d[metric] !== undefined)
-                .sort(
-                  (a, b) =>
-                    Number(b[metric]) - Number(a[metric]) ||
-                    text(a.department).localeCompare(text(b.department)),
-                )[0];
+              const leader = departmentLeader(departments, metric);
               return (
                 <article key={metric} className="po-card">
                   <p className="erp-muted">Leading {label(metric)}</p>
-                  <h2>{text(leader?.department)}</h2>
-                  <strong>{number(leader?.[metric], 2)}</strong>
+                  <h2>{leader ? leader.departments.join(" & ") : "No leader yet"}</h2>
+                  <strong>{leader ? `${number(leader.value, 2)}${leader.departments.length > 1 ? " (tied)" : ""}` : "—"}</strong>
                 </article>
               );
             },
@@ -339,13 +349,14 @@ export function ReportBody({
     );
   if (section === "company-reports") {
     const companies = rows(data.companies).filter(r => !query.search || String(r.name).toLowerCase().includes(query.search.toLowerCase()));
-    const summary: Row = {companies: companies.filter(r => Number(r.drives)>0).length};
+    // Companies that ran at least one drive; the table also lists companies without drives.
+    const summary: Row = {companies_with_drives: companies.filter(r => Number(r.drives)>0).length};
     for (const metric of ["drives","offers","accepted"]) summary[metric] = companies.reduce((total,r)=>total+Number(r[metric]||0),0);
     return (
       <>
         <Metrics
           data={summary}
-          keys={["companies", "drives", "offers", "accepted"]}
+          keys={["companies_with_drives", "drives", "offers", "accepted"]}
         />
         <section className="erp-panel">
           <CompanyReportTable
@@ -370,7 +381,7 @@ export function ReportBody({
             return (
               <article key={text(c.id)} className="po-card po-category-card">
                 <h2>{text(c.name)}</h2>
-                <p className="erp-muted">CGPA {text(c.conditionLabel)}</p>
+                <p className="erp-muted">CGPA {text(c.displayRange ?? c.conditionLabel)}</p>
                 <strong>
                   {formatCount(count)} <small>students</small>
                 </strong>

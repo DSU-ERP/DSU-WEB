@@ -145,6 +145,11 @@ export type Filter = {
   title?: string;
   options?: string[];
   defaultValue?: string;
+  /** Display text per option value; the URL keeps the raw value. */
+  optionLabels?: Record<string, string>;
+  /** Text for the empty option, or null when every choice is explicit. */
+  allLabel?: string | null;
+  placeholder?: string;
 };
 export function Filters({
   path,
@@ -183,10 +188,12 @@ export function Filters({
               name={f.key}
               defaultValue={query[f.key] ?? f.defaultValue ?? ""}
             >
-              <option value="">All</option>
+              {f.allLabel !== null && (
+                <option value="">{f.allLabel ?? "All"}</option>
+              )}
               {f.options.map((v) => (
                 <option key={v} value={v}>
-                  {label(v)}
+                  {f.optionLabels?.[v] ?? label(v)}
                 </option>
               ))}
             </select>
@@ -195,17 +202,20 @@ export function Filters({
               name={f.key}
               defaultValue={query[f.key] || ""}
               placeholder={
-                f.key === "search" ? "Search name or USN…" : undefined
+                f.placeholder ??
+                (f.key === "search" ? "Search name or USN…" : undefined)
               }
               maxLength={100}
             />
           )}
         </label>
       ))}
-      <button className="erp-primary">Apply filters</button>
-      <Link className="erp-secondary" href={href(path, hidden)}>
-        Clear
-      </Link>
+      <div className="po-filter-actions">
+        <button className="erp-primary">Apply filters</button>
+        <Link className="erp-secondary" href={href(path, hidden)}>
+          Clear
+        </Link>
+      </div>
     </form>
   );
 }

@@ -11,9 +11,9 @@ import type { AudiencePreview, AudienceSpec, AudienceStudent } from "@/features/
 // The backend re-checks the officer for every call.
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: string };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-async function post<T>(path: string, body: unknown): Promise<ActionResult<T>> {
+async function post<T>(path: string, body: unknown, { checkOfficer = true } = {}): Promise<ActionResult<T>> {
   try {
-    await officerSession();
+    if (checkOfficer) await officerSession();
     return { ok: true, data: (await backendApi<{ data: T }>(path, { method: "POST", body: JSON.stringify(body) })).data };
   } catch (error) {
     return { ok: false, error: error instanceof CampusError ? error.message : "The change could not be saved. Try again." };
@@ -30,13 +30,15 @@ const cleanSpec = (spec: AudienceSpec) => ({
   remove: spec.remove,
 });
 
+// Preview and search run as the officer types. The SQL behind both checks the
+// officer itself (placement.assert_officer), so the separate session round
+// trip is skipped for these reads only.
 export async function previewAudience(spec: AudienceSpec, search = "", page = 1) {
-  return post<AudiencePreview>("/placement/audience/preview", { spec: cleanSpec(spec), search: search.slice(0, 100), page });
+  return post<AudiencePreview>("/placement/audience/preview", { spec: cleanSpec(spec), search: search.slice(0, 100), page }, { checkOfficer: false });
 }
 
 export async function searchStudents(term: string): Promise<ActionResult<AudienceStudent[]>> {
   try {
-    await officerSession();
     const q = new URLSearchParams({ q: term.slice(0, 100) });
     return { ok: true, data: (await backendApi<{ data: AudienceStudent[] }>(`/placement/audience/search?${q}`)).data };
   } catch (error) {

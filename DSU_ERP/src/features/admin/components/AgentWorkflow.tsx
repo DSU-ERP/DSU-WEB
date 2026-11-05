@@ -1,7 +1,7 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Pause, Play, RotateCcw, SkipForward } from "lucide-react";
-import { buildGraph } from "../lib/graph";
+import { buildGraph, graphExtent, leadsTo } from "../lib/graph";
 import {
   ASSISTANT_LABEL,
   STATUS_LABEL,
@@ -163,6 +163,11 @@ export function AgentWorkflow({
     return set;
   }, [expanded, activeRun, workflow]);
   const graph = useMemo(() => buildGraph(workflow, { run: activeRun, upto: cursor, expanded: autoExpanded }), [workflow, activeRun, cursor, autoExpanded]);
+  // The largest architecture graph sets the opening zoom for all three.
+  const fitExtent = useMemo(() => {
+    const sizes = ASSISTANTS.map((a) => graphExtent(buildGraph(workflows[a]).nodes));
+    return { width: Math.max(...sizes.map((e) => e.width)), height: Math.max(...sizes.map((e) => e.height)) };
+  }, [workflows]);
   const selectedNode = workflow.nodes.find((n) => n.id === selected) ?? null;
   const selectedSteps = activeRun ? graph.steps.filter((s) => s.node === selected) : [];
   const start = activeRun ? Date.parse(activeRun.startedAt) : 0;
@@ -341,6 +346,7 @@ export function AgentWorkflow({
           onSelect={setSelected}
           onToggle={toggle}
           layoutKey={`${assistant}:${mode}:${[...autoExpanded].sort().join(",")}`}
+          fitExtent={fitExtent}
         />
         <aside className="aw-panel" aria-label="Selected node">
           {!selectedNode ? (
@@ -350,7 +356,7 @@ export function AgentWorkflow({
               <dl className="aw-facts">
                 <div><dt>Runs in</dt><dd>{workflow.runtime}</dd></div>
                 <div><dt>Workflow version</dt><dd>{workflow.version}</dd></div>
-                <div><dt>Framework</dt><dd>Custom orchestration. LangChain and LangGraph are not used.</dd></div>
+                <div><dt>Framework</dt><dd>{workflow.id === "officer" ? "LangGraph state graph with LangChain ChatOpenAI." : "Custom orchestration. LangChain and LangGraph are not used."}</dd></div>
               </dl>
               <p className="erp-muted">Select a node to see what it does{mode === "run" ? " and what it recorded in this run" : ""}.</p>
             </div>
@@ -366,7 +372,7 @@ export function AgentWorkflow({
                 <div>
                   <dt>Leads to</dt>
                   <dd>
-                    {workflow.edges.filter((e) => e.from === selectedNode.id).map((e) => `${e.to}${e.condition ? ` (${e.condition})` : ""}`).join("; ") || "End of the run"}
+                    {leadsTo(workflow, selectedNode.id).map((e) => `${e.label}${e.condition ? ` (${e.condition})` : ""}`).join("; ") || "End of the run"}
                   </dd>
                 </div>
               </dl>
@@ -410,8 +416,8 @@ export function AgentWorkflow({
                   <li key={s.seq} className={`aw-status-${s.status}${s.parentSeq ? " is-nested" : ""}`}>
                     <button type="button" onClick={() => setSelected(workflow.nodes.some((n) => n.id === s.node) ? s.node : null)}>
                       <span className="aw-tl-time">+{ms(Math.max(0, offset))}</span>
-                      <span className="aw-tl-label">{s.label}</span>
-                      <span className="aw-tl-status">{STATUS_LABEL[s.status]}</span>
+                      <span className="aw-tl-label" title={s.label}>{s.label}</span>
+                      <span className="aw-tl-status" title={STATUS_LABEL[s.status]}>{STATUS_LABEL[s.status]}</span>
                       <span className="aw-tl-bar" aria-hidden="true">
                         <i style={{ marginLeft: `${(Math.max(0, offset) / span) * 100}%`, width: `${Math.max(width, s.status === "skipped" ? 0 : 0.6)}%` }} />
                       </span>

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildGraph, executedPath, nodeStates, takenEdges, visibleSteps } from "../src/features/admin/lib/graph";
+import { buildGraph, executedPath, graphExtent, leadsTo, nodeStates, takenEdges, visibleSteps } from "../src/features/admin/lib/graph";
 import type { RunDetail, RunStep, Workflow } from "../src/features/admin/lib/types";
 
 const node = (id: string, kind: string, extra: Record<string, unknown> = {}) =>
@@ -71,6 +71,23 @@ test("denials and failures end at the terminal node where the check refused", ()
     step(3, "context", "completed"), step(4, "route", "completed"), step(5, "model.limit", "completed"), step(6, "model.call", "failed", { errorCategory: "timeout" })]) });
   assert.ok(failed.edges.find((e) => e.id === "model.call->failed")!.taken);
   assert.equal(failed.nodes.find((n) => n.id === "failed")!.state, "failed");
+  assert.equal(failed.nodes.find((n) => n.id === "failed")!.durationMs, 100, "a reached end shows the run's total duration");
+  assert.equal(denied.nodes.find((n) => n.id === "denied")!.durationMs, 100);
+  assert.equal(failed.nodes.find((n) => n.id === "denied")!.durationMs, null, "an end that was not reached has no timing");
+});
+
+test("a nested step leads wherever its parent leads, by label", () => {
+  assert.deepEqual(leadsTo(student, "context.placement"), [{ id: "route", label: "route", condition: undefined }]);
+  assert.deepEqual(leadsTo(student, "model.call").map((e) => e.label), ["model.validate", "Run failed"]);
+  assert.deepEqual(leadsTo(officer, "tool:list_drives").map((e) => [e.id, e.condition]), [["model.call", undefined]]);
+  assert.deepEqual(leadsTo(student, "output"), []);
+});
+
+test("graph extent covers every card, so graphs of different sizes can share an opening zoom", () => {
+  const short = graphExtent(buildGraph(officer).nodes);
+  const tall = graphExtent(buildGraph(student).nodes);
+  assert.ok(tall.height > short.height && short.width > 0);
+  assert.deepEqual(graphExtent([]), { width: 0, height: 0 });
 });
 
 test("the officer loop counts rounds and nests executed tools under the round", () => {

@@ -136,10 +136,12 @@ export function CohortFilters({
           {select("direction", "Order", [["asc", "Ascending"], ["desc", "Descending"]], "Default")}
         </>
       )}
-      <button className="erp-primary">Apply filters</button>
-      <Link className="erp-secondary" href={action}>
-        Clear
-      </Link>
+      <div className="po-filter-actions">
+        <button className="erp-primary">Apply filters</button>
+        <Link className="erp-secondary" href={action}>
+          Clear
+        </Link>
+      </div>
     </form>
   );
 }
@@ -263,7 +265,7 @@ export function CategorySummary({ data }: { data: CategoriesResponse }) {
         ? `. ${formatCount(data.unclassified)} without a valid official CGPA are unclassified and not shown in any category.`
         : ". Every student has a valid official CGPA."}{" "}
       Categories use official CGPA only: Advanced 8.50 and above, Medium 6.75
-      to below 8.50, Needs Improvement below 6.75. Placement eligible means a
+      – 8.49, Needs Improvement below 6.75. Placement eligible means a
       valid CGPA of 6.75 or above.
     </p>
   );

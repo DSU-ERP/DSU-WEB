@@ -104,7 +104,7 @@ export function DriveAudiencePanel({ driveId, state }: { driveId: string; state:
     const result = await saveAudience(driveId, spec);
     setBusy(false);
     if (!result.ok) return setError(result.error);
-    setMessage(`Audience saved: ${result.data.audience} students. ${result.data.notified} newly reached student account${result.data.notified === 1 ? " was" : "s were"} notified.`);
+    setMessage(`Audience saved: ${result.data.audience} student${result.data.audience === 1 ? "" : "s"}. ${result.data.notified} newly reached student account${result.data.notified === 1 ? " was" : "s were"} notified.`);
     setEditing(false);
     router.refresh();
   };

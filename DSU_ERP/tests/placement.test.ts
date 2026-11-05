@@ -5,7 +5,7 @@ import {
   validateDraft,
   safeWebUrl,
 } from "../src/features/placement/lib/assistantRules";
-import { csv, queryFrom, href } from "../src/features/placement/lib/types";
+import { academicYearFor, csv, queryFrom, href } from "../src/features/placement/lib/types";
 test("assistant tools retrieve distinct requested sources", () => {
   for (const [prompt, tool] of [
     ["Batch 2028 summary", "batch"],
@@ -69,4 +69,12 @@ test("drill-down preserves cohort filters but resets pagination", () => {
     href("students", q, { category: "medium", page: undefined }),
     "/placement/students?batch=2028&department=CSE&company=id&category=medium",
   );
+});
+
+test("new drives derive the academic year from the passing-out batch", () => {
+  assert.equal(academicYearFor("2027"), "2026-27");
+  assert.equal(academicYearFor("2030"), "2029-30");
+  assert.equal(academicYearFor("2100"), "");
+  assert.equal(academicYearFor(""), "");
+  assert.match(academicYearFor("2027"), /^20[0-9]{2}-([0-9]{2}|20[0-9]{2})$/);
 });

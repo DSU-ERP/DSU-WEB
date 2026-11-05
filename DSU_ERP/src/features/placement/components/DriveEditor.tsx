@@ -1,4 +1,4 @@
-import { ChangeForm, RoundsInput } from "./Controls";
+import { AcademicYearBatch, ChangeForm, RoundsInput } from "./Controls";
 import type { Report, Row } from "@/features/placement/lib/types";
 import { EMPLOYMENT_TYPES, JOB_CATEGORIES, STATUSES, label, text } from "@/features/placement/lib/types";
 export function DriveEditor({
@@ -7,6 +7,7 @@ export function DriveEditor({
   options,
   defaultCompany,
   prefill,
+  audience,
 }: {
   drive?: Row;
   companies: Row[];
@@ -14,6 +15,8 @@ export function DriveEditor({
   defaultCompany?: string;
   /** Reviewable defaults for a new drive (from a drive PDF); never saved automatically. */
   prefill?: Row;
+  /** The drive's chosen audience, when it has one: publishing reaches only these students. */
+  audience?: { size: number; selectedOnly: boolean };
 }) {
   const d = drive || prefill || {},
     existing = !!drive;
@@ -113,30 +116,11 @@ export function DriveEditor({
             defaultValue={String(d.package_lpa ?? "")}
           />
         </label>
-        <label>
-          Academic year
-          <input
-            name="academic_year"
-            pattern="20[0-9]{2}-([0-9]{2}|20[0-9]{2})"
-            placeholder="2026-27"
-            required
-            defaultValue={String(d.academic_year || "")}
-          />
-        </label>
-        <label>
-          Passing-out batch
-          <select
-            aria-label="Passing-out batch"
-            name="batch"
-            required
-            defaultValue={String(d.batch || "")}
-          >
-            <option value="">Select batch</option>
-            {options.batches.map((batch) => (
-              <option key={batch}>{batch}</option>
-            ))}
-          </select>
-        </label>
+        <AcademicYearBatch
+          academicYear={String(d.academic_year || "")}
+          batch={String(d.batch || "")}
+          batches={options.batches}
+        />
         <label>
           Status
           <select name="status" defaultValue={String(d.status || "upcoming")}>
@@ -217,13 +201,31 @@ export function DriveEditor({
         </select>
       </label>
       <input type="hidden" name="published_present" value="1"/>
-      <label><input type="checkbox" name="published" value="true" defaultChecked={!!d.published}/> Publish to students in this batch and notify everyone who meets these criteria</label>
-      <p className="po-note">
-        Only students who meet every limit above (batch, minimum CGPA, current
-        backlogs, branches, attendance and the upward-only offer rule) get a
-        notification. Relaxing a limit later notifies the newly eligible
-        students; nobody is notified twice.
-      </p>
+      {audience ? (
+        <>
+          <label>
+            <input type="checkbox" name="published" value="true" defaultChecked={!!d.published}/>{" "}
+            {audience.selectedOnly
+              ? `Publish and notify only the ${audience.size} hand-picked student${audience.size === 1 ? "" : "s"}`
+              : `Publish and notify the ${audience.size} student${audience.size === 1 ? "" : "s"} in this drive's audience`}
+          </label>
+          <p className="po-note">
+            This drive is sent to {audience.size} {audience.selectedOnly ? "hand-picked " : ""}student{audience.size === 1 ? "" : "s"} chosen
+            under &ldquo;Audience and company access&rdquo;. The batch, CGPA, backlog and branch fields above do not change who is
+            notified. Nobody is notified twice.
+          </p>
+        </>
+      ) : (
+        <>
+          <label><input type="checkbox" name="published" value="true" defaultChecked={!!d.published}/> Publish to students in this batch and notify everyone who meets these criteria</label>
+          <p className="po-note">
+            Only students who meet every limit above (batch, minimum CGPA, current
+            backlogs, branches, attendance and the upward-only offer rule) get a
+            notification. Relaxing a limit later notifies the newly eligible
+            students; nobody is notified twice.
+          </p>
+        </>
+      )}
       <label>Location<input name="location" defaultValue={String(d.location||'')} maxLength={200}/></label>
       <label>Required skills<input name="skills" defaultValue={String(d.skills||'')} maxLength={2000}/></label>
       <label>Required documents<input name="required_documents" defaultValue={String(d.required_documents||'')} maxLength={2000}/></label>

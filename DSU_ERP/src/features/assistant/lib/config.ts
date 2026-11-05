@@ -11,10 +11,15 @@ export const FRIDAY_MODEL =
 // used only when Baseten refuses (approved 2026-10-15 after Baseten's shared
 // capacity pool was exhausted). No provider outside this list is ever used,
 // on any request including follow-ups inside the tool loop.
-export const FRIDAY_PROVIDERS = parseProviders(
-  process.env.OPENROUTER_PROVIDER,
-  ["baseten/fp8", "deepinfra/fp8"],
-);
+export const APPROVED_PROVIDERS = ["baseten", "deepinfra/fp8"] as const;
+// OpenRouter has no "baseten/fp8" endpoint (Baseten is listed as "baseten"),
+// so a list naming it alone is refused with "No allowed providers".
+const PROVIDER_ALIASES: Record<string, string> = { "baseten/fp8": "baseten" };
+export const FRIDAY_PROVIDERS = [
+  ...new Set(parseProviders(process.env.OPENROUTER_PROVIDER, [...APPROVED_PROVIDERS]).map((p) => PROVIDER_ALIASES[p] ?? p)),
+];
+/** Approved providers to retry on when the configured list serves nothing. */
+export const FALLBACK_PROVIDERS = APPROVED_PROVIDERS.filter((p) => !FRIDAY_PROVIDERS.includes(p));
 export const FRIDAY_PROVIDER = FRIDAY_PROVIDERS.join(", ");
 
 /** OpenRouter's OpenAI-compatible API. Overridable for tests and proxies. */

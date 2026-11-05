@@ -131,6 +131,7 @@ export default async function DrivePage({
           drive={drive}
           companies={companies.rows}
           options={report.options}
+          audience={audience?.audienceMode ? { size: audience.size, selectedOnly: !!audience.rules?.selected_only } : undefined}
         />
       </details>
       <Filters

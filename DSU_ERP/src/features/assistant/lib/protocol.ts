@@ -160,7 +160,7 @@ export function explainUpstream(
     case 403:
       return "The OpenRouter key was rejected. Check OPENROUTER_API_KEY on the server.";
     case 404:
-      return `The configured provider (${provider}) is not currently serving this model.`;
+      return `None of the approved model providers (${provider}) is serving this model right now. Try again in a few minutes. If it keeps happening, an administrator should check OPENROUTER_PROVIDER lists valid OpenRouter provider names, such as "baseten, deepinfra/fp8".`;
     case 408:
     case 502:
     case 503:

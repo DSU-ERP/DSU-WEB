@@ -63,6 +63,7 @@ before(async () => {
       requests.push(parsed);
       const next = script.shift();
       if (!next) { res.writeHead(500).end('{"error":{"message":"unscripted"}}'); return; }
+      if (next.status) { res.writeHead(next.status, { 'content-type': 'application/json' }).end(JSON.stringify({ error: { code: next.status, message: 'No allowed providers are available for the selected model.' } })); return; }
       sse(res, next.chunks, next);
     });
   });
@@ -71,7 +72,7 @@ before(async () => {
   process.env.OPENROUTER_API_KEY = 'test-key';
   process.env.OPENROUTER_PROVIDER = 'baseten/fp8,deepinfra/fp8';
 });
-after(() => { server.close(); fs.rmSync(outfile, { force: true }); });
+after(() => { server.close(); fs.rmSync(outfile, { force: true }); fs.rmSync(outfile.replace('.cjs', '.alt.cjs'), { force: true }); });
 
 const reads = [];
 globalThis.__friday = {
@@ -93,7 +94,8 @@ test('one tool round then an answer, streamed in the existing browser protocol',
   assert.equal(requests.length, 2, 'agent → tools → agent');
   assert.deepEqual(reads, [{ resource: 'batch', query: { batch: '2027' } }], 'the real tool ran with the model arguments');
   // Approved providers only, with fallbacks disabled, on every request.
-  for (const body of requests) assert.deepEqual(body.provider, { order: ['baseten/fp8', 'deepinfra/fp8'], only: ['baseten/fp8', 'deepinfra/fp8'], allow_fallbacks: false });
+  // "baseten/fp8" is not an OpenRouter endpoint; it is sent as "baseten".
+  for (const body of requests) assert.deepEqual(body.provider, { order: ['baseten', 'deepinfra/fp8'], only: ['baseten', 'deepinfra/fp8'], allow_fallbacks: false });
   assert.ok(requests[0].tools.length > 10 && requests[0].tool_choice === 'auto', 'tools offered');
   assert.equal(requests[0].stream, true);
   // The second request replays the tool request and its result.
@@ -198,4 +200,26 @@ test('profile links: one per distinct resolved student, at most three, built fro
   } finally {
     globalThis.__friday.backendApi = previous;
   }
+});
+
+test('a provider list that serves nothing retries once on the remaining approved providers', async () => {
+  // A separate copy of the engine, loaded with a list naming one provider only.
+  const alt = outfile.replace('.cjs', '.alt.cjs');
+  fs.copyFileSync(outfile, alt);
+  const previous = process.env.OPENROUTER_PROVIDER;
+  process.env.OPENROUTER_PROVIDER = 'deepinfra/fp8';
+  const altEngine = require(alt);
+  process.env.OPENROUTER_PROVIDER = previous;
+  reset([{ status: 404 }, { chunks: answer('Here you go.') }]);
+  const events = [];
+  for await (const event of altEngine.runFriday({ history: [], message: 'hi', spoken: false, signal: new AbortController().signal })) events.push(event);
+  assert.equal(events.at(-1).type, 'done');
+  assert.equal(events.at(-1).text, 'Here you go.');
+  assert.deepEqual(requests.map((r) => r.provider.only), [['deepinfra/fp8'], ['baseten']], 'only approved providers, never a fallback outside the list');
+  assert.ok(requests.every((r) => r.provider.allow_fallbacks === false));
+  // Twice refused: the error explains what to check.
+  reset([{ status: 404 }, { status: 404 }]);
+  await assert.rejects(async () => { for await (const _ of altEngine.runFriday({ history: [], message: 'hi', spoken: false, signal: new AbortController().signal })); },
+    (error) => { assert.match(altEngine.describeError(error), /approved model providers.*OPENROUTER_PROVIDER/s); return true; });
+  assert.equal(requests.length, 2, 'one retry, not a loop');
 });

@@ -19,6 +19,8 @@ export function PlacementOverview({ data, charts, chartError, query, environment
   const companies = records(data.companies).filter(r => Number(r.offers) > 0).slice(0, 10);
   const recent = records(data.recent);
   const drives = records(data.scheduled);
+  // Recorded status is never changed by date; say how many are already past it.
+  const pastDated = drives.filter((drive) => driveDateWarning(drive, today)).length;
   const primary = [
     ["Total students", formatCount(total), "Students in the selected cohort"],
     ["Placement eligible", formatCount(k?.eligible), "Valid CGPA of 6.75 or above"],
@@ -53,7 +55,7 @@ export function PlacementOverview({ data, charts, chartError, query, environment
           {[
             ["Active offers", formatCount(k?.activeOffers ?? summary?.offers), "Offered or accepted"],
             ["Participating companies", formatCount(k?.companies ?? summary?.companies), "With drives in the selected batch"],
-            ["Active drives", formatCount(k?.activeDrives), "Recorded as upcoming or ongoing"],
+            ["Active drives", formatCount(k?.activeDrives), pastDated ? `Recorded as upcoming or ongoing; ${pastDated} past ${pastDated === 1 ? "its" : "their"} drive date` : "Recorded as upcoming or ongoing"],
             ["Average CGPA", formatCgpa(k?.averageCgpa), "Valid CGPAs in the selected cohort"],
           ].map(([title, value, detail]) => <article key={title}><div><h2>{title}</h2><p>{detail}</p></div><strong>{value}</strong></article>)}
         </section>

@@ -64,6 +64,12 @@ export const label = (value: string) =>
     .replaceAll("_", " ")
     .replaceAll("-", " ")
     .replace(/^./, (c) => c.toUpperCase());
+/** Academic year a passing-out batch graduates in: batch 2027 → "2026-27". */
+export function academicYearFor(batch: string) {
+  return /^20\d{2}$/.test(batch)
+    ? `${Number(batch) - 1}-${batch.slice(2)}`
+    : "";
+}
 export function queryFrom(
   params: Record<string, string | string[] | undefined>,
 ): Query {

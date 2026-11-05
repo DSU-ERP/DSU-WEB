@@ -139,8 +139,10 @@ export function RankingFilters({ overview, query }: { overview: RankingOverview;
       {select("evidence", "Evidence", [["complete", "Complete"], ["partial", "Partial"], ["pending", "Pending"]], "Any evidence")}
       {select("updated", "Evidence updated", [["7", "Within 7 days"], ["30", "Within 30 days"], ["older", "Older or never"]], "Any time")}
       {select("show", "Students shown", [["all", "Include not ranked"]], "Ranked only")}
-      <button className="erp-primary">Apply filters</button>
-      <Link className="erp-secondary" href={rankingHref({ kind, topic: query.topic })}>Reset filters</Link>
+      <div className="po-filter-actions">
+        <button className="erp-primary">Apply filters</button>
+        <Link className="erp-secondary" href={rankingHref({ kind, topic: query.topic })}>Reset filters</Link>
+      </div>
     </form>
   );
 }

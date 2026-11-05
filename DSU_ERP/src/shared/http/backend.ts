@@ -18,7 +18,10 @@ export async function backendApi<T>(
   try { origin = backendOrigin(); }
   catch { throw new CampusError(503, "Campus services have not been configured correctly.", "BACKEND_NOT_CONFIGURED"); }
   const method = options.method || "GET";
-  const send = async () => {
+  // A sleeping hosted backend takes about 40s to wake. Reads keep retrying
+  // within this window; writes are never repeated.
+  const deadline = Date.now() + (Number(process.env.DSU_BACKEND_WAKE_MS) || 60000);
+  const send = async (): Promise<Response> => {
     try {
       return await fetch(new URL(`/api/v1${path}`, origin), {
         method, body: options.body,
@@ -32,16 +35,21 @@ export async function backendApi<T>(
         const cause = error instanceof Error ? error.cause as { code?: string } | undefined : undefined;
         console.warn("Campus backend transport failed", { method, timedOut, code: cause?.code });
       }
+      if (method === "GET" && Date.now() + 2000 < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        return send();
+      }
       throw new CampusError(503, "Campus services are temporarily unavailable. Please try again.", timedOut ? "BACKEND_TIMEOUT" : "BACKEND_UNREACHABLE");
     }
   };
   let response = await send();
   // While a hosted backend wakes up or redeploys, its proxy answers with an
-  // HTML holding page that never reached the API. Reads are retried once.
-  if (!isJson(response) && method === "GET") {
+  // HTML holding page that never reached the API. Reads are retried with
+  // growing pauses until the wake window closes.
+  for (let pause = 1500; !isJson(response) && method === "GET" && Date.now() + pause < deadline; pause = Math.min(pause * 2, 8000)) {
     logNonJson(path, response, false);
     await response.body?.cancel().catch(() => {});
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, pause));
     response = await send();
   }
   if (!isJson(response)) logNonJson(path, response, method === "GET");

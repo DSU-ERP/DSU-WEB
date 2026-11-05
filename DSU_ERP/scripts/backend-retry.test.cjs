@@ -27,6 +27,8 @@ const bundled = build({
   }],
 });
 
+// A short wake window keeps the tests fast; production waits up to 60s.
+process.env.DSU_BACKEND_WAKE_MS = '4000';
 let replies = [];
 const hits = [];
 let server;
@@ -45,13 +47,23 @@ after(() => { server.close(); fs.rmSync(outfile, { force: true }); });
 const client = () => require(outfile);
 const quiet = async (fn) => { const warn = console.warn; const lines = []; console.warn = (...a) => lines.push(a); try { return [await fn(), lines]; } finally { console.warn = warn; } };
 
-test('a read that first gets a hosting holding page is retried once and succeeds', async () => {
+test('a read that first gets a hosting holding page is retried and succeeds', async () => {
   replies = ['html', 'json']; hits.length = 0;
   const [result, logs] = await quiet(() => client().backendApi('/admin/session'));
   assert.deepEqual(result, { data: { admin: true } });
   assert.deepEqual(hits, ['GET /api/v1/admin/session', 'GET /api/v1/admin/session']);
   assert.equal(logs.length, 1);
   assert.deepEqual(logs[0][1], { route: '/admin/session', status: 503, contentType: 'text/html; charset=utf-8', retried: false });
+});
+
+test('a read keeps retrying while the backend wakes up', async () => {
+  replies = ['html', 'html', 'json']; hits.length = 0;
+  process.env.DSU_BACKEND_WAKE_MS = '10000';
+  try {
+    const [result] = await quiet(() => client().backendApi('/session'));
+    assert.deepEqual(result, { data: { admin: true } });
+    assert.equal(hits.length, 3);
+  } finally { process.env.DSU_BACKEND_WAKE_MS = '4000'; }
 });
 
 test('a read that keeps getting HTML fails as an invalid response, logging no ids', async () => {

@@ -130,8 +130,8 @@ export function CategoryPanels({
               <h2>{category.name}</h2>
               <span aria-hidden="true">↗</span>
             </div>
-            <p className="erp-category-range" title={category.conditionLabel}>
-              {category.conditionLabel}
+            <p className="erp-category-range" title={category.displayRange}>
+              {category.displayRange}
             </p>
             <strong className="erp-category-count">
               {formatCount(category.count)}

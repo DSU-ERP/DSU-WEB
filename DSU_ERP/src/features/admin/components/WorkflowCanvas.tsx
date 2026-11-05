@@ -8,7 +8,9 @@ import {
   Position,
   ReactFlow,
   ReactFlowProvider,
+  getViewportForBounds,
   useReactFlow,
+  useStoreApi,
   type Edge,
   type Node,
   type NodeProps,
@@ -102,12 +104,25 @@ const FlowNode = memo(function FlowNode({ data }: NodeProps<Node<Data>>) {
 });
 const nodeTypes = { step: FlowNode };
 
-function Fit({ signature }: { signature: string }) {
+const FIT_PADDING = 0.12;
+const MIN_ZOOM = 0.2;
+const MAX_ZOOM = 1.8;
+
+// Every graph opens at the zoom that fits the largest of the three workflows,
+// so a short graph is not blown up; a larger (expanded) graph still fits whole.
+function Fit({ signature, extent }: { signature: string; extent: { width: number; height: number } }) {
   const flow = useReactFlow();
+  const store = useStoreApi();
   useEffect(() => {
-    const id = window.requestAnimationFrame(() => flow.fitView({ padding: 0.12, duration: 0 }));
+    const id = window.requestAnimationFrame(() => {
+      const { width, height } = store.getState();
+      const cap = width && height && extent.width && extent.height
+        ? getViewportForBounds({ x: 0, y: 0, ...extent }, width, height, MIN_ZOOM, MAX_ZOOM, FIT_PADDING).zoom
+        : MAX_ZOOM;
+      void flow.fitView({ padding: FIT_PADDING, maxZoom: cap, duration: 0 });
+    });
     return () => window.cancelAnimationFrame(id);
-  }, [flow, signature]);
+  }, [flow, store, signature, extent]);
   return null;
 }
 
@@ -120,6 +135,7 @@ export function WorkflowCanvas({
   onSelect,
   onToggle,
   layoutKey,
+  fitExtent,
 }: {
   nodes: GraphNode[];
   edges: GraphEdge[];
@@ -128,6 +144,7 @@ export function WorkflowCanvas({
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   layoutKey: string;
+  fitExtent: { width: number; height: number };
 }) {
   const flowNodes = useMemo<Node<Data>[]>(
     () =>
@@ -174,15 +191,14 @@ export function WorkflowCanvas({
           edges={flowEdges}
           nodeTypes={nodeTypes}
           onNodeClick={(_, node) => onSelect(node.id)}
-          fitView
-          minZoom={0.2}
-          maxZoom={1.8}
+          minZoom={MIN_ZOOM}
+          maxZoom={MAX_ZOOM}
           nodesConnectable={false}
           elementsSelectable
         >
           <Background gap={22} size={1} className="aw-dots" />
           <Controls showInteractive={false} position="bottom-right" />
-          <Fit signature={layoutKey} />
+          <Fit signature={layoutKey} extent={fitExtent} />
         </ReactFlow>
       </ReactFlowProvider>
     </div>

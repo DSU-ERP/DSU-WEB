@@ -16,7 +16,7 @@ function csvCell(value: unknown) {
 
 export function exportCsv({ data }: { data: CategoryData }) {
   const rows = [["Rank", "USN", "Student name", "Department", "Batch", "CGPA (stored precision)", "Category", "CGPA range", "Placement eligibility"],
-    ...data.students.map(s => [String(s.rank), s.enrollment_no, s.full_name, s.department_short_name ?? "", s.source_batch, s.cgpa, data.category.name, data.category.conditionLabel, placementStatus(s.placement_eligible)])];
+    ...data.students.map(s => [String(s.rank), s.enrollment_no, s.full_name, s.department_short_name ?? "", s.source_batch, s.cgpa, data.category.name, data.category.displayRange ?? data.category.conditionLabel, placementStatus(s.placement_eligible)])];
   return { data: { filename: `dsu-${data.category.id}.csv`, rows: data.students.length,
     content: "\uFEFF" + rows.map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n" } };
 }

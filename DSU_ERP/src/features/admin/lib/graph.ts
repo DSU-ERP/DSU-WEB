@@ -26,6 +26,8 @@ const ROW = 114;
 const CHILD_ROW = 92; // a child card with its timing line is ~82px tall
 const CHILD_INDENT = 40;
 const CHILD_GAP = 28; // a parent with its toggle button is taller than ROW
+const NODE_W = 216; // rendered card sizes (13.5rem; a parent with its toggle is the tallest)
+const NODE_H = 118;
 
 /** Steps visible at a point in a replay (all steps when `upto` is null). */
 export function visibleSteps(run: RunDetail | null, upto: number | null = null): RunStep[] {
@@ -190,7 +192,7 @@ export function buildGraph(workflow: Workflow, options: { run?: RunDetail | null
     const x = Math.min(...[...position.values()].map((p) => p.x)) - COLUMN;
     const reached = !!run && finished && run.status === id;
     nodes.push({ ...TERMINALS[id], x, y: id === "denied" ? y - ROW / 2 : y + ROW / 2, state: reached ? (id === "denied" ? "denied" : "failed") : finished ? "not_run" : "pending",
-      count: reached ? 1 : 0, durationMs: null, childCount: 0, expanded: false, terminal: true });
+      count: reached ? 1 : 0, durationMs: reached ? run.durationMs : null, childCount: 0, expanded: false, terminal: true });
   }
   const path = executedPath(workflow, steps);
   const transitions = takenEdges(workflow, path);
@@ -201,4 +203,19 @@ export function buildGraph(workflow: Workflow, options: { run?: RunDetail | null
     edges.push({ ...edge, id, taken });
   }
   return { nodes, edges, path, steps, states };
+}
+
+/** Where a node hands over; a nested step continues wherever its parent does. */
+export function leadsTo(workflow: Workflow, id: string) {
+  const from = workflow.nodes.find((n) => n.id === id)?.parent ?? id;
+  const label = (to: string) => workflow.nodes.find((n) => n.id === to)?.label ?? TERMINALS[to]?.label ?? to;
+  return workflow.edges.filter((e) => e.from === from).map((e) => ({ id: e.to, label: label(e.to), condition: e.condition }));
+}
+
+/** Approximate rendered size of a laid-out graph, so every graph can open at the same zoom. */
+export function graphExtent(nodes: Pick<GraphNode, "x" | "y">[]) {
+  if (!nodes.length) return { width: 0, height: 0 };
+  const xs = nodes.map((n) => n.x);
+  const ys = nodes.map((n) => n.y);
+  return { width: Math.max(...xs) - Math.min(...xs) + NODE_W, height: Math.max(...ys) - Math.min(...ys) + NODE_H };
 }
