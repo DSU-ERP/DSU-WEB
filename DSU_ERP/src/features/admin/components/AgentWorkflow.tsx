@@ -356,7 +356,7 @@ export function AgentWorkflow({
               <dl className="aw-facts">
                 <div><dt>Runs in</dt><dd>{workflow.runtime}</dd></div>
                 <div><dt>Workflow version</dt><dd>{workflow.version}</dd></div>
-                <div><dt>Framework</dt><dd>{workflow.id === "officer" ? "LangGraph state graph with LangChain ChatOpenAI." : "Custom orchestration. LangChain and LangGraph are not used."}</dd></div>
+                <div><dt>Framework</dt><dd>LangGraph state graph with LangChain ChatOpenAI.</dd></div>
               </dl>
               <p className="erp-muted">Select a node to see what it does{mode === "run" ? " and what it recorded in this run" : ""}.</p>
             </div>
