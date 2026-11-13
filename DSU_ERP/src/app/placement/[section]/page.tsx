@@ -8,7 +8,7 @@ import {
 import { CampusError } from "@/shared/http/errors";
 import type { OverviewCharts as ChartsData } from "@/features/placement/lib/intelligence";
 import { PlacementOverview } from "@/features/placement/components/Overview";
-import { NotificationsPanel } from "@/shared/notifications/Notifications";
+import { driveRequests } from "@/features/placement/lib/company";
 import { initialNotifications } from "@/shared/notifications/server";
 import { competencyTestingEnabled } from "@/features/competency/server";
 import {
@@ -31,9 +31,9 @@ export default async function PlacementSection({
   if (!Object.hasOwn(SECTIONS, section)) notFound();
   const config = SECTIONS[section as Section],
     query = queryFrom(await searchParams);
-  // Use one cohort scope for both report and chart aggregation.
-  const overviewQuery = Object.fromEntries(["batch", "department", "search"].flatMap(key => query[key] ? [[key, query[key]]] : []));
-  const [data, charts, notices] = await Promise.all([
+  // Home is scoped by passing-out batch only; branch and search live in Insights.
+  const overviewQuery: Record<string, string> = query.batch ? { batch: query.batch } : {};
+  const [data, charts, notices, pendingRequests] = await Promise.all([
     placementRead<Report>(config.resource, section === "overview" ? overviewQuery : query),
     section === "overview"
       ? placementOverviewCharts(overviewQuery).then(
@@ -45,22 +45,26 @@ export default async function PlacementSection({
         )
       : null,
     section === "overview" ? initialNotifications() : null,
+    section === "overview"
+      ? driveRequests({ status: "submitted" }).then(
+          (list) => list.counts.submitted ?? 0,
+          (error: unknown) => {
+            if (!(error instanceof CampusError)) throw error;
+            return null;
+          },
+        )
+      : null,
   ]);
-  if (section === "overview") return <>
-    <NotificationsPanel
-      initial={notices}
-      className="cp-overview-notices"
-      empty="You are all caught up. Drive requests from companies, round results they record and other updates will appear here."
-    />
+  if (section === "overview") return (
     <PlacementOverview
-    data={data} charts={charts?.value ?? null} chartError={charts?.error} query={overviewQuery}
-    environment={competencyTestingEnabled() ? "Testing · synthetic data" : process.env.NODE_ENV === "development" ? "Local · configured campus data" : undefined}
-    today={new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())}
-  />
-  </>;
+      data={data} charts={charts?.value ?? null} chartError={charts?.error} query={overviewQuery}
+      notices={notices} pendingRequests={pendingRequests}
+      environment={competencyTestingEnabled() ? "Testing · synthetic data" : process.env.NODE_ENV === "development" ? "Local · configured campus data" : undefined}
+      today={new Intl.DateTimeFormat("en-CA", {timeZone:"Asia/Kolkata",year:"numeric",month:"2-digit",day:"2-digit"}).format(new Date())}
+    />
+  );
   return (
     <>
-      <p className="erp-eyebrow">DSU / PLACEMENT OFFICER</p>
       <div className="po-heading">
         <div>
           <h1>{config.title}</h1>

@@ -6,41 +6,31 @@ import {
   Bot,
   Award,
   BriefcaseBusiness,
-  Layers,
-  Network,
   Building2,
   ChartLine,
-  ChevronDown,
-  FileText,
-  Inbox,
-  LayoutGrid,
-  ListChecks,
-  ListOrdered,
+  House,
   LogOut,
   Menu,
   Moon,
   PanelLeft,
   Sun,
   Users,
-  Upload,
-  Shapes,
+  Wrench,
   X,
   type LucideIcon,
 } from "lucide-react";
-import { SECTIONS } from "@/features/placement/lib/types";
+import { activeNav, placementNav } from "@/features/placement/lib/nav";
 import { signOut } from "@/app/login/actions";
 import { NotificationBell } from "@/shared/notifications/Notifications";
 
 const ICONS: Record<string, LucideIcon> = {
-  overview: LayoutGrid,
-  companies: Building2,
+  home: House,
   drives: BriefcaseBusiness,
+  companies: Building2,
+  students: Users,
   offers: Award,
-  "company-reports": FileText,
-  "multiple-offers": Layers,
-  departments: Network,
-  batch: ChartLine,
-  tests: ListChecks,
+  insights: ChartLine,
+  tools: Wrench,
 };
 
 const WIDTH = { min: 200, max: 380, initial: 246, step: 16 };
@@ -49,23 +39,11 @@ const clampWidth = (w: number) =>
 const uiScale = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) / 16 || 1;
 
-const NAV_GROUPS = [
-  { id: "offers", label: "Offers & Placements", Icon: Award, routes: ["offers", "multiple-offers"] },
-  { id: "departments", label: "Department Intelligence", Icon: Network, routes: ["departments", "batch", "categories", "student-analytics"] },
-];
-const matchesRoute = (path: string, href: string) => path === href || path.startsWith(`${href}/`);
-const activeGroups = (path: string) =>
-  NAV_GROUPS.filter(group =>
-    group.routes.some(route => matchesRoute(path, `/placement/${route}`))
-  ).map(group => group.id);
-
 export function Workspace({ children, competencyTesting = false }: { children: React.ReactNode; competencyTesting?: boolean }) {
   const path = usePathname();
-
-  const [openGroups, setOpenGroups] = useState<string[]>(() => activeGroups(path));
-  useEffect(() => {
-    setOpenGroups(previous => [...new Set([...previous, ...activeGroups(path)])]);
-  }, [path]);
+  const sections = placementNav(competencyTesting);
+  const active = activeNav(path, sections);
+  const onFriday = path.startsWith("/placement/assistants/friday");
 
   const drawer = useRef<HTMLDialogElement>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -143,115 +121,28 @@ export function Workspace({ children, competencyTesting = false }: { children: R
     saveWidth(next);
   };
 
-  const items: {
-    href: string;
-    label: string;
-    Icon: LucideIcon;
-    current: boolean;
-    className?: string;
-  }[] = [
-    ...(competencyTesting ? [{ href: "/placement/talent-intelligence", label: "Talent intelligence", Icon: ChartLine, current: path === "/placement/talent-intelligence" }] : []),
-    ...Object.entries(SECTIONS).map(([key, section]) => ({
-      href: `/placement/${key}`,
-      label: section.title,
-      Icon: ICONS[key] ?? LayoutGrid,
-      current: matchesRoute(path, `/placement/${key}`),
-    })),
-    {
-      href: "/placement/categories",
-      label: "Student categories",
-      Icon: Shapes,
-      current: path === "/placement/categories" || path.startsWith("/placement/categories/"),
-    },
-    {
-      href: "/placement/student-analytics",
-      label: "Student analytics",
-      Icon: Users,
-      current: path === "/placement/student-analytics",
-    },
-    {
-      href: "/placement/drive-requests",
-      label: "Drive requests",
-      Icon: Inbox,
-      current: matchesRoute(path, "/placement/drive-requests"),
-    },
-    {
-      href: "/placement/students-ranking",
-      label: "Students Ranking",
-      Icon: ListOrdered,
-      current: matchesRoute(path, "/placement/students-ranking"),
-    },
-    {
-      href: "/placement/imports",
-      label: "Data imports",
-      Icon: Upload,
-      current: path === "/placement/imports",
-    },
-    {
-      href: "/placement/assistants/friday",
-      label: "F.R.I.D.A.Y.",
-      Icon: Bot,
-      current: path.endsWith("/friday"),
-      className: "po-nav-friday",
-    },
-    {
-      href: "/placement/student-tools",
-      label: "Student tools",
-      Icon: ListChecks,
-      current: path === "/placement/student-tools",
-    },
-  ];
-
-  const navigation = (mobile = false) => {
-    const link = (route: string) => {
-      const item = items.find(item => item.href === `/placement/${route}`);
-      if (!item) return null;
-      const { href, Icon, current, className } = item;
-      const label = route === "departments" ? "Department Intelligence Overview" : item.label;
-      return (
-        <Link key={href} href={href} className={className}
-          aria-current={current ? "page" : undefined}
-          title={!mobile && collapsed && !isMobile ? label : undefined}
-          onClick={mobile ? closeDrawer : undefined}
-        >
-          <Icon size={16} aria-hidden="true" /><span className="po-nav-label">{label}</span>
-        </Link>
-      );
-    };
-    return (
-      <nav
-        id={mobile ? "placement-mobile-nav" : "placement-nav"}
-        aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}
-      >
-        {["assistants/friday", "overview", "companies", "drives", "drive-requests"].map(link)}
-        {NAV_GROUPS.map(({ id, label, Icon, routes }) => {
-          const open = openGroups.includes(id);
-          const controls = `po-${mobile ? "mobile" : "desktop"}-${id}-links`;
-          return (
-            <div className="po-nav-group" key={id}
-              data-active={routes.some(route => matchesRoute(path, `/placement/${route}`)) || undefined}
-            >
-              <button type="button" className="po-nav-toggle"
-                aria-expanded={open} aria-controls={controls}
-                title={!mobile && collapsed && !isMobile ? label : undefined}
-                onClick={() => setOpenGroups(previous =>
-                  open ? previous.filter(v => v !== id) : [...previous, id]
-                )}
-              >
-                <Icon size={16} aria-hidden="true" />
-                <span className="po-nav-label">{label}</span>
-                <ChevronDown className="po-nav-chevron" size={13} aria-hidden="true" />
-              </button>
-              <div id={controls} className="po-nav-children" hidden={!open}>
-                {routes.map(link)}
-              </div>
-            </div>
-          );
-        })}
-        {["students-ranking", "company-reports", "tests", "imports", "student-tools", "talent-intelligence"].map(link)}
-      </nav>
-    );
-  };
+  const navigation = (mobile = false) => (
+    <nav
+      id={mobile ? "placement-mobile-nav" : "placement-nav"}
+      aria-label={mobile ? "Mobile Placement Officer navigation" : "Placement Officer navigation"}
+    >
+      {sections.map(({ id, label, href }) => {
+        const Icon = ICONS[id] ?? House;
+        const current = active.section?.id === id;
+        return (
+          <Link key={id} href={href}
+            className={id === "tools" ? "po-nav-tools" : undefined}
+            aria-current={current ? "page" : undefined}
+            title={!mobile && collapsed && !isMobile ? label : undefined}
+            onClick={mobile ? closeDrawer : undefined}
+          >
+            <Icon size={16} aria-hidden="true" /><span className="po-nav-label">{label}</span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+  const tabs = !onFriday && active.section && active.section.tabs.length > 1 ? active.section : null;
 
   return (
     <div
@@ -381,6 +272,13 @@ export function Workspace({ children, competencyTesting = false }: { children: R
             <Menu size={17} aria-hidden="true" />Menu
           </button>
           <span className="po-topbar-identity">TRAINING & PLACEMENT CELL</span>
+          <Link
+            href="/placement/assistants/friday"
+            className="po-topbar-friday"
+            aria-current={onFriday ? "page" : undefined}
+          >
+            <Bot size={15} aria-hidden="true" />F.R.I.D.A.Y.
+          </Link>
           <NotificationBell className="po-topbar-bell" />
           <button
             type="button"
@@ -397,13 +295,22 @@ export function Workspace({ children, competencyTesting = false }: { children: R
         <main
           id="placement-content"
           className={
-            path.startsWith("/placement/assistants/friday")
+            onFriday
               ? "erp-main po-main-flush"
-              : path === "/placement/overview" ? "erp-main po-overview-main" : "erp-main"
+              : active.section?.id === "home" || path === "/placement/insights" ? "erp-main po-overview-main" : "erp-main"
           }
           tabIndex={-1}
         >
           {/* Keyed by path so each page plays the entrance transition. */}
+          {tabs && (
+            <nav className="po-section-tabs" aria-label={`${tabs.label} pages`}>
+              {tabs.tabs.map((tab) => (
+                <Link key={tab.href} href={tab.href} aria-current={active.tab?.href === tab.href ? "page" : undefined}>
+                  {tab.label}
+                </Link>
+              ))}
+            </nav>
+          )}
           <div className="po-route" key={path}>{children}</div>
         </main>
       </div>

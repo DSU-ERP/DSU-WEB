@@ -152,23 +152,25 @@ const css = '*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inhe
     assert.match(await page.getByRole('note').innerText(), /Developer scores are provisional.*50% \/ 30% \/ 20%/s);
     assert.deepEqual(await page.locator('.po-rank-metrics strong').allInnerTexts(), ['6', '5', '4', '5', '2', '1']);
 
-    // Sidebar: item present after Department Intelligence, active on the module and its sub-pages.
+    // Ranking is the first page of the Students section: the section is active in
+    // the sidebar and the Ranking tab is active, on the module and its sub-pages.
     const nav = page.locator('#placement-nav');
-    const hrefs = await nav.locator('a').evaluateAll((els) => els.map((e) => e.getAttribute('href')));
-    assert.equal(hrefs[hrefs.indexOf('/placement/students-ranking') - 1], '/placement/student-analytics', 'Students Ranking follows the Department Intelligence group');
+    const tabs = page.locator('.po-section-tabs');
     assert.equal(await nav.locator('a[aria-current=page]').getAttribute('href'), '/placement/students-ranking');
+    assert.equal(await tabs.locator('a[aria-current=page]').innerText(), 'Ranking');
     await open('', `/placement/students-ranking/${id(1)}`);
     assert.equal(await nav.locator('a[aria-current=page]').getAttribute('href'), '/placement/students-ranking', 'active on the detail page');
+    assert.equal(await tabs.locator('a[aria-current=page]').innerText(), 'Ranking', 'tab active on the detail page');
     await open();
     await page.getByRole('button', { name: 'Collapse sidebar' }).click();
-    const link = nav.getByRole('link', { name: 'Students Ranking', exact: true });
+    const link = nav.getByRole('link', { name: 'Students', exact: true });
     assert.ok(await link.isVisible());
-    assert.equal(await link.getAttribute('title'), 'Students Ranking', 'tooltip names the collapsed icon');
+    assert.equal(await link.getAttribute('title'), 'Students', 'tooltip names the collapsed icon');
     assert.ok(await link.locator('svg').isVisible());
     await page.getByRole('button', { name: 'Expand sidebar' }).click();
     await page.setViewportSize({ width: 390, height: 844 });
     await page.getByRole('button', { name: 'Menu', exact: true }).click();
-    await page.getByRole('dialog').getByRole('link', { name: 'Students Ranking', exact: true }).click();
+    await page.getByRole('dialog').getByRole('link', { name: 'Students', exact: true }).click();
     await page.waitForURL(origin + '/placement/students-ranking');
     await page.setViewportSize({ width: 1440, height: 900 });
 

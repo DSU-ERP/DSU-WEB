@@ -1,4 +1,4 @@
-// Real dashboard and navigation with clearly synthetic, local-only fixtures.
+// Real Home dashboard, Insights and officer navigation with clearly synthetic, local-only fixtures.
 const fs = require('node:fs');
 const path = require('node:path');
 const http = require('node:http');
@@ -25,13 +25,21 @@ const report = {
 };
 const entry=`import React from 'react';import {createRoot} from 'react-dom/client';
 import {PlacementOverview} from '@/features/placement/components/Overview';
+import {PlacementInsights} from '@/features/placement/components/Insights';
 import {Workspace} from '@/features/placement/components/Workspace';
 const data=${JSON.stringify(report)},charts=${JSON.stringify(chart)};
 const query=Object.fromEntries(new URLSearchParams(location.search));
 if(query.search==='no match'){data.summary.students=0;charts.kpis.totalStudents=0;charts.status=[];charts.departments=[];}
 if(query.search==='matched'){data.summary.students=1;charts.kpis.totalStudents=1;charts.kpis.eligible=1;charts.status=[{key:'eligible_not_placed',label:'Eligible, not placed',count:1}];charts.departments=[{department:'CSE',total:1,eligible:1,placed:0}];}
-if(query.state==='populated'){data.recent=[{id:'offer-1',student_id:'student-1',name:'Fixture Student',usn:'TEST001',company:'Fixture Recruiting Company',title:'Graduate engineer',package_lpa:8,status:'accepted',department:'CSE',batch:'2026',category:'regular',active:true}];data.companies=[{name:'Fixture Recruiting Company',offers:1,hired:1,accepted:1,average:8}];data.summary.average=8;data.summary.highest=8;data.summary.median=8;}
-function Fixture(){const [liveCharts,setCharts]=React.useState(charts);window.__updateDepartments=rows=>setCharts(previous=>({...previous,departments:rows}));return <Workspace competencyTesting={query.testing==='true'}><PlacementOverview data={data} charts={query.state==='error'?null:liveCharts} query={query} today='2026-10-26' environment='Visual QA · synthetic fixtures'/></Workspace>}
+if(query.state==='populated'){data.summary.average=8;data.summary.highest=8;data.summary.median=8;}
+function Fixture(){const [liveCharts,setCharts]=React.useState(charts);window.__updateDepartments=rows=>setCharts(previous=>({...previous,departments:rows}));
+ const shown=query.state==='error'?null:liveCharts;
+ const body=location.pathname==='/placement/insights'
+  ?<PlacementInsights data={data} charts={shown} query={query} environment='Visual QA · synthetic fixtures'/>
+  :location.pathname==='/placement/overview'
+  ?<PlacementOverview data={data} charts={shown} query={query} today='2026-10-26' environment='Visual QA · synthetic fixtures' notices={{audience:'officer',unread:0,rows:[]}} pendingRequests={query.requests==='none'?null:Number(query.requests||0)}/>
+  :<h1>Fixture page</h1>;
+ return <Workspace competencyTesting={query.testing==='true'}>{body}</Workspace>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 const mocks={...require("./harness-server-mocks.cjs"),
  'next/link':`import React from 'react';export default function Link({children,prefetch,scroll,...props}){return <a {...props}>{children}</a>}`,
@@ -40,7 +48,7 @@ const mocks={...require("./harness-server-mocks.cjs"),
  '@/app/placement/actions':`export async function changePlacement(){return {error:''}}`,
 };
 const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inherit;text-decoration:none}button{cursor:pointer}'+[
- 'src/app/globals.css','src/app/workspace.css','src/app/placement/placement.css','src/app/placement/overview.css',
+ 'src/app/globals.css','src/app/workspace.css','src/app/placement/placement.css','src/app/placement/overview.css','src/app/placement/company-portal.css','src/shared/notifications/notifications.css',
 ].map(p=>fs.readFileSync(p,'utf8').replace('@import "tailwindcss";','')).join('\n');
 (async()=>{
  let browser,server,page;
@@ -57,69 +65,89 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   page=await browser.newPage();const errors=[];
   page.on('pageerror',e=>errors.push(e.message));
   page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
-  const open=async(q='')=>{await page.goto(origin+'/placement/overview'+q);await page.getByRole('heading',{name:'Placement overview',exact:true}).waitFor();await page.evaluate(()=>document.fonts.ready);};
+  const open=async(q='',route='/placement/overview')=>{await page.goto(origin+route+q);await page.getByRole('heading',{name:route==='/placement/insights'?'Insights':'Placement overview',exact:true}).waitFor();await page.evaluate(()=>document.fonts.ready);};
+  const insights=(q='')=>open(q,'/placement/insights');
+
+  // Home stays short: attention, four numbers, upcoming drives, one status bar.
   for(const theme of ['light','dark']) for(const width of [1600,1440,1280,1024,768,390]){
    await page.setViewportSize({width,height:900});await open();await page.evaluate(t=>localStorage.setItem('dsu-placement-theme',t),theme);await page.reload();await page.locator('.po-'+theme).waitFor();
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Overflow ${theme} ${width}`);
    assert.equal(await page.locator('.po-overview-primary article').count(),4);
+   assert.equal(await page.locator('.po-overview-secondary').count(),0,'secondary metrics live in Insights');
+   assert.equal(await page.locator('.po-overview-charts, .po-overview-support, .po-donut').count(),0,'analysis lives in Insights');
+   assert.equal(await page.locator('.po-status-bar .po-status-placed').count(),0,'zero placed segment must not draw');
+   assert.ok(await page.locator('.po-attention').getByText('Drive date has passed. Review recorded status.').isVisible());
+   assert.ok(await page.locator('.dsu-notices').isVisible(),'notifications stay on Home');
+   assert.ok(await page.locator('.po-home-status .po-status-bar').isVisible(),'placement status bar on Home');
+   if(width===1440){assert.ok((await page.locator('.po-overview-drives').boundingBox()).y<900,'upcoming drives above the fold');}
+   await page.waitForTimeout(500);
+   await page.screenshot({path:path.join(dir,`home-${theme}-${width}.png`),fullPage:true});
+   await insights();
+   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Insights overflow ${theme} ${width}`);
+   assert.equal(await page.locator('.po-overview-primary article').count(),4);
    assert.equal(await page.locator('.po-overview-secondary article').count(),4);
    assert.equal(await page.locator('.po-arc.po-tone-placed').count(),0,'zero placed segment must not draw a slice');
-   assert.ok(await page.getByText('Drive date has passed. Review recorded status.').isVisible());
    assert.equal(await page.locator('.po-metrics').count(),0,'no duplicated metric grid');
-   if(width===1440){assert.ok((await page.locator('.po-overview-charts').boundingBox()).y<750,'analytics above fold');}
-   await page.screenshot({path:path.join(dir,`overview-${theme}-${width}.png`),fullPage:true});
-   if([1440,390].includes(width))await page.screenshot({path:path.join(dir,`overview-${theme}-${width}-viewport.png`)});
+   assert.equal(await page.locator('.po-section-tabs a[aria-current=page]').innerText(),'Summary');
+   await page.screenshot({path:path.join(dir,`insights-${theme}-${width}.png`),fullPage:true});
   }
+
+  // Needs attention: pending company requests, and an honest note when they can't be checked.
+  await page.setViewportSize({width:1440,height:900});
+  await open('?requests=2');
+  const pending=page.locator('.po-attention').getByRole('link',{name:/2 drive requests awaiting review/});
+  assert.equal(await pending.getAttribute('href'),'/placement/drive-requests');
+  await open('?requests=none');assert.ok(await page.getByText('Company drive requests could not be checked.').isVisible());
+  // Home's batch picker scopes the page and keeps Insights links in step.
+  await open();await page.getByLabel('Passing-out batch').selectOption('2026');await page.waitForURL('**batch=2026**');
+  assert.equal(await page.locator('.po-overview-kpi a').first().getAttribute('href'),'/placement/insights?batch=2026');
+
+  // Navigation: seven sections, FRIDAY in the top bar, tabs inside each section.
   await page.setViewportSize({width:390,height:844});await open();
   const menu=page.getByRole('button',{name:'Menu',exact:true});await menu.click();
   const dialog=page.getByRole('dialog');assert.ok(await dialog.isVisible());
-  assert.equal(await dialog.locator('nav a').count(),16,'all normal-runtime officer routes are preserved');
+  assert.equal(await dialog.locator('nav a').count(),7,'seven officer sections');
   await page.keyboard.press('Escape');assert.equal(await dialog.isVisible(),false);assert.ok(await menu.evaluate(e=>e===document.activeElement));
-  await menu.click();await dialog.getByRole('link',{name:'Placement overview',exact:true}).click();await page.locator('.po-overview').waitFor();assert.equal(await dialog.isVisible(),false);
+  await menu.click();await dialog.getByRole('link',{name:'Insights',exact:true}).click();await page.waitForURL(origin+'/placement/insights');assert.equal(await dialog.isVisible(),false);
+  await page.screenshot({path:path.join(dir,'tabs-mobile.png')});
   await page.setViewportSize({width:1440,height:900});await open();
   await page.getByRole('button',{name:'Collapse sidebar'}).click();assert.ok(await page.locator('.po-collapsed').count());
-  assert.equal(await page.locator('#placement-nav a').count(),16);
+  assert.equal(await page.locator('#placement-nav a').count(),7);
   await page.getByRole('button',{name:'Expand sidebar'}).click();
-  await page.screenshot({path:path.join(dir,'navigation-offers-expanded.png')});
-  const routes=['assistants/friday','overview','companies','drives','drive-requests','offers','multiple-offers','departments','batch','categories','student-analytics','students-ranking','company-reports','tests','imports','student-tools'];
   const nav=page.locator('#placement-nav');
-  assert.deepEqual(await nav.locator('a').evaluateAll(elements=>elements.map(e=>e.getAttribute('href'))),routes.map(route=>'/placement/'+route));
-  assert.equal(await nav.locator('a').first().innerText(),'F.R.I.D.A.Y.');
-  for(const name of ['Offers & Placements','Department Intelligence']){
-   const toggle=nav.getByRole('button',{name,exact:true});
-   assert.equal(await toggle.getAttribute('aria-expanded'),'false');
-   await toggle.click();assert.equal(await toggle.getAttribute('aria-expanded'),'true');
-   const children=page.locator('#'+await toggle.getAttribute('aria-controls'));
-   assert.ok(await children.isVisible());
-   await toggle.click();assert.equal(await children.isVisible(),false);
-   assert.equal(await children.getByRole('link').count(),0,'collapsed children are removed from the accessibility tree');
+  const sections=['overview','drives','companies','students-ranking','offers','insights','imports'];
+  assert.deepEqual(await nav.locator('a').evaluateAll(elements=>elements.map(e=>e.getAttribute('href'))),sections.map(route=>'/placement/'+route));
+  assert.deepEqual(await nav.locator('a').allInnerTexts(),['Home','Drives','Companies','Students','Offers','Insights','Tools']);
+  assert.equal(await page.locator('.po-topbar a[href="/placement/assistants/friday"]').innerText(),'F.R.I.D.A.Y.');
+  await page.screenshot({path:path.join(dir,'navigation-desktop.png')});
+  // Every original destination is still reachable: its section is active in
+  // the sidebar and its own tab is active above the page.
+  const destinations=[
+   ['overview','overview',null],['companies','companies','companies'],['drives','drives','drives'],['drive-requests','drives','drive-requests'],
+   ['offers','offers','offers'],['multiple-offers','offers','multiple-offers'],['departments','insights','departments'],['batch','insights','batch'],
+   ['categories','students-ranking','categories'],['student-analytics','students-ranking','student-analytics'],['students-ranking','students-ranking','students-ranking'],
+   ['company-reports','companies','company-reports'],['tests','students-ranking','tests'],['imports','imports','imports'],['student-tools','imports','student-tools'],
+   ['insights','insights','insights'],['categories/advanced','students-ranking','categories'],['drives/drive-1','drives','drives'],['students/student-1','students-ranking','student-analytics'],
+  ];
+  for(const [route,section,tab] of destinations){
+   await page.goto(origin+'/placement/'+route);await nav.waitFor();
+   assert.equal(await nav.locator('a[aria-current=page]').getAttribute('href'),'/placement/'+section,route);
+   if(tab){const current=page.locator('.po-section-tabs a[aria-current=page]');assert.equal(await current.getAttribute('href'),'/placement/'+tab,route);assert.ok(await current.isVisible());}
+   else assert.equal(await page.locator('.po-section-tabs').count(),0,'Home has no tabs');
   }
-  // Every original destination remains in the shell and reveals its active group on a direct visit.
-  // The fixture renders the real shell at each URL, not the authenticated route loader.
-  for(const route of routes){
-   await page.goto(origin+'/placement/'+route);await page.locator('#placement-nav').waitFor();
-   const current=page.locator('#placement-nav a[aria-current=page]');
-   assert.equal(await current.getAttribute('href'),'/placement/'+route);assert.ok(await current.isVisible());
-   await current.click();await page.waitForURL(origin+'/placement/'+route);
-  }
-  await page.goto(origin+'/placement/categories/advanced');await page.locator('#placement-nav').waitFor();
-  assert.equal(await page.locator('#placement-nav').getByRole('button',{name:'Department Intelligence',exact:true}).getAttribute('aria-expanded'),'true');
-  await open();
-  await page.getByRole('button',{name:'Collapse sidebar'}).click();
-  await nav.getByRole('button',{name:'Offers & Placements',exact:true}).click();
-  assert.ok(await nav.getByRole('link',{name:'Multiple-offer tracking',exact:true}).isVisible());
-  await page.getByRole('button',{name:'Expand sidebar'}).click();
-  await page.setViewportSize({width:1024,height:500});
-  await nav.getByRole('button',{name:'Department Intelligence',exact:true}).click();
-  await page.screenshot({path:path.join(dir,'navigation-short-viewport.png')});
+  await page.goto(origin+'/placement/assistants/friday');await nav.waitFor();
+  assert.equal(await nav.locator('a[aria-current=page]').count(),0);assert.equal(await page.locator('.po-section-tabs').count(),0);
+  assert.equal(await page.locator('.po-topbar a[href="/placement/assistants/friday"]').getAttribute('aria-current'),'page');
+  await page.goto(origin+'/placement/drives');await page.locator('.po-section-tabs').getByRole('link',{name:'Company requests',exact:true}).click();await page.waitForURL(origin+'/placement/drive-requests');
   assert.equal(await nav.evaluate(e=>getComputedStyle(e).scrollbarWidth),'none');
-  assert.ok(await nav.evaluate(e=>e.scrollHeight>e.clientHeight));
-  await nav.hover();await page.mouse.wheel(0,600);await page.waitForTimeout(200);
-  assert.ok(await nav.evaluate(e=>e.scrollTop>0),'wheel scrolling preserved');
-  await nav.getByRole('link',{name:'F.R.I.D.A.Y.',exact:true}).focus();
-  assert.equal(await nav.evaluate(e=>e.scrollTop),0,'keyboard focus scrolls hidden links into view');
   assert.ok(await page.locator('.erp-sidebar .po-signout').isVisible());
-  await page.setViewportSize({width:1440,height:900});await open();
+  await page.goto(origin+'/placement/students-ranking?testing=true');await page.locator('.po-section-tabs').waitFor();
+  assert.ok(await page.locator('.po-section-tabs').getByRole('link',{name:'Talent intelligence',exact:true}).isVisible(),'testing-only module is preserved');
+  await page.goto(origin+'/placement/students-ranking');await page.locator('.po-section-tabs').waitFor();
+  assert.equal(await page.locator('.po-section-tabs').getByRole('link',{name:'Talent intelligence',exact:true}).count(),0);
+
+  // Insights carries the department chart, filters and supporting measures.
+  await insights();
   const bars=page.locator('.po-department-chart');
   const eligible=bars.getByRole('button',{name:'CSE, Placement eligible: 455',exact:true});
   await eligible.hover();assert.ok(await bars.getByRole('tooltip').isVisible());
@@ -129,7 +157,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   assert.match(await bars.getByRole('tooltip').innerText(),/Students placed: 0.*0.0%/);
   assert.equal(await bars.locator('.po-bar.po-tone-placed').first().evaluate(e=>e.getBoundingClientRect().width),0);
   for(const [theme,colors] of [['light',['rgb(98, 119, 138)','rgb(193, 138, 62)','rgb(40, 123, 97)']],['dark',['rgb(155, 176, 197)','rgb(224, 177, 107)','rgb(103, 191, 160)']]]){
-   if(await page.locator('.po-'+theme).count()===0)await page.getByRole('button',{name:'Use '+theme+' theme'}).click();
+   if(await page.locator('.po-'+theme).count()===0)await page.getByRole('button',{name:'Switch to '+theme+' theme'}).click();
    for(const [i,series] of ['total','eligible','placed'].entries()){
     const style=await bars.locator('.po-bar.po-tone-'+series).first().evaluate(e=>({color:getComputedStyle(e).backgroundColor,image:getComputedStyle(e).backgroundImage}));
     assert.equal(style.color,colors[i]);assert.equal(style.image,'none');
@@ -139,43 +167,37 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   assert.equal(await bars.locator('.po-bar').first().evaluate(e=>getComputedStyle(e).animationName),'none');
   assert.equal(await bars.locator('.po-bar').first().evaluate(e=>getComputedStyle(e).transitionDuration),'0s');
   await page.emulateMedia({reducedMotion:'no-preference'});
-  await eligible.hover();await page.screenshot({path:path.join(dir,'department-tooltip-desktop.png'),fullPage:true});
+  await eligible.hover();
   await page.evaluate(()=>window.__updateDepartments([{department:'CSE',total:1000,eligible:675,placed:100}]));
   await bars.getByRole('button',{name:'CSE, Placement eligible: 675',exact:true}).waitFor();
   assert.match(await bars.getByRole('tooltip').innerText(),/675.*67.5%/,'tooltip uses the latest filtered data');
   assert.equal(await bars.locator('.po-bar-row').count(),1);
-  await open();
+  await insights();
   await page.locator('.po-chart-bars').getByText('View data table',{exact:true}).click();
   assert.ok(await page.getByRole('cell',{name:'A very long department name for accessibility'}).isVisible() || await page.getByRole('rowheader',{name:'A very long department name for accessibility'}).isVisible());
   await page.getByLabel('Student name or USN').fill('matched');await page.getByLabel('Passing-out batch').selectOption('2026');await page.getByLabel('Branch',{exact:true}).selectOption('CSE');
   await page.getByRole('button',{name:'Apply filters'}).click();await page.waitForURL('**search=matched**');
+  assert.equal(new URL(page.url()).pathname,'/placement/insights');
   assert.equal(new URL(page.url()).searchParams.get('batch'),'2026');assert.equal(new URL(page.url()).searchParams.get('department'),'CSE');
   await page.locator('.po-overview-primary').waitFor();assert.equal(await page.locator('.po-overview-kpi strong').first().innerText(),'1');
   assert.equal(await page.locator('.po-department-chart .po-bar-row').count(),1);
-  await page.locator('.po-department-chart').getByRole('button',{name:'CSE, Placement eligible: 1',exact:true}).focus();
-  assert.match(await page.getByRole('tooltip').innerText(),/100.0%/);
   const before=page.url();await page.getByRole('button',{name:/^Refresh/}).click();assert.equal(page.url(),before);assert.equal(await page.evaluate(()=>window.__refreshes),1);
-  await page.getByRole('button',{name:'Clear',exact:true}).click();await page.waitForURL(origin+'/placement/overview');
-  await open('?search=no+match');assert.ok(await page.getByRole('heading',{name:'No students match this selection'}).isVisible());assert.equal(await page.locator('.po-overview-primary').count(),0);
+  await page.getByRole('button',{name:'Clear',exact:true}).click();await page.waitForURL(origin+'/placement/insights');
+  await insights('?search=no+match');assert.ok(await page.getByRole('heading',{name:'No students match this selection'}).isVisible());assert.equal(await page.locator('.po-overview-primary').count(),0);
   await open('?state=error');assert.ok(await page.getByText('Cohort analytics are unavailable.').isVisible());assert.equal(await page.locator('.po-overview-kpi strong').nth(1).innerText(),'Not available');assert.equal(await page.locator('.po-overview-kpi strong').nth(2).innerText(),'0');
-  await page.screenshot({path:path.join(dir,'overview-partial-failure.png'),fullPage:true});
-  await open('?state=populated');assert.ok(await page.getByRole('link',{name:/TEST001/}).isVisible());assert.equal(await page.locator('.po-overview-support').getByText('No compensation data',{exact:true}).count(),0);
+  assert.equal(await page.locator('.po-home-status').count(),0,'no status bar without chart data');
+  await page.screenshot({path:path.join(dir,'home-partial-failure.png'),fullPage:true});
+  await insights('?state=populated');assert.equal(await page.locator('.po-overview-support').getByText('No compensation data',{exact:true}).count(),0);
   await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,'populated tables contained on mobile');
-  await page.screenshot({path:path.join(dir,'overview-populated-mobile.png'),fullPage:true});
-  await open('?testing=true');await page.getByRole('button',{name:'Menu',exact:true}).click();
-  assert.equal(await page.locator('#placement-mobile-nav a').count(),16,'testing-only module is preserved');
-  await page.locator('#placement-mobile-nav').getByRole('button',{name:'Department Intelligence',exact:true}).click();
-  assert.ok(await page.getByRole('dialog').getByRole('link',{name:'Student analytics',exact:true}).isVisible());
-  await page.screenshot({path:path.join(dir,'navigation-mobile-expanded.png')});
-  await page.getByRole('button',{name:'Close menu'}).click();
+  await page.screenshot({path:path.join(dir,'insights-populated-mobile.png'),fullPage:true});
   const touchPage=await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true});
-  await touchPage.goto(origin+'/placement/overview');
+  await touchPage.goto(origin+'/placement/insights');
   await touchPage.getByRole('button',{name:'CSE, Placement eligible: 455',exact:true}).tap();
   assert.match(await touchPage.getByRole('tooltip').innerText(),/455.*70.0%/);
   await touchPage.locator('.po-department-chart').screenshot({path:path.join(dir,'department-mobile.png')});
   await touchPage.close();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['KPI hierarchy','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','past drive warning','filters/clear/refresh','15 preserved routes and testing-only link','collapsible groups and active nested routes','hidden scrollbar with wheel and keyboard scrolling','mobile dialog and focus return','populated tables','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
+  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['short Home: attention, 4 KPIs, upcoming drives, status bar','pending and unavailable drive requests','batch picker','Insights KPIs, charts and supporting measures','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','filters/clear/refresh','7 sections with every original route reachable through tabs','FRIDAY in the top bar','testing-only tab','mobile dialog and focus return','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
  } catch(e){console.error(e.stack);if(page)await page.screenshot({path:path.join(dir,'failure.png'),fullPage:true});process.exitCode=1;}
  finally{await browser?.close();await new Promise(r=>server?server.close(r):r());}
 })();

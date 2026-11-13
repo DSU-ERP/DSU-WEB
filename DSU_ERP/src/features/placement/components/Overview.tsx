@@ -1,120 +1,144 @@
 import Link from "next/link";
-import { BarChart, DonutChart, LineChart } from "./Charts";
 import { Refresh } from "./Controls";
-import { OverviewFilters } from "./OverviewFilters";
-import { Table, offerColumns } from "./UI";
-import { formatCgpa, formatCount, formatPercent, type OverviewCharts } from "../lib/intelligence";
-import { href, label, number, text, type Report, type Query, type Row } from "../lib/types";
+import { BatchPicker } from "./OverviewFilters";
+import { NotificationsPanel } from "@/shared/notifications/Notifications";
+import type { NotificationList } from "@/shared/notifications/types";
+import { formatCount, formatPercent, roundedPercents, type OverviewCharts, type StatusSegment } from "../lib/intelligence";
+import { label, text, type Report, type Query, type Row } from "../lib/types";
 import { driveDateWarning } from "../lib/overview";
 
 const records = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
+const UPCOMING_LIMIT = 5;
 
-export function PlacementOverview({ data, charts, chartError, query, environment, today }: {
+/**
+ * Home: what needs the officer now, four headline numbers, and the drives
+ * coming up. Everything analytical lives under Insights.
+ */
+export function PlacementOverview({ data, charts, chartError, query, environment, today, notices = null, pendingRequests = null }: {
   data: Report; charts: OverviewCharts | null; chartError?: string; query: Query;
-  environment?: string; today: string;
+  environment?: string; today: string; notices?: NotificationList | null; pendingRequests?: number | null;
 }) {
   const k = charts?.kpis;
   const summary = data.summary;
   const total = k?.totalStudents ?? summary?.students;
-  const companies = records(data.companies).filter(r => Number(r.offers) > 0).slice(0, 10);
-  const recent = records(data.recent);
   const drives = records(data.scheduled);
-  const primary = [
-    ["Total students", formatCount(total), "Students in the selected cohort"],
+  const late = drives.flatMap(d => { const warning = driveDateWarning(d, today); return warning ? [{ drive: d, warning }] : []; });
+  const insights = `/placement/insights${query.batch ? `?batch=${encodeURIComponent(query.batch)}` : ""}`;
+  const kpis = [
+    ["Students", formatCount(total), "In the selected batch"],
     ["Placement eligible", formatCount(k?.eligible), "Valid CGPA of 6.75 or above"],
-    ["Students placed", formatCount(k?.placed ?? summary?.placed), "Distinct students with an active offer"],
-    ["Placement rate", formatPercent(k?.placementRate ?? (Number(total) > 0 ? summary?.placement_percentage : null), 2), "Placed students / selected students"],
+    ["Placed", formatCount(k?.placed ?? summary?.placed), "Students with an active offer"],
+    ["Placement rate", formatPercent(k?.placementRate ?? (Number(total) > 0 ? summary?.placement_percentage : null), 2), "Placed / students"],
   ];
+  const attention = Number(pendingRequests) > 0 || late.length > 0;
   return (
-    <div className="po-overview">
+    <div className="po-overview po-home">
       <header className="po-overview-header">
         <div>
-          <p className="po-overview-breadcrumb">PLACEMENTS / OVERVIEW</p>
           <h1>Placement overview</h1>
-          <p>Recruitment performance, student eligibility and placement activity.</p>
+          <p>{query.batch ? `Passing-out batch ${query.batch}` : "All passing-out batches"}</p>
         </div>
-        <div className="po-actions">{environment && <span className="po-environment">{environment}</span>}<Refresh /></div>
+        <div className="po-actions">
+          {environment && <span className="po-environment">{environment}</span>}
+          <BatchPicker batch={query.batch} batches={data.options.batches} />
+          <Refresh />
+        </div>
       </header>
-      <OverviewFilters query={query} options={data.options} />
+
+      <div className="po-home-attention">
+        <section className="erp-panel po-attention" aria-labelledby="attention-heading">
+          <h2 id="attention-heading">Needs attention</h2>
+          {attention ? (
+            <ul>
+              {Number(pendingRequests) > 0 && (
+                <li>
+                  <Link href="/placement/drive-requests">
+                    <strong>{pendingRequests} drive {pendingRequests === 1 ? "request" : "requests"} awaiting review</strong>
+                    <span>Submitted by companies through the company portal</span>
+                  </Link>
+                </li>
+              )}
+              {late.map(({ drive, warning }) => (
+                <li key={String(drive.id)}>
+                  <Link href={`/placement/drives/${drive.id}`}>
+                    <strong>{text(drive.title)} · {text(drive.company)}</strong>
+                    <span className="po-date-warning">{warning}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="po-attention-clear">Nothing needs your attention.</p>
+          )}
+          {pendingRequests === null && <p className="po-scope-note">Company drive requests could not be checked. <Link href="/placement/drive-requests">Open requests</Link></p>}
+        </section>
+        <NotificationsPanel
+          initial={notices}
+          className="cp-overview-notices"
+          empty="You are all caught up. Drive requests, round results and other updates will appear here."
+        />
+      </div>
+
       {total !== undefined && total !== null && Number(total) === 0 ? (
         <section className="erp-panel po-cohort-empty" role="status">
-          <h2>No students match this selection</h2>
-          <p>Choose another batch or branch, or clear the student search.</p>
-          <Link className="erp-secondary" href="/placement/overview">Clear filters</Link>
+          <h2>No students in this batch</h2>
+          <p>Choose another passing-out batch.</p>
+          <Link className="erp-secondary" href="/placement/overview">Show all batches</Link>
         </section>
       ) : <>
-        {!charts && <div className="po-overview-warning" role="status"><strong>Cohort analytics are unavailable.</strong> {chartError || "Use Refresh to try again."} Report totals are shown where available; missing measures are marked Not available.</div>}
+        {!charts && <div className="po-overview-warning" role="status"><strong>Cohort analytics are unavailable.</strong> {chartError || "Use Refresh to try again."} Missing measures are marked Not available.</div>}
         <section className="po-overview-primary" aria-label="Placement key indicators">
-          {primary.map(([title, value, detail]) => <article key={title} className="po-overview-kpi">
-            <h2>{title}</h2><strong>{value}</strong><p>{detail}</p>
+          {kpis.map(([title, value, detail]) => <article key={title} className="po-overview-kpi">
+            <Link href={insights}><h2>{title}</h2><strong>{value}</strong><p>{detail}</p></Link>
           </article>)}
         </section>
-        <section className="po-overview-secondary" aria-label="Operational indicators">
-          {[
-            ["Active offers", formatCount(k?.activeOffers ?? summary?.offers), "Offered or accepted"],
-            ["Participating companies", formatCount(k?.companies ?? summary?.companies), "With drives in the selected batch"],
-            ["Active drives", formatCount(k?.activeDrives), "Recorded as upcoming or ongoing"],
-            ["Average CGPA", formatCgpa(k?.averageCgpa), "Valid CGPAs in the selected cohort"],
-          ].map(([title, value, detail]) => <article key={title}><div><h2>{title}</h2><p>{detail}</p></div><strong>{value}</strong></article>)}
-        </section>
-        <p className="po-scope-note">Student and offer measures follow all selected filters. Companies and drives follow the passing-out batch; student search and branch do not restrict recruitment schedules.</p>
-        {charts && <section className="po-overview-charts" aria-label="Cohort analytics">
-          <DonutChart segments={charts.status} definition={charts.definitions.status} />
-          <BarChart rows={charts.departments} definition={charts.definitions.departments} />
-        </section>}
       </>}
-      <section className="po-overview-activity" aria-labelledby="recruitment-heading">
-        <div className="po-section-heading"><h2 id="recruitment-heading">Recruitment activity</h2><span>Recorded offers and drive schedules</span></div>
-        <section className="erp-panel po-overview-drives">
-          <div className="po-panel-heading"><h3>Upcoming & ongoing drives</h3><Link href={href("drives", { batch: query.batch || "" })}>View drives</Link></div>
-          <p className="po-scope-note">Selected batch schedule. Status is recorded by officers, not automatically changed by date.</p>
-          {drives.length ? <div className="po-drive-list">
-            <div className="po-drive-columns" aria-hidden="true"><span>Drive / company</span><span>Drive date</span><span>Registration deadline</span><span>Recorded status</span></div>
-            {drives.map(d => <article key={String(d.id)} className="po-drive-row">
-              <div><Link href={`/placement/drives/${d.id}`}>{text(d.title)}</Link><p>{text(d.company)}</p></div>
-              <div><span className="po-mobile-label">Drive date</span><time>{text(d.drive_date)}</time></div>
-              <div><span className="po-mobile-label">Registration deadline</span><time>{text(d.registration_deadline)}</time></div>
-              <div><span className="po-status-label">{label(String(d.status))}</span>{driveDateWarning(d, today) && <p className="po-date-warning">{driveDateWarning(d, today)}</p>}</div>
-            </article>)}
-          </div> : <OverviewEmpty title="No scheduled drives" detail="No upcoming or ongoing drives are recorded for this batch selection." />}
+
+      <div className="po-home-pair">
+        <section className="erp-panel po-overview-drives" aria-labelledby="upcoming-heading">
+          <div className="po-panel-heading"><h2 id="upcoming-heading">Upcoming drives</h2><Link href={`/placement/drives${query.batch ? `?batch=${encodeURIComponent(query.batch)}` : ""}`}>View all drives</Link></div>
+          {drives.length ? <ul className="po-home-drives">
+            {drives.slice(0, UPCOMING_LIMIT).map(d => <li key={String(d.id)}>
+              <div><Link href={`/placement/drives/${d.id}`}>{text(d.title)}</Link><span>{text(d.company)}</span></div>
+              <dl>
+                <div><dt>Drive</dt><dd><time>{text(d.drive_date)}</time></dd></div>
+                <div><dt>Deadline</dt><dd><time>{text(d.registration_deadline)}</time></dd></div>
+              </dl>
+              <span className="po-status-label">{label(String(d.status))}</span>
+            </li>)}
+          </ul> : <div className="po-overview-empty"><strong>No scheduled drives</strong><p>No upcoming or ongoing drives are recorded for this batch.</p></div>}
+          {drives.length > UPCOMING_LIMIT && <p className="po-scope-note">{drives.length - UPCOMING_LIMIT} more in Drives.</p>}
         </section>
-        <div className="po-overview-activity-pair">
-          <section className="erp-panel"><div className="po-panel-heading"><h3>Recent placements</h3><Link href={href("offers", query)}>View offers</Link></div>
-            {recent.length ? <Table caption="Recent active placement offers" rows={recent} columns={offerColumns} /> : <OverviewEmpty title="No recent placements" detail="There are no qualifying placement offers for the selected filters." />}
-          </section>
-          <section className="erp-panel"><div className="po-panel-heading"><h3>Leading recruiting companies</h3><Link href={href("company-reports", query)}>Company reports</Link></div>
-            {companies.length ? <Table caption="Leading companies by active offers" rows={companies} columns={[
-              {key:"name", title:"Company", link:r=>href("company-reports", query, {search:String(r.name)})},
-              ...["drives","offers","hired","accepted","average"].map(key=>({key,numeric:true,title:key==="average"?"Avg. LPA":label(key)})),
-            ]} /> : <OverviewEmpty title="No company results for this selection" detail="Companies appear here once they have qualifying offers. A scheduled drive alone does not count as a placement." />}
-          </section>
-        </div>
-      </section>
-      <section aria-labelledby="detail-heading" className="po-overview-details">
-        <div className="po-section-heading"><h2 id="detail-heading">Supporting measures</h2><span>Offer outcomes and compensation</span></div>
-        <div className="po-overview-support">
-          <section className="erp-panel"><h3>Drive stages</h3><p className="po-scope-note">{formatCount(summary?.drives)} recorded drives in the selected batch</p><SummaryList rows={records(data.drive_statuses)} name="status" value="count" /></section>
-          <section className="erp-panel"><h3>Placement categories</h3><p className="po-scope-note">Active offers by package category</p><SummaryList rows={records(data.categories)} name="category" value="offers" /></section>
-          <section className="erp-panel"><h3>Compensation summary</h3>
-            {summary?.average == null ? <OverviewEmpty title="No compensation data" detail="Package statistics appear when active offers include a valid LPA value." /> : <dl className="po-summary-list">{["average","highest","median"].map(key=><div key={key}><dt>{label(key)}</dt><dd>{number(summary?.[key],2)} <small>LPA</small></dd></div>)}</dl>}
-            <p className="po-scope-note">Mean, maximum and median of recorded packages on active offered or accepted offers. Students can have multiple offers.</p>
-          </section>
-        </div>
-        <div className="po-outcome-strip"><span>Accepted offers <strong>{formatCount(k?.acceptedOffers ?? summary?.accepted)}</strong></span><span>Unplaced students <strong>{formatCount(summary?.unplaced)}</strong></span><span>Eligible placement rate <strong>{formatPercent(k?.eligiblePlacementRate,2)}</strong></span></div>
-        <details className="erp-panel po-overview-disclosure"><summary>Department placement and compensation details</summary><Table caption="Department placement comparison" rows={records(data.departments)} columns={[
-          {key:"department",title:"Branch",link:r=>href("batch",query,{department:String(r.department??"__missing__"),page:undefined})},
-          ...["total","placed","placement_percentage","average","highest"].map(key=>({key,numeric:true,title:key==="average"?"Average LPA":key==="highest"?"Highest LPA":label(key)})),
-        ]}/></details>
-        {charts && <LineChart points={charts.progress} definition={charts.definitions.progress} />}
-        {charts && <details className="erp-panel po-overview-disclosure"><summary>Metric definitions and counting rules</summary><dl className="po-metric-definitions">{Object.entries(charts.definitions).map(([key, value])=><div key={key}><dt>{label(key.replace(/([A-Z])/g," $1"))}</dt><dd>{value}</dd></div>)}</dl></details>}
-      </section>
+        {charts && <section className="erp-panel po-home-status" aria-labelledby="status-heading">
+          <div className="po-panel-heading"><h2 id="status-heading">Placement status</h2><Link href={insights}>See insights</Link></div>
+          <StatusBar segments={charts.status} />
+        </section>}
+      </div>
     </div>
   );
 }
 
-function OverviewEmpty({title, detail}:{title:string;detail:string}) {
-  return <div className="po-overview-empty"><strong>{title}</strong><p>{detail}</p></div>;
-}
-function SummaryList({rows, name, value}:{rows:Row[];name:string;value:string}) {
-  return <dl className="po-summary-list">{rows.map(r=><div key={String(r[name])}><dt>{label(String(r[name]))}</dt><dd>{formatCount(r[value])}</dd></div>)}</dl>;
+const TONES: Record<string, string> = {
+  placed: "placed",
+  eligible_not_placed: "eligible",
+  not_eligible_not_placed: "third",
+};
+
+/** One stacked bar with a labelled legend; the legend carries every value. */
+function StatusBar({ segments }: { segments: StatusSegment[] }) {
+  const counts = segments.map(s => Math.max(0, Number(s.count) || 0));
+  const total = counts.reduce((a, b) => a + b, 0);
+  if (!total) return <p className="po-scope-note">No students in this batch, so there is no placement status to show.</p>;
+  const percents = roundedPercents(counts);
+  return <>
+    <div className="po-status-bar" role="img" aria-label={segments.map((s, i) => `${s.label} ${counts[i]} (${percents[i].toFixed(1)}%)`).join(", ")}>
+      {segments.map((s, i) => counts[i] > 0 && <span key={s.key} className={`po-status-${TONES[s.key] ?? "muted"}`} style={{ width: `${(counts[i] / total) * 100}%` }} />)}
+    </div>
+    <dl className="po-home-legend">
+      {segments.map((s, i) => <div key={s.key}>
+        <dt><i className={`po-status-${TONES[s.key] ?? "muted"}`} aria-hidden="true" />{s.label}</dt>
+        <dd>{formatCount(counts[i])} <small>{percents[i].toFixed(1)}%</small></dd>
+      </div>)}
+    </dl>
+  </>;
 }

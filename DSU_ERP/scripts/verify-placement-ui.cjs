@@ -435,11 +435,12 @@ const css =
     await page.getByRole("button", { name: "Collapse sidebar" }).click();
     assert.equal(await page.locator("#placement-nav").isVisible(), true);
     assert.equal(await page.locator("#placement-nav a svg:visible").count(), await page.locator("#placement-nav a:visible").count());
-    await page.getByRole("link", { name: "Student tools" }).waitFor();
-    await page.getByRole("link", { name: "Data imports" }).waitFor();
-    await page.getByRole("link", { name: "Batch analytics" }).waitFor();
+    // Batch lives under Insights; data imports and student tools under Tools.
+    assert.equal(await page.locator('#placement-nav a[aria-current=page]').getAttribute("href"), "/placement/insights");
+    await page.locator(".po-section-tabs").getByRole("link", { name: "Batch", exact: true }).waitFor();
+    await page.locator("#placement-nav").getByRole("link", { name: "Tools", exact: true }).waitFor();
     await page.getByRole("button", { name: "Expand sidebar" }).click();
-    await page.getByRole("button", { name: "Use dark theme" }).click();
+    await page.getByRole("button", { name: "Switch to dark theme" }).click();
     assert.ok(await page.locator(".po-dark").count());
     // Branch links filter the retained batch view, without using retired routes.
     await page.getByRole("link", {name:"CSE ↗",exact:true}).click();

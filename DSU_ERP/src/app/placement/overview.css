@@ -231,3 +231,79 @@
   .po-department-chart .po-bar, .po-nav-children:not([hidden]) { animation: none; }
   .po-department-chart .po-bar, .po-nav-chevron, .po-topbar button { transition: none; }
 }
+
+/* Section tabs: the pages inside the current sidebar section. */
+.po-section-tabs { display: flex; gap: .25rem; margin: 0 0 1.25rem; border-bottom: 1px solid var(--erp-border); overflow-x: auto; scrollbar-width: none; }
+.po-section-tabs::-webkit-scrollbar { display: none; }
+.po-section-tabs a { flex-shrink: 0; display: inline-flex; align-items: center; min-height: 2.75rem; padding: .5rem .875rem; margin-bottom: -1px; border-bottom: 2px solid transparent; font-size: .8125rem; color: var(--erp-muted); white-space: nowrap; transition: color 150ms ease, border-color 150ms ease; }
+.po-section-tabs a:hover { color: var(--po-text); }
+.po-section-tabs a[aria-current=page] { color: var(--po-text); font-weight: 600; border-bottom-color: var(--po-yellow); }
+.po-section-tabs a:focus-visible { outline: 2px solid var(--po-brand); outline-offset: -2px; }
+.po-overview-main > .po-section-tabs { margin-bottom: 1.5rem; }
+
+/* Sidebar: Tools sits apart from the everyday sections. */
+.po-shell .erp-sidebar nav a.po-nav-tools, .po-mobile-drawer nav a.po-nav-tools { margin-top: .75rem; position: relative; }
+.po-shell .erp-sidebar nav a.po-nav-tools::before, .po-mobile-drawer nav a.po-nav-tools::before { content: ""; position: absolute; left: .65rem; right: .65rem; top: -.45rem; border-top: 1px solid var(--erp-border); }
+
+/* Topbar FRIDAY entry. */
+.po-topbar-friday { margin-left: auto; display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .5rem .75rem; border-radius: 4px; font-size: .6875rem; font-weight: 600; letter-spacing: .04em; transition: background-color 150ms ease; }
+.po-topbar-friday:hover, .po-topbar-friday[aria-current=page] { background: var(--po-highlight); }
+.po-topbar-friday:focus-visible { outline: 2px solid var(--po-brand); outline-offset: -2px; }
+.po-topbar-friday + .po-topbar-bell { margin-left: 0; }
+
+/* Home dashboard. */
+.po-home { gap: 1.25rem; }
+.po-home .po-overview-header h1 { margin-top: 0; }
+.po-batch-picker { display: inline-flex; align-items: center; gap: .5rem; font-size: .75rem; color: var(--erp-muted); }
+.po-batch-picker select { height: 2.75rem; min-width: 9rem; padding: .5rem .75rem; font-size: .8125rem; color: var(--po-text); }
+.po-home-attention { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--overview-gap); align-items: stretch; }
+.po-home-attention .cp-overview-notices { margin: 0; }
+.po-home h2 { font-size: 1.0625rem; font-weight: 500; letter-spacing: -.025em; margin: 0; }
+.po-attention ul { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; }
+.po-attention li + li { border-top: 1px solid var(--erp-border); }
+.po-attention li a { display: grid; gap: .2rem; padding: .7rem .25rem; border-radius: 4px; transition: background-color 150ms ease; }
+.po-attention li a:hover { background: var(--po-highlight); }
+.po-attention li strong { font-size: .8125rem; font-weight: 500; }
+.po-attention li span { font-size: .75rem; color: var(--erp-muted); }
+.po-attention li .po-date-warning { color: var(--po-warning); }
+.po-attention-clear { margin-top: .75rem; font-size: .8125rem; color: var(--erp-muted); }
+.po-home .po-overview-kpi { padding: 0; }
+.po-home .po-overview-kpi:first-child { padding-top: 0; }
+.po-home .po-overview-kpi a { display: block; height: 100%; padding: 1.125rem 1.25rem; border-radius: inherit; transition: background-color 150ms ease; }
+.po-home .po-overview-kpi a:hover { background: var(--po-highlight); }
+.po-home-pair { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--overview-gap); align-items: start; }
+.po-home-drives { list-style: none; margin: .75rem 0 0; padding: 0; }
+.po-home-drives li { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1.4fr) auto; gap: 1rem; align-items: center; padding: .8rem 0; border-top: 1px solid var(--erp-border); font-size: .8125rem; }
+.po-home-drives li > div { display: grid; gap: .2rem; min-width: 0; }
+.po-home-drives li > div a { font-weight: 500; text-decoration: underline; text-underline-offset: 3px; overflow-wrap: anywhere; }
+.po-home-drives li > div span { font-size: .6875rem; color: var(--erp-muted); }
+.po-home-drives dl { display: flex; gap: 1.25rem; margin: 0; }
+.po-home-drives dt { font-size: .625rem; color: var(--erp-muted); }
+.po-home-drives dd { margin: 0; font-variant-numeric: tabular-nums; }
+.po-status-bar { display: flex; height: .75rem; margin: 1.25rem 0 1rem; border-radius: 2px; overflow: hidden; background: var(--po-highlight); }
+.po-status-bar span { display: block; height: 100%; }
+.po-status-bar span + span { border-left: 2px solid var(--po-surface); }
+.po-status-placed { background: var(--po-series-placed); }
+.po-status-eligible { background: var(--po-series-eligible); }
+.po-status-third { background: var(--po-series-third); }
+.po-status-muted { background: var(--erp-muted); }
+.po-home-legend { margin: 0; display: grid; }
+.po-home-legend > div { display: flex; justify-content: space-between; gap: 1rem; padding: .45rem 0; border-bottom: 1px solid var(--erp-border); font-size: .75rem; }
+.po-home-legend > div:last-child { border: 0; }
+.po-home-legend dt { display: flex; align-items: center; gap: .5rem; }
+.po-home-legend i { width: .625rem; height: .625rem; border-radius: 2px; flex-shrink: 0; }
+.po-home-legend dd { margin: 0; font-weight: 500; font-variant-numeric: tabular-nums; }
+.po-home-legend small { margin-left: .5rem; font-weight: 400; color: var(--erp-muted); }
+@media (max-width: 1100px) {
+  .po-home-pair { grid-template-columns: 1fr; }
+}
+@media (max-width: 760px) {
+  .po-home-attention { grid-template-columns: 1fr; }
+  .po-home-drives li { grid-template-columns: 1fr auto; }
+  .po-home-drives dl { grid-column: 1 / -1; grid-row: 2; }
+  .po-batch-picker { width: 100%; }
+  .po-batch-picker select { flex: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .po-section-tabs a, .po-attention li a, .po-home .po-overview-kpi a, .po-topbar-friday { transition: none; }
+}
