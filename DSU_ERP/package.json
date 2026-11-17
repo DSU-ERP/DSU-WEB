@@ -30,6 +30,7 @@
     "test:interview-ui": "node scripts/verify-interview-workspace.cjs && node scripts/verify-interview-conversation.cjs && node scripts/verify-interview-security.cjs"
   },
   "dependencies": {
+    "@gsap/react": "2.1.2",
     "@huggingface/transformers": "^4.3.1",
     "@openrouter/sdk": "^1.4.25",
     "@radix-ui/react-slot": "^1.5.0",

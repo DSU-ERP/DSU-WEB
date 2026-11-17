@@ -1,0 +1,307 @@
+/* Placement officer Home on the adjustable glass surface
+   (src/components/ui/adjustable-glass-dashboard.tsx). The component ships its
+   own styles; this file maps them onto the officer portal's light and dark
+   tokens, the Geist type scale and the shell's content column. Selectors are
+   scoped under .po-shell so they outrank the component's injected <style>. */
+
+.po-shell .po-glass-home { display: block; }
+
+.po-shell .gw-root.po-glass {
+  --po-glass-base: #ffffff;
+  --gw-ink: var(--po-text);
+  --gw-muted: #4d554c;
+  --gw-accent: #2c775d;
+  --gw-line: rgba(27, 33, 27, 0.12);
+  --gw-background: #dfe5d8;
+  --gw-shade: rgba(244, 246, 240, 0.52);
+  --gw-surface: #fbfcf9;
+  --gw-panel: #ffffff;
+  --gw-highlight: #ffffff;
+  --gw-positive-surface: rgba(44, 119, 93, 0.13);
+  --gw-account-surface: rgba(237, 241, 231, 0.9);
+  --gw-account-action: rgba(255, 255, 255, 0.75);
+  --gw-segment: rgba(27, 33, 27, 0.07);
+  --gw-segment-active: #ffffff;
+  --gw-transaction-surface: rgba(237, 241, 231, 0.9);
+  --gw-income-surface: rgba(44, 119, 93, 0.13);
+  --gw-pending: #8a5a14;
+  --gw-goal-surface: rgba(237, 241, 231, 0.9);
+  --gw-button: #243725;
+  --gw-button-ink: #ffffff;
+  --gw-popover: rgba(250, 251, 248, 0.95);
+  --gw-fallback: #fbfcf9;
+  --gw-shadow: rgba(27, 40, 27, 0.28);
+  --gw-panel-shadow: rgba(27, 40, 27, 0.3);
+  --gw-soft-shadow: rgba(27, 40, 27, 0.08);
+  --gw-segment-shadow: rgba(27, 40, 27, 0.1);
+  --gw-popover-shadow: rgba(27, 40, 27, 0.22);
+  --gw-sample-shadow: rgba(27, 40, 27, 0.35);
+  --gw-selection: rgba(44, 119, 93, 0.25);
+  --gw-scrollbar: #8e9d88;
+  --gw-hover: rgba(27, 33, 27, 0.06);
+  --gw-control-hover: rgba(27, 33, 27, 0.07);
+  --gw-soft-edge: rgba(255, 255, 255, 0.55);
+  --gw-strong-edge: rgba(255, 255, 255, 0.6);
+  --po-glass-placed: #2c775d;
+  --po-glass-eligible: #3f6c95;
+  --po-glass-third: #a5602f;
+  container-type: inline-size;
+  min-height: 0;
+  padding: clamp(0.75rem, 1.6vw, 1.5rem);
+  border-radius: 1.5rem;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: normal;
+  color: var(--gw-ink);
+}
+
+.po-shell.po-dark .gw-root.po-glass {
+  --po-glass-base: #1d231c;
+  --gw-ink: #e8ece3;
+  --gw-muted: #b4bdac;
+  --gw-accent: #8fd0ad;
+  --gw-line: rgba(232, 236, 227, 0.13);
+  --gw-background: #141912;
+  --gw-shade: rgba(15, 19, 14, 0.7);
+  --gw-surface: #20251f;
+  --gw-panel: #232a22;
+  --gw-highlight: rgba(255, 255, 255, 0.2);
+  --gw-positive-surface: rgba(143, 208, 173, 0.16);
+  --gw-account-surface: rgba(48, 62, 43, 0.75);
+  --gw-account-action: rgba(232, 236, 227, 0.08);
+  --gw-segment: rgba(232, 236, 227, 0.07);
+  --gw-segment-active: rgba(232, 236, 227, 0.16);
+  --gw-transaction-surface: rgba(48, 62, 43, 0.7);
+  --gw-income-surface: rgba(143, 208, 173, 0.16);
+  --gw-pending: #e1c383;
+  --gw-goal-surface: rgba(48, 62, 43, 0.7);
+  --gw-button: #b7cba6;
+  --gw-button-ink: #182111;
+  --gw-popover: rgba(29, 35, 28, 0.96);
+  --gw-fallback: #20251f;
+  --gw-shadow: rgba(0, 0, 0, 0.5);
+  --gw-panel-shadow: rgba(0, 0, 0, 0.55);
+  --gw-soft-shadow: rgba(0, 0, 0, 0.25);
+  --gw-segment-shadow: rgba(0, 0, 0, 0.3);
+  --gw-popover-shadow: rgba(0, 0, 0, 0.5);
+  --gw-sample-shadow: rgba(0, 0, 0, 0.6);
+  --gw-selection: rgba(143, 208, 173, 0.3);
+  --gw-hover: rgba(232, 236, 227, 0.07);
+  --gw-control-hover: rgba(232, 236, 227, 0.09);
+  --gw-soft-edge: rgba(255, 255, 255, 0.12);
+  --gw-strong-edge: rgba(255, 255, 255, 0.16);
+  --po-glass-placed: #8fd0ad;
+  --po-glass-eligible: #8db7dc;
+  --po-glass-third: #e0a77c;
+}
+
+/* Layout inside the shell's content column. */
+.po-shell .po-glass .po-glass-main {
+  padding: clamp(1rem, 2vw, 1.75rem);
+  border-radius: 1.25rem;
+}
+.po-shell .po-glass .gw-view-heading {
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.po-shell .po-glass .gw-view-heading h1 {
+  margin: 0;
+  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+  font-weight: 500;
+  color: var(--gw-ink);
+  text-wrap: balance;
+}
+.po-shell .po-glass .gw-greeting { font-size: 0.8125rem; }
+.po-shell .po-glass .po-glass-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.po-shell .po-glass .po-batch-picker { color: var(--gw-muted); }
+.po-shell .po-glass .po-batch-picker select {
+  background: color-mix(in srgb, var(--gw-panel) 70%, transparent);
+  border: 1px solid var(--gw-line);
+  border-radius: 0.5rem;
+  color: var(--gw-ink);
+}
+.po-shell .po-glass .gw-adjust {
+  min-height: 2.75rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--gw-line);
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+}
+.po-shell .po-glass .gw-adjust[aria-expanded="true"] { background: var(--gw-control-hover); }
+.po-shell .po-glass .po-environment { color: var(--gw-muted); border-color: var(--gw-line); }
+
+.po-shell .po-glass .gw-overview-grid,
+.po-shell .po-glass .gw-lower-grid { gap: 1rem; margin-bottom: 1rem; }
+.po-shell .po-glass .gw-lower-grid:last-child { margin-bottom: 0; }
+.po-shell .po-glass .gw-overview-grid { grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr); }
+.po-shell .po-glass .gw-lower-grid { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); align-items: stretch; }
+.po-shell .po-glass .gw-panel { padding: 1.25rem; }
+
+/* Readable sizes: the stock component is set at 9 to 12px. */
+.po-shell .po-glass .gw-panel-title { font-size: 0.8125rem; margin-bottom: 1rem; }
+.po-shell .po-glass .gw-panel-title h2 { margin: 0; font-size: 0.9375rem; font-weight: 600; letter-spacing: -0.01em; color: var(--gw-ink); }
+.po-shell .po-glass .gw-text-button { font-size: 0.8125rem !important; color: var(--gw-muted); }
+.po-shell .po-glass .gw-text-button:hover { color: var(--gw-accent); }
+.po-shell .po-glass .gw-small-label { font-size: 0.75rem; }
+.po-shell .po-glass .gw-balance-value { font-size: clamp(2rem, 3.4cqi, 2.75rem); color: var(--gw-ink); }
+.po-shell .po-glass .gw-balance-meta { font-size: 0.8125rem; }
+.po-shell .po-glass .gw-chart-summary { gap: 1.75rem; flex-wrap: wrap; }
+.po-shell .po-glass .gw-chart-summary span { font-size: 0.75rem; }
+.po-shell .po-glass .gw-chart-summary strong { font-size: 1.3125rem; }
+.po-shell .po-glass .gw-chart-summary .po-glass-quiet strong { color: var(--gw-muted); }
+.po-shell .po-glass .gw-chart-labels,
+.po-shell .po-glass .gw-chart-months { font-size: 0.6875rem; }
+.po-shell .po-glass .gw-chart-wrap svg { height: 9.5rem; }
+.po-shell .po-glass .gw-chart-footnote { margin-top: 0.75rem !important; font-size: 0.75rem; }
+.po-shell .po-glass .gw-segment { font-size: 0.75rem; }
+.po-shell .po-glass .gw-segment button { padding: 0.3125rem 0.625rem; min-height: 2rem; }
+.po-shell .po-glass .gw-empty { padding: 2.5rem 1rem; font-size: 0.8125rem; }
+
+/* Placement rate panel. */
+.po-shell .po-glass .po-glass-kpis { list-style: none; margin: 1.25rem 0 0; padding: 0; }
+.po-shell .po-glass .po-glass-kpis li + li { border-top: 1px solid var(--gw-line); }
+.po-shell .po-glass .po-glass-kpis a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0.375rem;
+  border-radius: 0.5rem;
+  transition: background-color 150ms ease;
+}
+.po-shell .po-glass .po-glass-kpis a:hover { background: var(--gw-hover); }
+.po-shell .po-glass .po-glass-kpis strong { display: block; font-size: 0.8125rem; font-weight: 500; }
+.po-shell .po-glass .po-glass-kpis small { display: block; font-size: 0.75rem; color: var(--gw-muted); }
+.po-shell .po-glass .po-glass-kpis b { font-size: 1.0625rem; font-weight: 500; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.po-shell .po-glass .gw-account { padding-top: 1.25rem; border-radius: 0.75rem; }
+.po-shell .po-glass .gw-account strong { font-size: 0.8125rem; }
+.po-shell .po-glass .gw-account span { font-size: 0.75rem; }
+.po-shell .po-glass .gw-account .po-glass-go {
+  margin-left: auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--gw-account-action);
+  color: var(--gw-ink);
+  transition: background-color 150ms ease, transform 200ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+.po-shell .po-glass .gw-account:hover .po-glass-go { background: var(--gw-positive-surface); color: var(--gw-accent); transform: translate(1px, -1px); }
+
+/* Upcoming drives list. */
+.po-shell .po-glass .gw-transactions { list-style: none; margin: 0; padding: 0; }
+.po-shell .po-glass .gw-transaction-name strong { font-size: 0.875rem; }
+.po-shell .po-glass .gw-transaction-name strong a:hover { color: var(--gw-accent); text-decoration: underline; text-underline-offset: 3px; }
+.po-shell .po-glass .gw-transaction-name span { font-size: 0.75rem; }
+.po-shell .po-glass .gw-transaction-name .po-date-warning { color: var(--gw-pending); }
+.po-shell .po-glass .gw-transaction-icon.is-warning { color: var(--gw-pending); }
+.po-shell .po-glass .gw-transaction-status { font-size: 0.75rem; white-space: nowrap; }
+.po-shell .po-glass .po-glass-date { font-size: 0.8125rem; font-weight: 500; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.po-shell .po-glass .po-glass-more { margin-top: 0.875rem; font-size: 0.75rem; color: var(--gw-muted); }
+.po-shell .po-glass .po-glass-more a { color: var(--gw-ink); text-decoration: underline; text-underline-offset: 3px; }
+
+/* Needs attention. */
+.po-shell .po-glass .po-glass-attention { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.po-shell .po-glass .po-glass-attention a {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  background: var(--gw-transaction-surface);
+  transition: background-color 150ms ease;
+}
+.po-shell .po-glass .po-glass-attention a:hover { background: var(--gw-positive-surface); }
+.po-shell .po-glass .po-glass-attention a > span:nth-child(2) { flex: 1; min-width: 0; }
+.po-shell .po-glass .po-glass-attention strong { display: block; font-size: 0.8125rem; font-weight: 500; }
+.po-shell .po-glass .po-glass-attention small { display: block; font-size: 0.75rem; color: var(--gw-muted); }
+.po-shell .po-glass .po-glass-attention small.po-date-warning { color: var(--gw-pending); }
+.po-shell .po-glass .po-glass-attention-icon {
+  flex: none;
+  width: 2.125rem;
+  height: 2.125rem;
+  border-radius: 0.625rem;
+  display: grid;
+  place-items: center;
+  background: var(--gw-income-surface);
+  color: var(--gw-accent);
+}
+.po-shell .po-glass .po-glass-attention-icon.is-warning { background: color-mix(in srgb, var(--gw-pending) 16%, transparent); color: var(--gw-pending); }
+.po-shell .po-glass .po-glass-clear { display: flex; align-items: center; gap: 0.625rem; padding: 0.5rem 0; color: var(--gw-accent); }
+.po-shell .po-glass .po-glass-clear .po-attention-clear { margin: 0; color: var(--gw-muted); }
+
+/* Notifications as a glass panel. */
+.po-shell .po-glass .dsu-notices.gw-panel {
+  --n-surface: transparent;
+  --n-text: var(--gw-ink);
+  --n-muted: var(--gw-muted);
+  --n-line: var(--gw-line);
+  --n-hover: var(--gw-hover);
+  margin: 0;
+  border: 0;
+  background: color-mix(in srgb, var(--gw-panel) calc((0.16 + var(--gw-opacity) * 0.5) * 100%), transparent);
+}
+
+/* Placement status as progress tracks. */
+.po-shell .po-glass .gw-goal + .gw-goal { margin-top: 0.875rem; }
+.po-shell .po-glass .gw-goal-top .po-glass-count { font-size: 0.8125rem; font-weight: 500; color: var(--gw-ink); font-variant-numeric: tabular-nums; }
+.po-shell .po-glass .gw-goal-top .po-glass-count small { margin-left: 0.375rem; font-size: 0.75rem; font-weight: 400; color: var(--gw-muted); }
+.po-shell .po-glass .gw-goal-top strong { font-size: 0.8125rem; }
+.po-shell .po-glass .gw-goal-track { height: 0.375rem; margin: 0.5rem 0 0; }
+.po-shell .po-glass .po-glass-status-total { margin-top: 1rem; font-size: 0.75rem; color: var(--gw-muted); }
+.po-shell .po-glass .po-glass-tone-placed { --po-glass-tone: var(--po-glass-placed); }
+.po-shell .po-glass .po-glass-tone-eligible { --po-glass-tone: var(--po-glass-eligible); }
+.po-shell .po-glass .po-glass-tone-third { --po-glass-tone: var(--po-glass-third); }
+.po-shell .po-glass .po-glass-tone-muted { --po-glass-tone: var(--gw-muted); }
+.po-shell .po-glass .gw-goal-track i { background: var(--po-glass-tone, var(--gw-accent)); }
+.po-shell .po-glass .gw-goal-icon { color: var(--po-glass-tone, var(--gw-accent)); }
+
+/* Empty cohort and analytics warning. */
+.po-shell .po-glass .po-cohort-empty { display: grid; justify-items: start; gap: 0.5rem; margin-bottom: 1rem; }
+.po-shell .po-glass .po-cohort-empty h2 { margin: 0; font-size: 1rem; font-weight: 600; }
+.po-shell .po-glass .po-cohort-empty p { color: var(--gw-muted); }
+.po-shell .po-glass .po-overview-warning { margin-bottom: 1rem; }
+
+/* Appearance popover sits under the heading's Adjust glass button. */
+.po-shell .po-glass .po-glass-actions { position: relative; }
+.po-shell .po-glass .po-glass-actions .gw-material { top: calc(100% + 0.5rem); right: 0; z-index: 20; }
+.po-shell .po-glass .gw-material > p { font-size: 0.75rem; }
+.po-shell .po-glass .gw-range > span,
+.po-shell .po-glass .gw-tint,
+.po-shell .po-glass .gw-presets button,
+.po-shell .po-glass .gw-reset { font-size: 0.8125rem !important; }
+.po-shell .po-glass .gw-range output { font-size: 0.75rem; }
+.po-shell .po-glass .gw-presets button { min-height: 2.25rem; }
+
+/* The shell sidebar narrows the column, so stack by the column's width. */
+@container (max-width: 860px) {
+  .po-shell .po-glass .gw-overview-grid,
+  .po-shell .po-glass .gw-lower-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 520px) {
+  .po-shell .po-glass .gw-view-heading { align-items: stretch; }
+  .po-shell .po-glass .po-glass-actions { width: 100%; }
+  .po-shell .po-glass .po-batch-picker { flex: 1 1 100%; }
+  .po-shell .po-glass .gw-transaction { flex-wrap: wrap; }
+  .po-shell .po-glass .gw-transaction-status { display: none; }
+  .po-shell .po-glass .po-glass-actions .gw-material { width: 100%; }
+}
+@media (max-width: 700px) {
+  .po-shell .gw-root.po-glass { padding: 0.5rem; border-radius: 1.125rem; }
+  .po-shell .po-glass .po-glass-main { padding: 1rem 0.875rem; }
+  .po-shell .po-glass .gw-balance { min-height: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .po-shell .po-glass .po-glass-kpis a,
+  .po-shell .po-glass .po-glass-attention a,
+  .po-shell .po-glass .gw-account .po-glass-go { transition: none; }
+}

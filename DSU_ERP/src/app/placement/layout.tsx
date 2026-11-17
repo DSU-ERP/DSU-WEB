@@ -9,6 +9,7 @@ import { signOut } from "../login/actions";
 import "../workspace.css";
 import "./placement.css";
 import "./overview.css";
+import "./glass-home.css";
 import "./ranking.css";
 import "./company-portal.css";
 import "@/shared/notifications/notifications.css";

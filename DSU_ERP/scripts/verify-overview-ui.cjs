@@ -32,6 +32,7 @@ const query=Object.fromEntries(new URLSearchParams(location.search));
 if(query.search==='no match'){data.summary.students=0;charts.kpis.totalStudents=0;charts.status=[];charts.departments=[];}
 if(query.search==='matched'){data.summary.students=1;charts.kpis.totalStudents=1;charts.kpis.eligible=1;charts.status=[{key:'eligible_not_placed',label:'Eligible, not placed',count:1}];charts.departments=[{department:'CSE',total:1,eligible:1,placed:0}];}
 if(query.state==='populated'){data.summary.average=8;data.summary.highest=8;data.summary.median=8;}
+if(query.progress==='yes'){charts.progress=Array.from({length:14},(_,i)=>{const d=new Date(Date.UTC(2025,8+i,1));return {month:d.toISOString().slice(0,7),offersRecorded:i+1,studentsPlaced:i,drivesCompleted:i%3};});}
 function Fixture(){const [liveCharts,setCharts]=React.useState(charts);window.__updateDepartments=rows=>setCharts(previous=>({...previous,departments:rows}));
  const shown=query.state==='error'?null:liveCharts;
  const body=location.pathname==='/placement/insights'
@@ -48,7 +49,7 @@ const mocks={...require("./harness-server-mocks.cjs"),
  '@/app/placement/actions':`export async function changePlacement(){return {error:''}}`,
 };
 const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inherit;text-decoration:none}button{cursor:pointer}'+[
- 'src/app/globals.css','src/app/workspace.css','src/app/placement/placement.css','src/app/placement/overview.css','src/app/placement/company-portal.css','src/shared/notifications/notifications.css',
+ 'src/app/globals.css','src/app/workspace.css','src/app/placement/placement.css','src/app/placement/overview.css','src/app/placement/glass-home.css','src/app/placement/company-portal.css','src/shared/notifications/notifications.css',
 ].map(p=>fs.readFileSync(p,'utf8').replace('@import "tailwindcss";','')).join('\n');
 (async()=>{
  let browser,server,page;
@@ -56,6 +57,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await build({stdin:{contents:entry,resolveDir:root,loader:'tsx'},bundle:true,outfile:path.join(dir,'bundle.js'),platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'},plugins:[{name:'boundaries',setup(b){b.onResolve({filter:/.*/},a=>mocks[a.path]?{path:a.path,namespace:'mock'}:undefined);b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:mocks[a.path],loader:'tsx',resolveDir:root}));}}]});
   server=http.createServer((req,res)=>{
    if(req.url==='/bundle.js'){res.setHeader('Content-Type','text/javascript');res.end(fs.readFileSync(path.join(dir,'bundle.js')));return;}
+   if(req.url==='/images/placement/campus.webp'){res.setHeader('Content-Type','image/webp');res.end(fs.readFileSync(path.join(root,'public/images/placement/campus.webp')));return;}
    if(req.url.startsWith('/fonts/')&&/^\/fonts\/[a-z0-9.-]+\.woff2$/.test(req.url)){res.setHeader('Content-Type','font/woff2');res.end(fs.readFileSync(path.join(root,'public',req.url)));return;}
    res.setHeader('Content-Type','text/html');res.end(`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>`);
   });
@@ -68,18 +70,24 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   const open=async(q='',route='/placement/overview')=>{await page.goto(origin+route+q);await page.getByRole('heading',{name:route==='/placement/insights'?'Insights':'Placement overview',exact:true}).waitFor();await page.evaluate(()=>document.fonts.ready);};
   const insights=(q='')=>open(q,'/placement/insights');
 
-  // Home stays short: attention, four numbers, upcoming drives, one status bar.
+  // Home on the glass surface: rate with three more numbers, activity, drives, attention, notices, status.
   for(const theme of ['light','dark']) for(const width of [1600,1440,1280,1024,768,390]){
    await page.setViewportSize({width,height:900});await open();await page.evaluate(t=>localStorage.setItem('dsu-placement-theme',t),theme);await page.reload();await page.locator('.po-'+theme).waitFor();
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Overflow ${theme} ${width}`);
-   assert.equal(await page.locator('.po-overview-primary article').count(),4);
+   assert.ok(await page.locator('.gw-root.po-glass .gw-room').evaluate(img=>img.complete&&img.naturalWidth>0),'campus photo behind the glass');
+   assert.equal(await page.locator('.po-glass-rate .gw-balance-value').innerText(),'0.00%');
+   assert.equal(await page.locator('.po-glass-kpis li').count(),3,'rate plus three headline numbers');
    assert.equal(await page.locator('.po-overview-secondary').count(),0,'secondary metrics live in Insights');
    assert.equal(await page.locator('.po-overview-charts, .po-overview-support, .po-donut').count(),0,'analysis lives in Insights');
-   assert.equal(await page.locator('.po-status-bar .po-status-placed').count(),0,'zero placed segment must not draw');
+   assert.equal(await page.locator('.po-glass-tone-placed .gw-goal-track i').evaluate(e=>e.getBoundingClientRect().width),0,'zero placed track must not draw');
+   assert.ok(await page.locator('.po-glass-activity').getByText('No placement activity yet').isVisible(),'empty activity is said, not drawn');
    assert.ok(await page.locator('.po-attention').getByText('Drive date has passed. Review recorded status.').isVisible());
    assert.ok(await page.locator('.dsu-notices').isVisible(),'notifications stay on Home');
-   assert.ok(await page.locator('.po-home-status .po-status-bar').isVisible(),'placement status bar on Home');
-   if(width===1440){assert.ok((await page.locator('.po-overview-drives').boundingBox()).y<900,'upcoming drives above the fold');}
+   assert.equal(await page.locator('.po-home-status [role=progressbar]').count(),4,'placement status tracks on Home');
+   for(const s of ['.po-glass-main .gw-view-heading h1','.po-glass-kpis strong','.gw-transaction-name strong','.po-glass-attention strong, .po-attention-clear','.gw-goal-top strong']){
+    const size=await page.locator(s).first().evaluate(e=>parseFloat(getComputedStyle(e).fontSize));assert.ok(size>=12,`${s} readable at ${size}px`);
+   }
+   if(width===1440){assert.ok((await page.locator('.po-glass-drives').boundingBox()).y<900,'upcoming drives above the fold');}
    await page.waitForTimeout(500);
    await page.screenshot({path:path.join(dir,`home-${theme}-${width}.png`),fullPage:true});
    await insights();
@@ -100,7 +108,40 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await open('?requests=none');assert.ok(await page.getByText('Company drive requests could not be checked.').isVisible());
   // Home's batch picker scopes the page and keeps Insights links in step.
   await open();await page.getByLabel('Passing-out batch').selectOption('2026');await page.waitForURL('**batch=2026**');
-  assert.equal(await page.locator('.po-overview-kpi a').first().getAttribute('href'),'/placement/insights?batch=2026');
+  assert.equal(await page.locator('.po-glass-kpis a').first().getAttribute('href'),'/placement/insights?batch=2026');
+  assert.equal(await page.locator('.po-glass-rate a.gw-account').getAttribute('href'),'/placement/insights?batch=2026');
+
+  // Adjust glass: popover with presets and sliders, saved per browser, Escape returns focus.
+  await open();
+  const adjust=page.getByRole('button',{name:'Adjust glass'});
+  const glass=page.locator('.gw-root.po-glass');
+  const blur=()=>glass.evaluate(e=>e.style.getPropertyValue('--gw-blur'));
+  assert.equal(await blur(),'22px');
+  await adjust.click();assert.equal(await adjust.getAttribute('aria-expanded'),'true');
+  const panel=page.getByRole('complementary',{name:'Glass appearance'});assert.ok(await panel.isVisible());
+  assert.ok(await panel.getByRole('button',{name:'Close glass settings'}).evaluate(e=>e===document.activeElement),'focus moves into the panel');
+  await panel.getByRole('slider',{name:'Blur'}).fill('8');assert.equal(await blur(),'8px');
+  await panel.getByRole('button',{name:'Solid',exact:true}).click();
+  assert.equal(await glass.evaluate(e=>e.style.getPropertyValue('--gw-opacity')),'0.86');
+  const box=await panel.boundingBox(),trig=await adjust.boundingBox();assert.ok(box.x>=0&&box.x+box.width<=1440,'panel stays on screen');assert.ok(box.y>=trig.y+trig.height,'panel opens below its button');
+  await page.screenshot({path:path.join(dir,'home-adjust-glass.png')});
+  await page.keyboard.press('Escape');assert.equal(await panel.count(),0);assert.ok(await adjust.evaluate(e=>e===document.activeElement),'focus returns to Adjust glass');
+  await page.reload();await page.getByRole('heading',{name:'Placement overview',exact:true}).waitFor();
+  assert.equal(await blur(),'32px','appearance is remembered');
+  await adjust.click();await page.getByRole('button',{name:'Reset appearance'}).click();assert.equal(await blur(),'22px');
+  await page.getByRole('button',{name:'Close glass settings'}).click();
+
+  // Activity: monthly offers and placements, with period choices only when they differ.
+  await open('?progress=yes');
+  const activity=page.locator('.po-glass-activity');
+  assert.deepEqual(await activity.getByRole('group',{name:'Activity period'}).getByRole('button').allInnerTexts(),['6 months','12 months','All']);
+  assert.equal(await activity.getByRole('button',{name:'12 months'}).getAttribute('aria-pressed'),'true');
+  const totals=()=>activity.locator('.gw-chart-summary strong').allInnerTexts();
+  assert.deepEqual(await totals(),['102','90','12']);
+  await activity.getByRole('button',{name:'6 months'}).click();assert.deepEqual(await totals(),['69','63','6']);
+  await activity.getByRole('button',{name:'All'}).click();assert.deepEqual(await totals(),['105','91','13']);
+  assert.match(await activity.getByRole('img').getAttribute('aria-label'),/Sep 2025 to Oct 2026: 105 offers recorded and 91 students placed/);
+  await activity.screenshot({path:path.join(dir,'home-activity.png')});
 
   // Navigation: seven sections, FRIDAY in the top bar, tabs inside each section.
   await page.setViewportSize({width:390,height:844});await open();
@@ -184,7 +225,8 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   const before=page.url();await page.getByRole('button',{name:/^Refresh/}).click();assert.equal(page.url(),before);assert.equal(await page.evaluate(()=>window.__refreshes),1);
   await page.getByRole('button',{name:'Clear',exact:true}).click();await page.waitForURL(origin+'/placement/insights');
   await insights('?search=no+match');assert.ok(await page.getByRole('heading',{name:'No students match this selection'}).isVisible());assert.equal(await page.locator('.po-overview-primary').count(),0);
-  await open('?state=error');assert.ok(await page.getByText('Cohort analytics are unavailable.').isVisible());assert.equal(await page.locator('.po-overview-kpi strong').nth(1).innerText(),'Not available');assert.equal(await page.locator('.po-overview-kpi strong').nth(2).innerText(),'0');
+  await open('?state=error');assert.ok(await page.getByText('Cohort analytics are unavailable.').isVisible());assert.equal(await page.locator('.po-glass-kpis b').nth(1).innerText(),'Not available');assert.equal(await page.locator('.po-glass-kpis b').nth(2).innerText(),'0');
+  assert.ok(await page.getByRole('heading',{name:'Activity is unavailable'}).isVisible());
   assert.equal(await page.locator('.po-home-status').count(),0,'no status bar without chart data');
   await page.screenshot({path:path.join(dir,'home-partial-failure.png'),fullPage:true});
   await insights('?state=populated');assert.equal(await page.locator('.po-overview-support').getByText('No compensation data',{exact:true}).count(),0);
@@ -197,7 +239,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await touchPage.locator('.po-department-chart').screenshot({path:path.join(dir,'department-mobile.png')});
   await touchPage.close();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['short Home: attention, 4 KPIs, upcoming drives, status bar','pending and unavailable drive requests','batch picker','Insights KPIs, charts and supporting measures','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','filters/clear/refresh','7 sections with every original route reachable through tabs','FRIDAY in the top bar','testing-only tab','mobile dialog and focus return','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
+  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['glass Home: photo, rate and 3 KPIs, activity periods, drives, attention, notices, status tracks','Adjust glass popover, persistence, Escape focus return','pending and unavailable drive requests','batch picker','Insights KPIs, charts and supporting measures','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','filters/clear/refresh','7 sections with every original route reachable through tabs','FRIDAY in the top bar','testing-only tab','mobile dialog and focus return','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
  } catch(e){console.error(e.stack);if(page)await page.screenshot({path:path.join(dir,'failure.png'),fullPage:true});process.exitCode=1;}
  finally{await browser?.close();await new Promise(r=>server?server.close(r):r());}
 })();
