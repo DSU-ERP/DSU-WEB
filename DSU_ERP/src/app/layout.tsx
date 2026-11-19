@@ -1,6 +1,5 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import './static-campus.css';
 import { InspectGuard } from '@/components/security/InspectGuard';
 export const metadata: Metadata = {
   title: 'DSU Agentic ERP',

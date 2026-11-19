@@ -1,11 +1,12 @@
-import { Geist } from 'next/font/google';
+import { Archivo } from 'next/font/google';
 
-/** Geist Light for large display text. The app's own Geist files only cover
- * weights 400-600; next/font downloads this weight at build time and serves it
- * from our own origin, so visitors make no requests to Google. */
-export const geistLight = Geist({
+/** Archivo, variable in weight and width, sets the landing page's carved
+ * capitals. The width axis is what gives the wide plaque lettering. next/font
+ * downloads it at build time and serves it from our own origin, so visitors
+ * make no requests to Google. */
+export const archivo = Archivo({
   subsets: ['latin'],
-  weight: '300',
+  axes: ['wdth'],
   display: 'swap',
-  variable: '--font-geist-light',
+  variable: '--font-archivo',
 });

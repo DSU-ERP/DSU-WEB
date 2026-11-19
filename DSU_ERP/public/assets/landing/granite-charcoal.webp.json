@@ -1,0 +1,4 @@
+{
+  "prompt": "Procedurally generated (no image model, no photograph). Seamless 1024px tile of polished black-galaxy granite: wrapped power-diagram crystals on a 9px jittered grid with weights 0.45-1.85 so grain sizes vary (76% black mineral 0.072-0.090, 20% grey 0.092-0.114, 4% pale 0.118-0.144), darker seams between crystals, warm charcoal tint (r x1.035, b x0.93), +-0.8% grain noise, ~800 sand #D4BF96 glints (radius 0.6-3px) drawn with wrap-around, blur 0.55, mean ~#181817. Generator: node + sharp, seed 31, CELL=9 GLD=1300 LIFT=1.08. Shown at 512px (384px on phones).",
+  "createdAt": "2026-11-19T16:18:52.695Z"
+}

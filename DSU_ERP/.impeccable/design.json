@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-19T00:00:00.000Z",
+  "title": "Design System: DSU Agentic ERP — Landing",
+  "scope": "Landing page (/) only: src/app/page.tsx, CampusPortal, Navbar, src/app/landing.css, scoped under .ln. Sign-in, sign-up and the role portals are out of scope and keep their own Geist-on-light look (src/app/globals.css, src/app/workspace.css).",
+  "extensions": {
+    "colorMeta": {
+      "stone": { "role": "neutral", "displayName": "Charcoal Granite", "canonical": "#191918", "cssVar": "--ln-stone", "tonalRamp": ["#0c0c0b", "#121211", "#191918", "#252523", "#3a3936", "#57554f", "#8a877f", "#c9c6bd"] },
+      "stone-deep": { "role": "neutral", "displayName": "Deep Stone", "canonical": "#121211", "cssVar": "--ln-stone-deep", "tonalRamp": ["#0c0c0b", "#121211", "#191918", "#252523", "#3a3936", "#57554f", "#8a877f", "#c9c6bd"] },
+      "sand": { "role": "primary", "displayName": "Sand Gilt", "canonical": "#D4BF96", "cssVar": "--ln-sand", "tonalRamp": ["#231e15", "#3b3324", "#574b36", "#76674b", "#968461", "#ab9772", "#d4bf96", "#ecdfc1"] },
+      "sand-hi": { "role": "primary", "displayName": "Polished Sand", "canonical": "#ECDFC1", "cssVar": "--ln-sand-hi", "tonalRamp": ["#231e15", "#3b3324", "#574b36", "#76674b", "#968461", "#ab9772", "#d4bf96", "#ecdfc1"] },
+      "sand-low": { "role": "secondary", "displayName": "Worn Sand", "canonical": "#AB9772", "cssVar": "--ln-sand-2", "tonalRamp": ["#231e15", "#3b3324", "#574b36", "#76674b", "#968461", "#ab9772", "#d4bf96", "#ecdfc1"] },
+      "rule": { "role": "neutral", "displayName": "Hairline Gilt", "canonical": "rgb(212 191 150 / 0.18)", "cssVar": "--ln-rule" },
+      "rule-strong": { "role": "neutral", "displayName": "Strong Gilt Line", "canonical": "rgb(212 191 150 / 0.5)", "cssVar": "--ln-rule-strong" },
+      "sand-wash": { "role": "neutral", "displayName": "Gilt Wash", "canonical": "rgb(212 191 150 / 0.07)", "note": "Literal in landing.css (outlined-control hover fill); not a custom property." }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "\"ONE CAMPUS.\" Plaque capitals, incised (ln-cut-lg; md below 1200px; sm on phones). One line from 768px up; phones min(15vw, 8.6svh), stacked." },
+      "headline": { "displayName": "Headline", "purpose": "\"ACCESS PORTAL.\" Incised (ln-cut-md; sm below 1200px). Phones min(15vw, 8.4svh)." },
+      "title": { "displayName": "Tagline", "purpose": "The single widely tracked secondary line in Worn Sand; left padding equals tracking to stay centred. Phones 11px / 0.36em." },
+      "body": { "displayName": "Body", "purpose": "Portal lede, max 34ch, sand." },
+      "body-small": { "displayName": "Body small", "purpose": "Portal note, max 44ch, Worn Sand, under a hairline rule." },
+      "label": { "displayName": "Plate label", "purpose": "Gilt plate labels. Phones 11.5px / 0.12em; 11px at 380px and below." },
+      "label-header": { "displayName": "Header link label", "purpose": "Header Sign in link. Phones 11px / 0.16em." },
+      "label-product": { "displayName": "Product label", "purpose": "\"Agentic ERP\" beside the official logo; hidden at 860px and below." }
+    },
+    "fonts": [
+      { "name": "Archivo", "source": "next/font/google, variable weight + wdth axis, self-hosted", "cssVar": "--font-archivo", "stack": "var(--font-archivo), 'Archivo', 'Arial Narrow', Arial, sans-serif" }
+    ],
+    "materials": [
+      { "name": "granite", "value": "url('/assets/landing/granite-charcoal.webp') 0 0 / 512px 512px (384px on phones)", "purpose": "Procedural black-galaxy granite tile; provenance in granite-charcoal.webp.json." },
+      { "name": "slab", "value": "radial-gradient(ellipse 55% 42% at 16% 28%, rgb(236 223 193 / 0.035), transparent 72%), radial-gradient(ellipse 48% 40% at 88% 78%, rgb(0 0 0 / 0.26), transparent 70%), radial-gradient(ellipse 40% 34% at 70% 16%, rgb(236 223 193 / 0.025), transparent 70%)", "purpose": "Slow light/shade variation across the stage so the tile never reads as a repeat." },
+      { "name": "sheen", "value": "mix-blend-mode: soft-light; radial-gradient(55% 60% at 50% -8%, rgb(255 246 226 / 0.32), transparent 72%), linear-gradient(101deg, transparent 31%, rgb(255 246 226 / 0.2) 43%, rgb(255 246 226 / 0.6) 50%, rgb(255 246 226 / 0.2) 57%, transparent 69%)", "purpose": "Light on the polish; sweeps xPercent -18 to 22 with the scroll pull." },
+      { "name": "incised-cut", "value": "SVG filter: feGaussianBlur(SourceAlpha, blur) -> feDiffuseLighting(surfaceScale depth, diffuseConstant 1.1, feDistantLight azimuth 90 elevation 45) -> feComposite arithmetic k1 0.6 k3 0.5 with SourceGraphic -> clip to SourceAlpha. ln-cut-lg blur 6 depth 8; ln-cut-md 4.5/9; ln-cut-sm 2.6/6.", "purpose": "V-cut lettering on display and headline; defined in CampusPortal.tsx." },
+      { "name": "etching", "value": "/assets/landing/campus-etched-1x.webp 1100w, -2x.webp 2200w; mask linear-gradient(180deg, #000 80%, transparent 99%)", "purpose": "Building drawing as sand linework; ground plane sinks into the stone." },
+      { "name": "carved-seal", "value": "/assets/college/dsu-seal-carved.png", "purpose": "Official seal re-toned as carved sand lettering; roundel and ring." }
+    ],
+    "shadows": [
+      { "name": "carved-socket", "value": "inset 0 4px 9px rgb(0 0 0 / 0.8), inset 0 -1px 0 rgb(255 244 220 / 0.16), 0 1px 0 rgb(255 244 220 / 0.07), 0 -1px 0 rgb(0 0 0 / 0.5)", "purpose": "Seal roundel socket (on rgb(0 0 0 / 0.28)); seal inside carries drop-shadow(0 -1px 0 rgb(0 0 0 / 0.7))." },
+      { "name": "gilt-plate", "value": "inset 0 1px 0 rgb(255 250 236 / 0.5), inset 0 -1px 0 rgb(60 48 28 / 0.35), 0 14px 28px -16px rgb(0 0 0 / 0.75)", "purpose": "Primary plate bevel and its single soft drop. Ghost plate has none." }
+    ],
+    "motion": [
+      { "name": "ease-settle", "value": "cubic-bezier(0.22, 1, 0.36, 1)", "purpose": "Entrance, arrow nudges, plate press." },
+      { "name": "state-fast", "value": "0.2s ease", "purpose": "Header link colour/border/background." },
+      { "name": "state-plate", "value": "0.25s ease", "purpose": "Plate colour/background/border; transform uses ease-settle." },
+      { "name": "arrow-nudge", "value": "transform 0.3s ease-settle; translateX(4px) on plates, 3px on header link", "purpose": "Hover affordance on arrowed actions." },
+      { "name": "ln-surface", "value": "opacity 0 -> 1, translateY(18px) -> none; 1-1.1s ease-settle; delays 0.05 / 0.15 / 0.28 / 0.38s", "purpose": "Inscription surfaces once: roundel, title, tagline, plates. No-preference only." },
+      { "name": "ln-etch-in", "value": "opacity 0 -> 1, clip-path inset(100% 0 0 0) -> inset(0); 1.6s ease-settle, 0.3s delay", "purpose": "Etching revealed bottom-up on entrance." },
+      { "name": "pull", "value": "GSAP ScrollTrigger pin, scrub 0.65, length 1.6 x innerHeight, starts below header. liftEnd 0.3 (inscription fades, y -44, power1.in, from 0.03); move 0.1 +0.68 (etching to target, power2.inOut); ring 0.28 +0.5 (scale 0.9 -> 1, rotate -14 -> 0, power2.out); portal 0.4 +0.3 (y 28 -> 0, power2.out); sheen 0 +1 linear. Inscription inert > 0.2, portal inert < 0.62.", "purpose": "The single linked scroll pull; only under prefers-reduced-motion: no-preference." }
+    ],
+    "breakpoints": [
+      { "name": "cut-step", "value": "max-width: 1199px", "purpose": "Display uses ln-cut-md, headline ln-cut-sm." },
+      { "name": "no-product-label", "value": "max-width: 860px", "purpose": "Header product label hidden." },
+      { "name": "phone", "value": "max-width: 767px", "purpose": "Header 64px, gutter 22px, etching 136vw, stacked display, phone ring geometry, 384px granite tile." },
+      { "name": "static-ring", "value": "min-width: 768px", "purpose": "Reduced-motion layout shows the ring beside the portal." },
+      { "name": "narrow", "value": "max-width: 380px", "purpose": "Plate padding 12px, label 11px." },
+      { "name": "narrowest", "value": "max-width: 340px", "purpose": "Plates stack full width." }
+    ],
+    "geometry": [
+      { "name": "ring-desktop", "value": "--ln-ring: min(50vw, 88svh, 820px); centre 71% / 52%; --ln-land: 0.68; inner field masked transparent 70% -> #000 73.5%" },
+      { "name": "ring-phone", "value": "--ln-ring: min(104vw, 50svh); centre 50% / 73%; --ln-land: 0.86; only the lower arc kept (linear mask 52% -> 70% intersected with the radial mask)" },
+      { "name": "ring-static", "value": "min(36vw, 460px), right of the portal at >= 768px; opacity 0.36" },
+      { "name": "stage", "value": "--ln-stage-h: max(560px, calc(100svh - header)); --ln-etch-w: min(74vw, 1100px, stage-h x 1.1)" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Plate",
+      "kind": "button",
+      "refersTo": "plate-primary",
+      "description": "Solid gilt plate for Sign in; the only element that brightens to polished sand.",
+      "html": "<a class=\"ds-plate\" href=\"#\">Sign in <svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a>",
+      "css": ".ds-plate { display: inline-flex; align-items: center; justify-content: space-between; gap: 24px; min-width: 172px; height: 52px; padding: 0 24px 0 26px; font-family: 'Archivo', 'Arial Narrow', Arial, sans-serif; font-size: 13px; font-weight: 600; font-stretch: 118%; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: #191918; background: #d4bf96; box-shadow: inset 0 1px 0 rgb(255 250 236 / 0.5), inset 0 -1px 0 rgb(60 48 28 / 0.35), 0 14px 28px -16px rgb(0 0 0 / 0.75); transition: background-color 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); } .ds-plate svg { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); } .ds-plate:hover { background: #ecdfc1; } .ds-plate:hover svg { transform: translateX(4px); } .ds-plate:active { transform: translateY(1px); } .ds-plate:focus-visible { outline: 2px solid #ecdfc1; outline-offset: 4px; }"
+    },
+    {
+      "name": "Ghost Plate",
+      "kind": "button",
+      "refersTo": "plate-ghost",
+      "description": "Outlined plate for Create account, always paired after the primary plate.",
+      "html": "<a class=\"ds-plate-ghost\" href=\"#\">Create account</a>",
+      "css": ".ds-plate-ghost { display: inline-flex; align-items: center; justify-content: center; min-width: 172px; height: 52px; padding: 0 24px 0 26px; font-family: 'Archivo', 'Arial Narrow', Arial, sans-serif; font-size: 13px; font-weight: 600; font-stretch: 118%; letter-spacing: 0.16em; text-transform: uppercase; text-decoration: none; white-space: nowrap; color: #d4bf96; background: transparent; border: 1px solid rgb(212 191 150 / 0.5); transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1); } .ds-plate-ghost:hover { background: rgb(212 191 150 / 0.07); border-color: #d4bf96; color: #ecdfc1; } .ds-plate-ghost:active { transform: translateY(1px); } .ds-plate-ghost:focus-visible { outline: 2px solid #ecdfc1; outline-offset: 4px; }"
+    },
+    {
+      "name": "Header",
+      "kind": "nav",
+      "refersTo": "header",
+      "description": "Sticky deep-stone band: official logo lockup (shown here as a placeholder block), product label, one outlined Sign in link.",
+      "html": "<header class=\"ds-header\"><span class=\"ds-brand\"><span class=\"ds-logo\" aria-hidden=\"true\"></span><span class=\"ds-product\">Agentic ERP</span></span><a class=\"ds-header-link\" href=\"#\">Sign in <svg width=\"15\" height=\"15\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a></header>",
+      "css": ".ds-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; height: 76px; padding: 0 clamp(20px, 4.4vw, 64px); background: #121211; border-bottom: 1px solid rgb(212 191 150 / 0.18); font-family: 'Archivo', 'Arial Narrow', Arial, sans-serif; } .ds-brand { display: flex; align-items: center; } .ds-logo { display: block; width: 131px; height: 42px; background: rgb(236 223 193 / 0.12); } .ds-product { margin-left: 20px; padding-left: 20px; border-left: 1px solid rgb(212 191 150 / 0.5); line-height: 30px; font-size: 11px; font-weight: 600; font-stretch: 118%; letter-spacing: 0.26em; text-transform: uppercase; color: #ab9772; white-space: nowrap; } .ds-header-link { display: inline-flex; align-items: center; gap: 10px; min-height: 40px; padding: 0 16px; border: 1px solid rgb(212 191 150 / 0.5); font-size: 12px; font-weight: 600; font-stretch: 115%; letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none; color: #d4bf96; transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease; } .ds-header-link svg { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); } .ds-header-link:hover { border-color: #d4bf96; background: rgb(212 191 150 / 0.07); color: #ecdfc1; } .ds-header-link:hover svg { transform: translateX(3px); } .ds-header-link:focus-visible { outline: 2px solid #ecdfc1; outline-offset: 4px; }"
+    },
+    {
+      "name": "Seal Roundel",
+      "kind": "custom",
+      "refersTo": "roundel",
+      "description": "Circular carved socket that holds the carved seal at the head of the axis (seal image omitted here).",
+      "html": "<div class=\"ds-stone\"><span class=\"ds-roundel\"><span class=\"ds-roundel-mark\"></span></span></div>",
+      "css": ".ds-stone { display: grid; place-items: center; padding: 32px; background: #191918; } .ds-roundel { display: grid; place-items: center; width: 112px; aspect-ratio: 1; border-radius: 50%; background: rgb(0 0 0 / 0.28); box-shadow: inset 0 4px 9px rgb(0 0 0 / 0.8), inset 0 -1px 0 rgb(255 244 220 / 0.16), 0 1px 0 rgb(255 244 220 / 0.07), 0 -1px 0 rgb(0 0 0 / 0.5); } .ds-roundel-mark { width: 90%; height: 90%; border-radius: 50%; border: 2px solid #d4bf96; opacity: 0.8; }"
+    },
+    {
+      "name": "Inscription",
+      "kind": "custom",
+      "refersTo": "display",
+      "description": "Plaque capitals on stone with the tracked Worn Sand tagline. The live surface adds the ln-cut SVG filter, which cannot be shipped in an isolated snippet.",
+      "html": "<div class=\"ds-inscription\"><h1 class=\"ds-title\">One campus.</h1><p class=\"ds-tagline\">Infinite possibilities.</p></div>",
+      "css": ".ds-inscription { padding: 40px 24px; text-align: center; background: #191918; font-family: 'Archivo', 'Arial Narrow', Arial, sans-serif; } .ds-title { margin: 0; font-size: 64px; font-weight: 500; font-stretch: 118%; line-height: 0.92; letter-spacing: 0.05em; text-transform: uppercase; color: #d4bf96; } .ds-tagline { margin: 16px 0 0; padding-left: 0.44em; font-size: 13px; font-weight: 500; font-stretch: 125%; letter-spacing: 0.44em; text-transform: uppercase; color: #ab9772; }"
+    },
+    {
+      "name": "Portal Copy",
+      "kind": "card",
+      "refersTo": "headline",
+      "description": "Access portal text block: incised headline, lede, plates, and a ruled note. Not a card: it sits flush on the stone.",
+      "html": "<section class=\"ds-portal\"><h2 class=\"ds-portal-h\">Access<br>portal.</h2><p class=\"ds-lede\">Connect to your digital campus environment.</p><p class=\"ds-note\">Recruiters join through the invitation link sent by the DSU placement office.</p></section>",
+      "css": ".ds-portal { padding: 40px clamp(20px, 4.4vw, 64px); background: #191918; border-top: 1px solid rgb(212 191 150 / 0.18); font-family: 'Archivo', 'Arial Narrow', Arial, sans-serif; color: #d4bf96; } .ds-portal-h { margin: 0; font-size: 56px; font-weight: 500; font-stretch: 118%; line-height: 0.94; letter-spacing: 0.05em; text-transform: uppercase; } .ds-lede { margin: 20px 0 0; max-width: 34ch; font-size: 17px; font-stretch: 100%; line-height: 1.5; } .ds-note { margin: 24px 0 0; padding-top: 16px; max-width: 44ch; border-top: 1px solid rgb(212 191 150 / 0.18); font-size: 13px; font-stretch: 100%; line-height: 1.55; color: #ab9772; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Dedication Stone",
+    "overview": "The landing page is the campus's own foundation stone: a slab of polished charcoal granite with sand-gilt lettering cut into it. Everything on the page is either stone, something carved into the stone, or light moving across its polish. The university's real seal and the real building drawing are the identity; they are carved and etched, never pictured as photographs or set on cards.\n\nDensity is monumental and sparse: one centred axis, plaque-scale capitals, one line of tracked secondary lettering, two plates. Depth comes from cutting into the surface (incised lettering, a recessed seal socket, an etched drawing that sinks into the ground plane), not from stacking panels above it. Motion is one linked scroll pull that moves the inscription, the building, the carved ring, the portal and the light together.\n\nScope. This world governs the landing surface (route `/`: `src/app/page.tsx`, `CampusPortal`, `Navbar`, `src/app/landing.css`) and nothing else. Every rule is scoped under the `.ln` root. Sign-in, sign-up and the role portals are out of scope and unchanged: they keep their pre-existing Geist-on-light look and their own tokens in `src/app/globals.css` and `src/app/workspace.css`, which this document does not describe and does not govern.",
+    "keyCharacteristics": [
+      "Charcoal granite ground, sand as the single ink; the owner pinned the palette as charcoal and sand.",
+      "Wide Archivo capitals tracked like plaque lettering, with an incised V-cut edge on headings.",
+      "Square corners everywhere except the circle of the seal.",
+      "Depth by carving (inset socket, cut lettering, masked etching), plus one soft drop under the primary plate.",
+      "One pinned scroll pull drives every moving part; reduced motion gets a complete static layout."
+    ],
+    "rules": [
+      { "name": "The One Ink Rule", "body": "Sand is the only ink on the stone. The sole other colour on the surface is the official DSU logo lockup in the header, used unaltered. Warm-white highlights inside shadows and the sheen are light on the material, not ink, and stay at low alpha.", "section": "colors" },
+      { "name": "The Brightest Plate Rule", "body": "The only solid fill of polished sand (`sand-hi`) is the primary plate on hover. No other surface is filled brighter than `sand`.", "section": "colors" },
+      { "name": "The Incised Lettering Rule", "body": "Display and headline lettering is cut into the stone with an SVG V-cut filter: the glyph's blurred alpha is the height map, lit by `feDiffuseLighting` (distant light, azimuth 90, elevation 45) and blended with the fill as fill × (0.6 × light + 0.5), so walls stay dark sand and the lit lip never clips. Cut depth follows size: `ln-cut-lg` (blur 6, depth 8) for 120-148px, `ln-cut-md` (4.5, 9) for 80-115px, `ln-cut-sm` (2.6, 6) under 80px. Below 1200px the display steps to `md` and the headline to `sm`; on phones both use `sm`. Body and labels are never cut.", "section": "typography" },
+      { "name": "The Plaque Width Rule", "body": "Capitals are set wide (`wdth` 115-125) and tracked; running sentences return to `wdth` 100.", "section": "typography" },
+      { "name": "The Cut Not Card Rule", "body": "Nothing floats on the stone in a panel. New elements are carved in (inset, incised, etched) or are plates; there are no cards, blurred glass or raised containers.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** set every element on the granite stone (`stone` plus the granite tile) and ink it in sand; step down to `sand-low` for secondary lines.",
+      "**Do** cut display and headline lettering with the matching `ln-cut-*` filter for its size; the filter definitions live in `CampusPortal`, so any heading that uses them must render alongside those definitions.",
+      "**Do** keep plates and controls square, outlined or filled in sand, with a 1px `rule-strong` edge on outlined ones.",
+      "**Do** use the official seal and building as carved and etched material, from the provenance-tagged rasters.",
+      "**Do** tie any new scroll motion to the single pinned pull's progress, and give reduced-motion visitors a complete static layout.",
+      "**Do** keep a 2px `sand-hi` focus outline, offset 4px, on every link."
+    ],
+    "donts": [
+      "**Don't** introduce a second ink colour; the official logo lockup in the header is the only exception.",
+      "**Don't** fill anything with `sand-hi` except the primary plate on hover.",
+      "**Don't** round rectangular corners; the only curve is the seal's circle.",
+      "**Don't** put content on cards, glass or raised panels; carve it in instead.",
+      "**Don't** extend this world's tokens or `.ln` styles to sign-in, sign-up or the role portals; they keep their own look."
+    ]
+  }
+}

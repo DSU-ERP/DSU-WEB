@@ -1,0 +1,445 @@
+/* Landing page: the campus dedication stone.
+   Polished charcoal granite carries everything; sand gilt is the only ink.
+   Every rule is scoped under .ln so the portals keep their own look. */
+
+.ln {
+  --ln-stone: #191918;
+  --ln-stone-deep: #121211;
+  --ln-sand: #d4bf96;
+  --ln-sand-hi: #ecdfc1;
+  --ln-sand-2: #ab9772;
+  --ln-rule: rgb(212 191 150 / 0.18);
+  --ln-rule-strong: rgb(212 191 150 / 0.5);
+  --ln-header-h: 76px;
+  --ln-gutter: clamp(20px, 4.4vw, 64px);
+  --ln-stage-h: max(560px, calc(100svh - var(--ln-header-h)));
+  --ln-face: var(--font-archivo), 'Archivo', 'Arial Narrow', Arial, sans-serif;
+  /* Black-galaxy granite: crystal grains with sparse sand flecks (seamless tile,
+     authored for this page; the 1024px raster is shown at 512px for crisp DPR 2). */
+  --ln-granite: url('/assets/landing/granite-charcoal.webp');
+  /* Slow variation across the slab, so the tile never reads as a repeat. */
+  --ln-slab:
+    radial-gradient(ellipse 55% 42% at 16% 28%, rgb(236 223 193 / 0.035), transparent 72%),
+    radial-gradient(ellipse 48% 40% at 88% 78%, rgb(0 0 0 / 0.26), transparent 70%),
+    radial-gradient(ellipse 40% 34% at 70% 16%, rgb(236 223 193 / 0.025), transparent 70%);
+
+  min-height: 100svh;
+  background: var(--ln-stone) var(--ln-granite) 0 0 / 512px 512px;
+  color: var(--ln-sand);
+  font-family: var(--ln-face);
+  font-synthesis: none;
+}
+
+/* The canvas outside the page (overscroll, scrollbar track) is stone too. */
+html:has(.ln) { background: var(--ln-stone-deep); scrollbar-color: #4b4538 var(--ln-stone-deep); }
+html:has(.ln) body { background: var(--ln-stone); }
+.ln ::selection { background: var(--ln-sand); color: var(--ln-stone); }
+.ln a:focus-visible { outline: 2px solid var(--ln-sand-hi); outline-offset: 4px; }
+
+/* ---------- Header ---------- */
+
+.ln-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: var(--ln-header-h);
+  padding: 0 var(--ln-gutter);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  background: var(--ln-stone-deep);
+  border-bottom: 1px solid var(--ln-rule);
+}
+.ln-brand { display: flex; align-items: center; min-width: 0; }
+.ln-brand-logo { display: block; height: 42px; width: auto; }
+.ln-brand-product {
+  margin-left: 20px;
+  padding-left: 20px;
+  border-left: 1px solid var(--ln-rule-strong);
+  line-height: 30px;
+  font-size: 11px;
+  font-weight: 600;
+  font-stretch: 118%;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--ln-sand-2);
+  white-space: nowrap;
+}
+.ln-header-nav { display: flex; align-items: center; }
+.ln-header-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--ln-rule-strong);
+  font-size: 12px;
+  font-weight: 600;
+  font-stretch: 115%;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ln-sand);
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+.ln-header-link svg { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.ln-header-link:hover { border-color: var(--ln-sand); background: rgb(212 191 150 / 0.07); color: var(--ln-sand-hi); }
+.ln-header-link:hover svg { transform: translateX(3px); }
+
+/* ---------- Stage: the stone ---------- */
+
+.ln-stage {
+  --ln-etch-w: min(74vw, 1100px, calc(var(--ln-stage-h) * 1.1));
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(var(--ln-stage-h), auto) auto;
+  justify-items: center;
+  /* The slab travels with the pinned stage, so the grain never slides under
+     the inscription while the pull runs. */
+  background: var(--ln-slab), var(--ln-stone) var(--ln-granite) 0 0 / 512px 512px;
+}
+.ln-stage:focus { outline: none; }
+.ln-defs { position: absolute; width: 0; height: 0; overflow: hidden; }
+
+/* Light crossing the polish. Soft-light lifts the crystals where it falls,
+   and the band travels with the scroll pull. */
+.ln-sheen {
+  position: absolute;
+  inset: 0 -45%;
+  z-index: 0;
+  pointer-events: none;
+  mix-blend-mode: soft-light;
+  background:
+    radial-gradient(55% 60% at 50% -8%, rgb(255 246 226 / 0.32), transparent 72%),
+    linear-gradient(101deg, transparent 31%, rgb(255 246 226 / 0.2) 43%, rgb(255 246 226 / 0.6) 50%, rgb(255 246 226 / 0.2) 57%, transparent 69%);
+}
+
+/* The inscription fills the stone above the building and centres in it, so
+   the gaps above and below stay balanced at every viewport height. */
+.ln-inscription {
+  grid-area: 1 / 1;
+  align-self: stretch;
+  justify-self: stretch;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 24px var(--ln-gutter) calc(var(--ln-etch-w) / 2.6 + clamp(16px, 3svh, 40px));
+  text-align: center;
+}
+
+/* The seal, carved: a recessed socket with a shadowed upper wall and a lit
+   lower lip, the lettering cut in sand at its floor. */
+.ln-roundel {
+  display: grid;
+  place-items: center;
+  width: clamp(72px, 12.5svh, 124px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(0 0 0 / 0.28);
+  box-shadow:
+    inset 0 4px 9px rgb(0 0 0 / 0.8),
+    inset 0 -1px 0 rgb(255 244 220 / 0.16),
+    0 1px 0 rgb(255 244 220 / 0.07),
+    0 -1px 0 rgb(0 0 0 / 0.5);
+}
+.ln-roundel img {
+  display: block;
+  width: 90%;
+  height: 90%;
+  filter: drop-shadow(0 -1px 0 rgb(0 0 0 / 0.7));
+}
+
+/* Incised lettering (see the ln-cut filters in CampusPortal). */
+.ln-title,
+.ln-portal h2 {
+  margin: 0;
+  font-weight: 500;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  color: var(--ln-sand);
+  filter: url(#ln-cut-lg);
+}
+.ln-title {
+  margin-top: clamp(16px, 3.2svh, 32px);
+  font-size: clamp(48px, min(9.6vw, 15.2svh), 148px);
+  line-height: 0.92;
+  letter-spacing: 0.05em; /* plaque spacing; still one line from 768px up */
+  white-space: nowrap;
+}
+.ln-tagline {
+  margin: clamp(12px, 2.4svh, 24px) 0 0;
+  padding-left: 0.44em; /* balances the trailing tracking so the line sits on the axis */
+  font-size: clamp(12px, 1.2vw, 17px);
+  font-weight: 500;
+  font-stretch: 125%;
+  letter-spacing: 0.44em;
+  text-transform: uppercase;
+  color: var(--ln-sand-2);
+}
+.ln-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: clamp(22px, 4.4svh, 44px);
+}
+.ln-inscription .ln-actions { justify-content: center; }
+
+/* Gilt plates. The brightest sand on the page belongs to the primary action. */
+.ln-plate {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-width: 172px;
+  height: clamp(48px, 6.4svh, 56px);
+  padding: 0 24px 0 26px;
+  font-size: 13px;
+  font-weight: 600;
+  font-stretch: 118%;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ln-stone);
+  background: var(--ln-sand);
+  box-shadow:
+    inset 0 1px 0 rgb(255 250 236 / 0.5),
+    inset 0 -1px 0 rgb(60 48 28 / 0.35),
+    0 14px 28px -16px rgb(0 0 0 / 0.75);
+  transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease, transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.ln-plate svg { transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1); }
+.ln-plate:hover { background: var(--ln-sand-hi); }
+.ln-plate:hover svg { transform: translateX(4px); }
+.ln-plate:active { transform: translateY(1px); }
+.ln-plate-ghost {
+  justify-content: center;
+  color: var(--ln-sand);
+  background: transparent;
+  border: 1px solid var(--ln-rule-strong);
+  box-shadow: none;
+}
+.ln-plate-ghost:hover { background: rgb(212 191 150 / 0.07); border-color: var(--ln-sand); color: var(--ln-sand-hi); }
+
+/* The campus, etched: the drawing's own linework cut in sand (a derived plate,
+   public/assets/landing/campus-etched-*.webp). */
+.ln-etching {
+  grid-area: 1 / 1;
+  align-self: end;
+  z-index: 2;
+  position: relative;
+  width: var(--ln-etch-w);
+  aspect-ratio: 1100 / 423;
+  margin: 0;
+  transform-origin: 0 0;
+  /* The ground plane sinks into the stone instead of ending on a hard edge. */
+  -webkit-mask-image: linear-gradient(180deg, #000 80%, transparent 99%);
+  mask-image: linear-gradient(180deg, #000 80%, transparent 99%);
+}
+.ln-etching img { display: block; width: 100%; height: 100%; }
+.ln-etching-missing {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ln-sand-2);
+}
+
+/* ---------- Access portal ---------- */
+
+.ln-portal {
+  grid-area: 2 / 1;
+  justify-self: stretch;
+  z-index: 3;
+  padding: clamp(56px, 9vw, 112px) var(--ln-gutter);
+  border-top: 1px solid var(--ln-rule);
+}
+.ln-portal h2 {
+  font-size: clamp(44px, min(6.6vw, 11svh), 112px);
+  line-height: 0.94;
+  letter-spacing: 0.05em;
+  filter: url(#ln-cut-md);
+}
+.ln-portal h2 span { display: block; }
+.ln-portal-lede {
+  margin: clamp(18px, 3svh, 28px) 0 0;
+  max-width: 34ch;
+  font-size: clamp(15px, 1.3vw, 19px);
+  font-stretch: 100%;
+  line-height: 1.5;
+  color: var(--ln-sand);
+}
+.ln-portal .ln-actions { margin-top: clamp(24px, 4.4svh, 40px); }
+.ln-portal-note {
+  margin: clamp(22px, 3.6svh, 32px) 0 0;
+  padding-top: 16px;
+  max-width: 44ch;
+  border-top: 1px solid var(--ln-rule);
+  font-size: 13px;
+  font-stretch: 100%;
+  line-height: 1.55;
+  color: var(--ln-sand-2);
+}
+
+/* The carved seal ring. Its geometry is shared with the etching's landing box,
+   which sits wholly inside the ring's inner field (0.68 of the diameter keeps
+   the box corners inside 0.75 of the radius), so the lettering is never covered. */
+.ln-ring img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  opacity: 0.36;
+  -webkit-mask-image: radial-gradient(circle closest-side, rgb(0 0 0 / 0.3) 60%, #000 74%);
+  mask-image: radial-gradient(circle closest-side, rgb(0 0 0 / 0.3) 60%, #000 74%);
+}
+.ln-ring, .ln-target { display: none; }
+
+/* Without the pull (reduced motion), the ring sits beside the portal. */
+@media (min-width: 768px) {
+  .ln-stage:not([data-enhanced]) .ln-ring {
+    display: block;
+    grid-area: 2 / 1;
+    justify-self: end;
+    align-self: center;
+    z-index: 1;
+    width: min(36vw, 460px);
+    aspect-ratio: 1;
+    margin-right: var(--ln-gutter);
+    pointer-events: none;
+  }
+}
+
+/* ---------- Enhanced: one pinned pull ---------- */
+
+.ln-stage[data-enhanced] {
+  --ln-ring: min(50vw, 88svh, 820px);
+  --ln-ring-x: 71%;
+  --ln-ring-y: 52%;
+  --ln-land: 0.68; /* etching width as a share of the ring diameter */
+  height: var(--ln-stage-h);
+  grid-template-rows: minmax(0, 1fr);
+}
+.ln-stage[data-enhanced] .ln-portal {
+  /* Off the grid, so the containing block is the whole stage, not row 2. */
+  grid-area: auto;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: min(44%, 640px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 0 0 var(--ln-gutter);
+  border: 0;
+}
+.ln-stage[data-enhanced] .ln-ring {
+  display: block;
+  position: absolute;
+  z-index: 1;
+  width: var(--ln-ring);
+  aspect-ratio: 1;
+  left: calc(var(--ln-ring-x) - var(--ln-ring) / 2);
+  top: calc(var(--ln-ring-y) - var(--ln-ring) / 2);
+  pointer-events: none;
+}
+/* Landed: the inner field is cleared, so the lettered band frames the building
+   and the shield never sits behind or beneath it. The hero roundel keeps the
+   whole seal. */
+.ln-stage[data-enhanced] .ln-ring img {
+  -webkit-mask-image: radial-gradient(circle closest-side, transparent 70%, #000 73.5%);
+  mask-image: radial-gradient(circle closest-side, transparent 70%, #000 73.5%);
+}
+.ln-stage[data-enhanced] .ln-target {
+  display: block;
+  position: absolute;
+  width: calc(var(--ln-ring) * var(--ln-land));
+  height: calc(var(--ln-ring) * var(--ln-land) * 423 / 1100);
+  left: calc(var(--ln-ring-x) - var(--ln-ring) * var(--ln-land) / 2);
+  top: calc(var(--ln-ring-y) - var(--ln-ring) * var(--ln-land) * 423 / 2200);
+  pointer-events: none;
+}
+
+/* ---------- Entrance: the inscription surfaces once ---------- */
+
+@keyframes ln-surface { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+@keyframes ln-etch-in { from { opacity: 0; clip-path: inset(100% 0 0 0); } to { opacity: 1; clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: no-preference) {
+  .ln-roundel { animation: ln-surface 1s cubic-bezier(0.22, 1, 0.36, 1) 0.05s backwards; }
+  .ln-title { animation: ln-surface 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s backwards; }
+  .ln-tagline { animation: ln-surface 1s cubic-bezier(0.22, 1, 0.36, 1) 0.28s backwards; }
+  .ln-inscription .ln-actions { animation: ln-surface 1s cubic-bezier(0.22, 1, 0.36, 1) 0.38s backwards; }
+  .ln-etching img { animation: ln-etch-in 1.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s backwards; }
+}
+
+/* Lenis smooth scrolling (see SmoothScroll.tsx). */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-stopped { overflow: hidden; }
+
+/* ---------- Narrow screens ---------- */
+
+@media (max-width: 1199px) {
+  .ln-title { filter: url(#ln-cut-md); }
+  .ln-portal h2 { filter: url(#ln-cut-sm); }
+}
+
+@media (max-width: 860px) {
+  .ln-brand-product { display: none; }
+}
+
+@media (max-width: 767px) {
+  .ln { --ln-header-h: 64px; --ln-gutter: 22px; }
+  .ln-brand-logo { height: 34px; }
+  .ln-header-link { font-size: 11px; letter-spacing: 0.16em; }
+
+  .ln-stage { --ln-etch-w: 136vw; }
+  .ln-roundel { width: clamp(64px, 10svh, 92px); }
+  .ln-title, .ln-portal h2 { filter: url(#ln-cut-sm); }
+  .ln-title { font-size: min(15vw, 8.6svh); line-height: 0.92; }
+  .ln-title span { display: block; }
+  .ln-tagline { font-size: 11px; letter-spacing: 0.36em; padding-left: 0.36em; }
+  .ln-plate { min-width: 0; flex: 1 1 auto; padding: 0 14px; gap: 10px; font-size: 11.5px; letter-spacing: 0.12em; }
+  .ln-actions { width: 100%; max-width: 400px; }
+
+  .ln-portal h2 { font-size: min(15vw, 8.4svh); }
+  .ln-stage[data-enhanced] .ln-portal {
+    width: auto;
+    right: 0;
+    bottom: auto;
+    top: clamp(24px, 5svh, 52px);
+    justify-content: flex-start;
+    padding: 0 var(--ln-gutter);
+  }
+  /* Phones: the building rests on the ring's lower arc. Only that arc is cut,
+     so the copy above stays clear and no lettering is ever half covered. */
+  .ln-stage[data-enhanced] {
+    --ln-ring: min(104vw, 50svh);
+    --ln-ring-x: 50%;
+    --ln-ring-y: 73%;
+    --ln-land: 0.86;
+  }
+  .ln-stage[data-enhanced] .ln-ring img {
+    -webkit-mask-image: linear-gradient(180deg, transparent 52%, #000 70%), radial-gradient(circle closest-side, transparent 70%, #000 73.5%);
+    -webkit-mask-composite: source-in;
+    mask-image: linear-gradient(180deg, transparent 52%, #000 70%), radial-gradient(circle closest-side, transparent 70%, #000 73.5%);
+    mask-composite: intersect;
+  }
+  /* Finer crystals at phone width. */
+  .ln { background-size: 384px 384px; }
+  .ln-stage { background-size: 100% 100%, 100% 100%, 100% 100%, 384px 384px; }
+}
+
+@media (max-width: 380px) {
+  .ln-plate { padding: 0 12px; font-size: 11px; }
+}
+
+@media (max-width: 340px) {
+  .ln-actions { flex-direction: column; }
+  .ln-plate { flex: none; width: 100%; }
+}
