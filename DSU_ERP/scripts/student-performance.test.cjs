@@ -15,7 +15,7 @@ test('student API avoids duplicate proxy authentication while page refresh and c
   process.env.NEXT_PUBLIC_SUPABASE_URL='https://synthetic.invalid';process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='synthetic';
   global.__studentPerf={auth:0,clients:0,cookies:[]};
   try {
-    const { proxy } = await load('src/proxy.ts', { 'next/server': serverMock, '@supabase/ssr': `exports.createServerClient=(_u,_k,options)=>{global.__studentPerf.clients++;return {auth:{getUser:async()=>{global.__studentPerf.auth++;options.cookies.setAll([{name:'refreshed',value:'synthetic',options:{httpOnly:true}}]);return {data:{user:{id:'student'}}}}}}};` });
+    const { proxy } = await load('src/proxy.ts', { 'next/server': serverMock, '@supabase/ssr': `exports.createServerClient=(_u,_k,options)=>{global.__studentPerf.clients++;return {auth:{getClaims:async()=>{global.__studentPerf.auth++;options.cookies.setAll([{name:'refreshed',value:'synthetic',options:{httpOnly:true}}]);return {data:{claims:{sub:'student'}},error:null}}}}};` });
     for (const path of ['/student/api/conversations', '/student/api/sessions/id/answer', '/student/api/netcheck']) {
       const result=await proxy(request(path));assert.equal(result.headers.get('Cache-Control'),'private, no-store');
     }
@@ -35,15 +35,15 @@ test('student API handler still verifies the user once, denies missing sessions 
     const { GET }=await load('src/app/student/api/[...path]/route.ts', {
       'server-only':'', 'react':'exports.cache=fn=>fn;', 'next/navigation':'exports.redirect=()=>{throw Error("NEXT_REDIRECT")};',
       '@/shared/config/env':'exports.backendOrigin=()=>new URL("http://synthetic-backend.invalid");',
-      './supabase':`exports.supabaseServer=async()=>({auth:{getUser:async()=>{global.__studentPerf.auth++;return {data:{user:global.__studentPerf.user},error:null}},getSession:async()=>{global.__studentPerf.tokenReads++;return {data:{session:{access_token:'verified-token'}}}}}});`,
+      './supabase':`exports.supabaseServer=async()=>({auth:{getClaims:async()=>{global.__studentPerf.auth++;return {data:global.__studentPerf.user?{claims:{sub:global.__studentPerf.user.id}}:null,error:null}},getSession:async()=>{global.__studentPerf.tokenReads++;return {data:{session:{access_token:'verified-token'}}}}}});`,
     });
     const run=()=>GET(request('/student/api/conversations'),{params:Promise.resolve({path:['conversations']})});
     assert.equal((await run()).status,401);assert.equal(global.__studentPerf.requests.length,0);
     global.__studentPerf.user={id:'student'};global.__studentPerf.auth=0;
     const result=await run();assert.equal(result.status,200);assert.deepEqual(await result.json(),{data:{ready:true}});
-    assert.equal(global.__studentPerf.auth,1,'the onboarding check reuses the verified session');
-    assert.deepEqual(global.__studentPerf.requests,['Bearer verified-token','Bearer verified-token']);
-    assert.deepEqual(global.__studentPerf.urls.sort(),['/api/v1/session','/api/v1/student/conversations']);
+    assert.equal(global.__studentPerf.auth,1,'the user is verified once');
+    assert.deepEqual(global.__studentPerf.requests,['Bearer verified-token'],'one backend call: the backend applies the onboarding gate');
+    assert.deepEqual(global.__studentPerf.urls,['/api/v1/student/conversations']);
   } finally { global.fetch=originalFetch;delete global.__studentPerf; }
 });
 
@@ -168,30 +168,34 @@ test('student landing page and GitHub callback use the same onboarding rule as t
   } finally { delete global.__callback; }
 });
 
-test('student API serves only skills resources while onboarding is required', async () => {
-  const originalFetch=global.fetch;global.__studentPerf={auth:0,urls:[],required:true};
+test('student API asks the backend to apply the onboarding gate to every non-skills resource', async () => {
+  const originalFetch=global.fetch;global.__studentPerf={auth:0,calls:[],required:true};
   try {
-    global.fetch=async(url)=>{const path=new URL(url).pathname;global.__studentPerf.urls.push(path);
-      return Response.json({data:path==='/api/v1/session'?{role:'student',onboardingRequired:global.__studentPerf.required}:{ok:true}});};
+    // The backend answers 403 ONBOARDING_REQUIRED from its cached /session when
+    // the gate header is present; this fake mirrors that contract.
+    global.fetch=async(url,options)=>{const path=new URL(url).pathname;const gated=options.headers['x-dsu-onboarding-gate']==='1';
+      global.__studentPerf.calls.push({path,gated});
+      if(gated&&global.__studentPerf.required)return Response.json({error:{code:'ONBOARDING_REQUIRED',message:'Complete your skills onboarding first.'}},{status:403});
+      return Response.json({data:{ok:true}});};
     const route=await load('src/app/student/api/[...path]/route.ts', {
       'server-only':'', 'react':'exports.cache=fn=>fn;', 'next/navigation':'exports.redirect=()=>{throw Error("NEXT_REDIRECT")};',
       '@/shared/config/env':'exports.backendOrigin=()=>new URL("http://synthetic-backend.invalid");',
-      './supabase':`exports.supabaseServer=async()=>({auth:{getUser:async()=>{global.__studentPerf.auth++;return {data:{user:{id:'student'}},error:null}},getSession:async()=>({data:{session:{access_token:'verified-token'}}})}});`,
+      './supabase':`exports.supabaseServer=async()=>({auth:{getClaims:async()=>{global.__studentPerf.auth++;return {data:{claims:{sub:'student'}},error:null}},getSession:async()=>({data:{session:{access_token:'verified-token'}}})}});`,
     });
-    const call=async(method,path)=>{global.__studentPerf.urls=[];global.__studentPerf.auth=0;
+    const call=async(method,path)=>{global.__studentPerf.calls=[];global.__studentPerf.auth=0;
       const req={...request('/student/api/'+path.join('/')),method,body:method==='POST'?new Response('{}').body:null};
       req.headers.set('origin','http://localhost');
-      const res=await route[method](req,{params:Promise.resolve({path})});return {status:res.status,body:await res.json(),urls:global.__studentPerf.urls,auth:global.__studentPerf.auth};};
+      const res=await route[method](req,{params:Promise.resolve({path})});return {status:res.status,body:await res.json(),calls:global.__studentPerf.calls,auth:global.__studentPerf.auth};};
     const read=await call('GET',['dashboard']);
-    assert.equal(read.status,403);assert.deepEqual(read.body,{code:'ONBOARDING_REQUIRED',error:'Complete your skills onboarding first.'});
+    assert.equal(read.status,403);assert.equal(read.body.code,'ONBOARDING_REQUIRED');
+    assert.deepEqual(read.calls,[{path:'/api/v1/student/dashboard',gated:true}],'one gated backend call, no separate /session read');
     assert.equal(read.auth,1);
     const write=await call('POST',['conversations']);
     assert.equal(write.status,403);assert.equal(write.body.code,'ONBOARDING_REQUIRED');
-    assert.deepEqual(write.urls,['/api/v1/session'],'a write is never forwarded while onboarding is required');
     const skills=await call('GET',['skills','profile']);
-    assert.equal(skills.status,200);assert.deepEqual(skills.urls,['/api/v1/student/skills/profile'],'skills resources need no /session read');
+    assert.equal(skills.status,200);assert.deepEqual(skills.calls,[{path:'/api/v1/student/skills/profile',gated:false}],'skills resources are never gated');
     global.__studentPerf.required=false;
     const open=await call('POST',['conversations']);
-    assert.equal(open.status,200);assert.deepEqual(open.urls,['/api/v1/session','/api/v1/student/conversations']);assert.equal(open.auth,1);
+    assert.equal(open.status,200);assert.deepEqual(open.calls,[{path:'/api/v1/student/conversations',gated:true}]);assert.equal(open.auth,1);
   } finally { global.fetch=originalFetch;delete global.__studentPerf; }
 });

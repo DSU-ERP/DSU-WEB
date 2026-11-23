@@ -2,11 +2,10 @@ import "server-only";
 import { backendApi } from "@/shared/http/backend";
 import { CampusError } from "@/shared/http/errors";
 import { signInAgain } from "@/shared/auth/session";
-import { officerSession } from "./server";
 import type { AudienceState, CompanyAccess, DriveRequest, DriveRequestList } from "./company-types";
 
+// The backend authorizes each read; no separate /placement/session call first.
 async function officerGet<T>(path: string): Promise<T> {
-  await officerSession();
   try {
     return (await backendApi<{ data: T }>(path)).data;
   } catch (error) {

@@ -10,11 +10,14 @@ export async function proxy(request: NextRequest) {
   if (path === "/student" || path.startsWith("/student/")) request.headers.set(PATHNAME_HEADER, path);
   else request.headers.delete(PATHNAME_HEADER);
   let response = NextResponse.next({ request });
-  // Student handlers call userSession(), which verifies the user with Supabase
-  // and can refresh cookies itself. Avoid another auth round trip here before
+  // API route handlers call userSession(), which verifies the user and can
+  // refresh cookies itself. Avoid another auth round trip here before
   // every answer, caption-related request and chat message. Pages still refresh
   // in the proxy because Server Components cannot write refreshed cookies.
-  if (path.startsWith("/student/api/") || path.startsWith("/company/api/") || path.startsWith("/admin/api/")) {
+  if (
+    path.startsWith("/student/api/") || path.startsWith("/company/api/") || path.startsWith("/admin/api/") ||
+    /^\/placement\/(tools-api|friday-api|assistant-api|drive-import-api|export)(\/|$)/.test(path)
+  ) {
     response.headers.set("Cache-Control", "private, no-store");
     return response;
   }
@@ -39,9 +42,11 @@ export async function proxy(request: NextRequest) {
         },
       },
     });
-    // Session checks in pages/actions remain authoritative if refresh is unavailable.
+    // Refreshes an expiring session (writing new cookies) and otherwise
+    // verifies the token locally with the cached JWKS, with no Supabase Auth
+    // round trip. Session checks in pages/actions remain authoritative.
     try {
-      await client.auth.getUser();
+      await client.auth.getClaims();
     } catch {}
   }
   response.headers.set("Cache-Control", "private, no-store");

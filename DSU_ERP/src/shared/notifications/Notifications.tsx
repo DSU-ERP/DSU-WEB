@@ -1,68 +1,107 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { Bell, Check, CheckCheck } from "lucide-react";
 import { listNotifications, readAllNotifications, readNotification } from "@/shared/notifications/actions";
 import { noticeTime, safeHref, type NotificationItem, type NotificationList } from "./types";
 
-const POLL_MS = 60000;
+const POLL_MS = 180_000;
+// Returning to the tab or opening the bell refreshes only when the list is
+// older than this, so quick tab switches do not each cost a server round trip.
+const STALE_MS = 30_000;
 
 /**
- * Unread notifications for the signed-in account. Refreshes every minute
- * while the tab is visible. Marking an item as read removes it at once and
- * restores it if the server rejects the change.
+ * One notification store per browser tab, shared by every bell and panel on
+ * the page. Previously each mounted component polled on its own (two pollers
+ * on the dashboard and overview pages) and the bell refetched data the server
+ * had just rendered.
+ */
+type Store = { list: NotificationList | null; error: string; loading: boolean; at: number };
+let store: Store = { list: null, error: "", loading: false, at: 0 };
+const listeners = new Set<() => void>();
+const emit = (patch: Partial<Store>) => {
+  store = { ...store, ...patch };
+  listeners.forEach((listener) => listener());
+};
+const subscribe = (listener: () => void) => {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+};
+const snapshot = () => store;
+let inflight: Promise<void> | null = null;
+function load(force = false): Promise<void> {
+  if (inflight) return inflight;
+  if (!force && store.list && Date.now() - store.at < STALE_MS) return Promise.resolve();
+  if (!store.list) emit({ loading: true });
+  inflight = listNotifications()
+    .then((result) => {
+      if (result.ok) emit({ list: result.data, error: "", loading: false, at: Date.now() });
+      else emit({ error: result.error, loading: false });
+    })
+    .catch(() => emit({ loading: false, error: "Notifications are unavailable right now." }))
+    .finally(() => {
+      inflight = null;
+    });
+  return inflight;
+}
+let pollers = 0;
+let timer: number | undefined;
+const onVisible = () => {
+  if (document.visibilityState === "visible") void load();
+};
+function startPolling() {
+  if (pollers++ > 0) return;
+  timer = window.setInterval(() => {
+    if (document.visibilityState === "visible") void load(true);
+  }, POLL_MS);
+  document.addEventListener("visibilitychange", onVisible);
+}
+function stopPolling() {
+  if (--pollers > 0) return;
+  window.clearInterval(timer);
+  document.removeEventListener("visibilitychange", onVisible);
+}
+
+/**
+ * Unread notifications for the signed-in account. Marking an item as read
+ * removes it at once and restores it if the server rejects the change.
  */
 function useNotifications(initial: NotificationList | null, eager: boolean) {
-  const [list, setList] = useState<NotificationList | null>(initial);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(!initial && eager);
-  const busy = useRef(false);
-  const refresh = useCallback(async () => {
-    if (busy.current) return;
-    busy.current = true;
-    const result = await listNotifications();
-    busy.current = false;
-    setLoading(false);
-    if (result.ok) {
-      setList(result.data);
-      setError("");
-    } else setError(result.error);
-  }, []);
+  const shared = useSyncExternalStore(subscribe, snapshot, snapshot);
+  const seeded = useRef(false);
   useEffect(() => {
-    if (eager && !initial) void refresh();
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void refresh();
-    }, POLL_MS);
-    const onVisible = () => {
-      if (document.visibilityState === "visible") void refresh();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => {
-      window.clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisible);
-    };
-  }, [eager, initial, refresh]);
-  const markRead = async (item: NotificationItem) => {
-    const before = list;
-    setList((current) =>
-      current ? { ...current, unread: Math.max(0, current.unread - 1), rows: current.rows.filter((row) => row.id !== item.id) } : current,
-    );
-    const result = await readNotification(item.id, item.source);
-    if (!result.ok) {
-      setList(before);
-      setError(result.error);
+    // Server-rendered data is the freshest copy: share it instead of refetching.
+    let deferred: number | undefined;
+    if (initial && !seeded.current) {
+      seeded.current = true;
+      emit({ list: initial, error: "", loading: false, at: Date.now() });
     }
+    // Deferred so a server-seeded panel mounting in the same commit fills the
+    // store first; load() then sees fresh data and skips the request.
+    else if (eager) deferred = window.setTimeout(() => void load(), 0);
+    startPolling();
+    return () => {
+      window.clearTimeout(deferred);
+      stopPolling();
+    };
+  }, [eager, initial]);
+  const list = shared.list ?? initial;
+  const loading = !list && (shared.loading || eager);
+  const refresh = useCallback((force = true) => load(force), []);
+  const markRead = async (item: NotificationItem) => {
+    const before = store.list;
+    if (before)
+      emit({ list: { ...before, unread: Math.max(0, before.unread - 1), rows: before.rows.filter((row) => row.id !== item.id) } });
+    const result = await readNotification(item.id, item.source);
+    if (!result.ok) emit({ list: before, error: result.error });
   };
   const markAll = async () => {
-    const before = list;
-    setList((current) => (current ? { ...current, unread: 0, rows: [] } : current));
+    const before = store.list;
+    if (before) emit({ list: { ...before, unread: 0, rows: [] } });
     const result = await readAllNotifications();
-    if (!result.ok) {
-      setList(before);
-      setError(result.error);
-    }
+    if (!result.ok) emit({ list: before, error: result.error });
   };
-  return { list, error, loading, refresh, markRead, markAll };
+  return { list, error: shared.error, loading, refresh, markRead, markAll };
 }
 
 function Items({ rows, onRead, onNavigate }: { rows: NotificationItem[]; onRead: (item: NotificationItem) => void; onNavigate?: () => void }) {
@@ -157,7 +196,7 @@ export function NotificationBell({ className = "", popoverClassName = "" }: { cl
       ref={details}
       className={`dsu-bell ${className}`}
       onToggle={(event) => {
-        if (event.currentTarget.open) void refresh();
+        if (event.currentTarget.open) void refresh(false);
       }}
     >
       <summary aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}>

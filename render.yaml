@@ -23,5 +23,9 @@ services:
         sync: false
       - key: DSU_BACKEND_URL
         sync: false
+      # Same value as the backend's SERVICE_TOKEN. Lets the web server forward
+      # each visitor's IP so backend per-IP rate limits apply per visitor.
+      - key: DSU_SERVICE_TOKEN
+        sync: false
       - key: OPENROUTER_API_KEY
         sync: false

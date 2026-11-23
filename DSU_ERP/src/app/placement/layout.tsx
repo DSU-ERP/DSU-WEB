@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { competencyTestingEnabled } from "@/features/competency/server";
 import { officerSession } from "@/features/placement/lib/server";
-import { requireWorkspace } from "@/shared/auth/workspace";
+import { requireWorkspaceWith } from "@/shared/auth/workspace";
 import { CampusError } from "@/shared/http/errors";
 import { describeFailure } from "@/shared/http/diagnostics";
 import { Workspace } from "@/features/placement/components/Workspace";
@@ -19,8 +19,7 @@ export default async function PlacementLayout({
   children: React.ReactNode;
 }) {
   try {
-    await requireWorkspace("placement_officer");
-    await officerSession();
+    await requireWorkspaceWith("placement_officer", officerSession);
   } catch (error) {
     if (!(error instanceof CampusError)) throw error;
     const failure = describeFailure(error);

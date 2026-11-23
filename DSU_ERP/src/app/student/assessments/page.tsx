@@ -5,12 +5,10 @@ import {
   type AttemptHistory,
 } from "@/features/student/components/Assessments";
 export default async function Page() {
-  const data = (await backendApi<{ data: PracticeData }>("/student/practice"))
-      .data,
-    history = (
-      await backendApi<{ data: AttemptHistory[] }>(
-        "/student/assessments/history",
-      )
-    ).data;
-  return <AssessmentHub data={data} history={history} />;
+  // Independent reads: fetch together instead of one after the other.
+  const [practice, history] = await Promise.all([
+    backendApi<{ data: PracticeData }>("/student/practice"),
+    backendApi<{ data: AttemptHistory[] }>("/student/assessments/history"),
+  ]);
+  return <AssessmentHub data={practice.data} history={history.data} />;
 }

@@ -46,30 +46,39 @@ export async function placementMutate<T>(
   payload: Record<string, Json>,
   requestId: string,
 ): Promise<T> {
-  await officerSession();
-  return (
+  // The backend authorizes every action; a separate /placement/session check
+  // here only added a round trip (React cache does not dedupe in actions).
+  return officerCall(async () => (
     await backendApi<{ data: T }>(
       "/placement/actions/" + encodeURIComponent(action),
       { method: "POST", body: JSON.stringify({ payload, requestId }) },
     )
-  ).data;
+  ).data);
+}
+
+/** Sends an expired session to sign-in, like officerSession() did before each call. */
+async function officerCall<T>(call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    if (error instanceof CampusError && error.status === 401) signInAgain(error);
+    throw error;
+  }
 }
 
 export async function placementImportHistory<T>(): Promise<T> {
-  await officerSession();
-  return (await backendApi<{ data: T }>("/imports")).data;
+  return officerCall(async () => (await backendApi<{ data: T }>("/imports")).data);
 }
 export async function renameFridayConversation(
   id: string,
   title: string,
 ): Promise<import("./types").Row> {
-  await officerSession();
-  return (
+  return officerCall(async () => (
     await backendApi<{ data: import("./types").Row }>(
       "/placement/friday/rename",
       { method: "POST", body: JSON.stringify({ id, title }) },
     )
-  ).data;
+  ).data);
 }
 
 // ---- Student Skills Intelligence (officer reads) ----------------------------

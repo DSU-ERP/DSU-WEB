@@ -16,7 +16,8 @@ import {
 } from "../lib/types";
 import { STATE_TEXT, WorkflowCanvas } from "./WorkflowCanvas";
 
-const POLL_MS = 2000;
+// Every tick lists runs (and often reloads one), each a backend call.
+const POLL_MS = 5000;
 const ASSISTANTS: Assistant[] = ["student", "officer", "company"];
 const RANGES: [string, string, number | null][] = [
   ["hour", "Last hour", 3600e3],
@@ -112,15 +113,23 @@ export function AgentWorkflow({
   useEffect(() => {
     if (!live) return;
     let stopped = false;
+    let busy = false;
     const tick = async () => {
-      if (document.visibilityState !== "visible") return;
-      const list = await loadRuns();
-      if (stopped || !list) return;
-      const newest = list.rows[0];
-      if (follow && newest && newest.id !== runId) await openRun(newest.id);
-      else if (runId) {
-        const fresh = list.rows.find((r) => r.id === runId);
-        if (fresh && (fresh.status === "running" || (run && fresh.updatedAt !== run.updatedAt))) await openRun(runId, true);
+      // Skip a tick while the previous one is still waiting on the backend,
+      // so slow responses never stack overlapping requests.
+      if (busy || document.visibilityState !== "visible") return;
+      busy = true;
+      try {
+        const list = await loadRuns();
+        if (stopped || !list) return;
+        const newest = list.rows[0];
+        if (follow && newest && newest.id !== runId) await openRun(newest.id);
+        else if (runId) {
+          const fresh = list.rows.find((r) => r.id === runId);
+          if (fresh && (fresh.status === "running" || (run && fresh.updatedAt !== run.updatedAt))) await openRun(runId, true);
+        }
+      } finally {
+        busy = false;
       }
     };
     const timer = window.setInterval(() => void tick(), POLL_MS);

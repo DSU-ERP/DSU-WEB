@@ -568,6 +568,7 @@ export function TestRunner({ initial }: { initial: Attempt }) {
   const revision = useRef(initial.revision),
     queue = useRef<Promise<void>>(Promise.resolve()),
     submitting = useRef(false),
+    flushSave = useRef<() => void>(() => {}),
     latest = useRef(answers),
     firstSave = useRef(true),
     lastActivity = useRef(Date.now()),
@@ -642,12 +643,19 @@ export function TestRunner({ initial }: { initial: Attempt }) {
     window.addEventListener("beforeunload", warn);
     return () => window.removeEventListener("beforeunload", warn);
   }, [initial.status]);
+  // Leaving the test page inside the app also saves pending answers.
+  useEffect(() => () => flushSave.current(), []);
   useEffect(() => {
     if (firstSave.current) {
       firstSave.current = false;
       return;
     }
-    const timeout = setTimeout(() => {
+    // Typing pauses of 2 s batch into one save (each save is a backend
+    // transaction). Leaving or hiding the tab flushes a pending save at once.
+    let pending = true;
+    const save = () => {
+      if (!pending) return;
+      pending = false;
       const snapshot = { answers, marked };
       queue.current = queue.current
         .catch(() => {})
@@ -674,8 +682,19 @@ export function TestRunner({ initial }: { initial: Attempt }) {
             setSaving(false);
           }
         });
-    }, 500);
-    return () => clearTimeout(timeout);
+    };
+    flushSave.current = save;
+    const timeout = setTimeout(save, 2000);
+    const flushIfHidden = () => {
+      if (document.visibilityState === "hidden") save();
+    };
+    document.addEventListener("visibilitychange", flushIfHidden);
+    window.addEventListener("pagehide", save);
+    return () => {
+      clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", flushIfHidden);
+      window.removeEventListener("pagehide", save);
+    };
   }, [answers, marked, initial.id, initial.expires_at]);
   useEffect(() => {
     if (!initial.config.fullscreen) return;

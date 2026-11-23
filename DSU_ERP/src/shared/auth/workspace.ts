@@ -29,3 +29,16 @@ export async function requireWorkspace(role: WorkspaceRole) {
   return access;
 }
 
+
+/**
+ * Runs the workspace role check and the workspace's own session read in
+ * parallel (they are independent backend calls), while keeping the role
+ * check's outcome first: a wrong role still redirects home even if the other
+ * read failed.
+ */
+export async function requireWorkspaceWith<T>(role: WorkspaceRole, load: () => Promise<T>): Promise<T> {
+  const [access, loaded] = await Promise.allSettled([requireWorkspace(role), load()]);
+  if (access.status === "rejected") throw access.reason;
+  if (loaded.status === "rejected") throw loaded.reason;
+  return loaded.value;
+}

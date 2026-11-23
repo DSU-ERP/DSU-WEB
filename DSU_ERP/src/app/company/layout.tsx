@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { requireWorkspace } from "@/shared/auth/workspace";
+import { requireWorkspaceWith } from "@/shared/auth/workspace";
 import { CampusError } from "@/shared/http/errors";
 import { describeFailure } from "@/shared/http/diagnostics";
 import { companySession } from "@/features/company/lib/server";
@@ -16,8 +16,7 @@ export const metadata = { title: "Company portal · DSU Placements" };
 export default async function CompanyLayout({ children }: { children: React.ReactNode }) {
   let session;
   try {
-    await requireWorkspace("company");
-    session = await companySession();
+    session = await requireWorkspaceWith("company", companySession);
   } catch (error) {
     if (!(error instanceof CampusError)) throw error;
     const failure = describeFailure(error);

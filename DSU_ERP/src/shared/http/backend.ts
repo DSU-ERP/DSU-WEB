@@ -1,4 +1,5 @@
 import "server-only";
+import { headers as requestHeaders } from "next/headers";
 import { userSession } from "@/shared/auth/session";
 import { backendOrigin } from "@/shared/config/env";
 import { CampusError, readCampusResponse } from "./errors";
@@ -10,6 +11,9 @@ export async function backendApi<T>(
     // A session the caller already verified in this request. Route handlers
     // pass it so several backend calls verify the user only once.
     session?: { token: string };
+    // Ask the backend to apply the skills-onboarding gate (browser calls
+    // proxied by /student/api). The backend answers from its cached /session.
+    onboardingGate?: boolean;
   } = {},
 ): Promise<T> {
   if (!path.startsWith("/") || path.startsWith("//")) throw new CampusError(400, "Invalid resource.");
@@ -20,12 +24,18 @@ export async function backendApi<T>(
   const method = options.method || "GET";
   // A sleeping hosted backend takes about 40s to wake. Reads keep retrying
   // within this window; writes are never repeated.
+  const forwarded = await forwardedHeaders();
   const deadline = Date.now() + (Number(process.env.DSU_BACKEND_WAKE_MS) || 60000);
   const send = async (): Promise<Response> => {
     try {
       return await fetch(new URL(`/api/v1${path}`, origin), {
         method, body: options.body,
-        headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": options.contentType || "application/json" } : {}) },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          ...(options.body ? { "Content-Type": options.contentType || "application/json" } : {}),
+          ...(options.onboardingGate ? { "x-dsu-onboarding-gate": "1" } : {}),
+          ...forwarded,
+        },
         cache: "no-store", redirect: "error",
         signal: AbortSignal.timeout(options.timeoutMs ?? (method === "POST" ? 45000 : 20000)),
       });
@@ -65,4 +75,27 @@ function logNonJson(path: string, response: Response, retried: boolean) {
   console.warn("Campus backend returned a non-JSON response", {
     route: path.split("?")[0].replace(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, ":id"), status: response.status, contentType: response.headers.get("content-type") || "none", retried,
   });
+}
+
+/**
+ * Every browser request reaches the backend from this server's one egress IP.
+ * With DSU_SERVICE_TOKEN set, the browser's IP is forwarded so the backend can
+ * apply per-IP limits per visitor instead of one shared bucket; the backend
+ * trusts x-dsu-client-ip only together with a valid service token.
+ */
+async function forwardedHeaders(): Promise<Record<string, string>> {
+  const out: Record<string, string> = {};
+  let incoming: Headers;
+  try { incoming = await requestHeaders(); } catch { return out; }
+  const requestId = incoming.get("x-request-id");
+  if (requestId && /^[\w-]{1,128}$/.test(requestId)) out["x-request-id"] = requestId;
+  const serviceToken = process.env.DSU_SERVICE_TOKEN;
+  // Render's ingress appends the connecting address, so the last entry is the
+  // one a browser cannot forge.
+  const ip = incoming.get("x-forwarded-for")?.split(",").pop()?.trim();
+  if (serviceToken && ip && /^[0-9a-fA-F:.]{2,64}$/.test(ip)) {
+    out["x-service-token"] = serviceToken;
+    out["x-dsu-client-ip"] = ip;
+  }
+  return out;
 }
