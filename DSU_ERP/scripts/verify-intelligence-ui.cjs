@@ -143,6 +143,8 @@ const importResult = {
   },
   missingCompanyFields: ["hr_phone"],
   warnings: ["The PDF did not state a drive date."],
+  sources: { title: "Role: Graduate analyst", package_lpa: "CTC: 8 LPA" },
+  method: "rules",
   document: { filename: "drive.pdf", pageCount: 2, chars: 1840, truncated: false, lowText: false, stored: "text" },
   text: "Graduate analyst at Example employer.",
 };
@@ -562,6 +564,8 @@ const send = (res, status, body) => {
       const review = await page.locator(".po-import-review").innerText();
       assert.match(review, /company details and \d+ role details found/, "review summary shown");
       assert.match(review, /Dates are not kept on the company/, "PDF dates are explained, not stored");
+      assert.match(review, /From: “CTC: 8 LPA”/, "each value shows the line it came from");
+      assert.doesNotMatch(await page.locator(".po-import").innerText(), /AI/, "the import does not claim to use AI");
       await page.getByRole("button", { name: /Fill the form/ }).click();
       await page.locator('input[name="name"]').waitFor();
       assert.equal(await page.locator('input[name="name"]').inputValue(), "Example employer");

@@ -142,8 +142,9 @@ export function CompanyEditorForm({
       <section className="erp-panel po-import" aria-labelledby="po-import-title">
         <h2 id="po-import-title">Fill from a recruiter PDF · optional</h2>
         <p className="erp-muted">
-          Upload the company’s drive notice or job description (PDF, up to 10 MB). AI reads the company details and the
-          role it is hiring for, and fills the form below. Nothing is saved until you review it and press Save. The
+          Upload the company’s drive notice or job description (PDF, up to 10 MB). The company details and the role it
+          is hiring for are read from the PDF’s labels and headings (no AI), and fill the form below. Anything not
+          clearly stated is left for you. Nothing is saved until you review it and press Save. The
           extracted text is kept for officers; the PDF itself is not stored.
         </p>
         <div className="po-import-row">
@@ -163,7 +164,7 @@ export function CompanyEditorForm({
           </button>
         </div>
         <p role="status" aria-live="polite" className={error ? "erp-form-error" : "erp-muted"}>
-          {error || (busy ? "Extracting text and suggesting details. This can take up to a minute." : "")}
+          {error || (busy ? "Reading the PDF. This takes a few seconds." : "")}
         </p>
         {result && found && (
           <div className="po-import-review">
@@ -193,7 +194,10 @@ export function CompanyEditorForm({
                 return (
                   <div key={k}>
                     <dt>{COMPANY_FIELD_LABELS[k]}</dt>
-                    <dd>{Array.isArray(v) ? v.join(", ") : String(v)}</dd>
+                    <dd>
+                      {Array.isArray(v) ? v.join(", ") : String(v)}
+                      <Source text={result.sources?.[k === "name" && !result.sources?.name ? "company_name" : k]} />
+                    </dd>
                   </div>
                 );
               })}
@@ -202,7 +206,10 @@ export function CompanyEditorForm({
                 return (
                   <div key={k}>
                     <dt>{DRIVE_DEFAULT_LABELS[k as keyof typeof DRIVE_DEFAULT_LABELS]}</dt>
-                    <dd>{Array.isArray(v) ? v.join(", ") : String(v)}</dd>
+                    <dd>
+                      {Array.isArray(v) ? v.join(", ") : String(v)}
+                      <Source text={result.sources?.[k]} />
+                    </dd>
                   </div>
                 );
               })}
@@ -307,6 +314,11 @@ export function CompanyEditorForm({
       </section>
     </>
   );
+}
+
+/** The line in the PDF a value was read from, so the officer can check it. */
+function Source({ text }: { text?: string }) {
+  return text ? <small className="po-import-source">From: “{text}”</small> : null;
 }
 
 /**

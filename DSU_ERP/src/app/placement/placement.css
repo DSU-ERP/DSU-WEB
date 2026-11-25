@@ -1041,6 +1041,7 @@ html:has(.po-shell) {
 .po-import-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px 16px; margin: 0; }
 .po-import-fields div { padding: 8px 0; border-bottom: 1px solid var(--erp-border); min-width: 0; }
 .po-import-fields dt { font-size: 11px; color: var(--erp-muted); }
+.po-import-source { display: block; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--erp-muted); overflow-wrap: anywhere; }
 .po-import-fields dd { margin: 2px 0 0; font-size: 13px; overflow-wrap: anywhere; white-space: pre-line; max-height: 9em; overflow: auto; }
 .po-import-text { max-height: 260px; overflow: auto; white-space: pre-wrap; font-size: 11px; padding: 10px; background: var(--po-highlight); border-radius: 4px; }
 

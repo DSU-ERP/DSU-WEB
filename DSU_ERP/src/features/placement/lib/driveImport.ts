@@ -41,6 +41,9 @@ export type DriveImportResult = {
   company?: CompanyImportFields;
   missingCompanyFields?: string[];
   warnings: string[];
+  /** The PDF line each value was read from (rule-based reading). */
+  sources?: Record<string, string>;
+  method?: "rules";
   document: { filename: string; pageCount: number | null; chars: number; truncated: boolean; lowText: boolean; stored: string };
   text: string;
 };
