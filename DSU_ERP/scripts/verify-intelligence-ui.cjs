@@ -121,17 +121,27 @@ const dashboard = {
   academicEligibility: true,
 };
 
-// ---- Officer drive import fixture ----
-const company = { id: "c1", name: "Example employer", industry: "Software" };
+// ---- Officer company PDF import and drive defaults fixture ----
+const company = {
+  id: "c1", name: "Example employer", industry: "Software",
+  drive_defaults: { title: "Graduate analyst", package_lpa: 8, location: "Bengaluru", min_cgpa: 7, max_backlogs: 0, branches: ["CSE", "Robotics"], skills: "SQL, Excel", rounds: ["Aptitude", "Interview"], employment_type: "full-time", openings: 10 },
+};
+const plainCompany = { id: "c2", name: "New employer", industry: "Retail", drive_defaults: {} };
 const options = { batches: ["2028"], departments: ["CSE", "ECE"], quotas: [], industries: ["Software"], policy: { label: "Campus policy", minimumCgpa: "6" }, categories: [] };
 const importResult = {
   intakeId: id,
   fields: {
-    company_name: "Example employer", title: "Graduate analyst", package_lpa: 8, location: "Bengaluru", drive_date: "", registration_deadline: "",
+    company_name: "Example employer", title: "Graduate analyst", package_lpa: 8, location: "Bengaluru", drive_date: "2027-02-10", registration_deadline: "",
     min_cgpa: 7, max_backlogs: 0, branches: ["CSE"], skills: "SQL, Excel", description: "Analyst role.", rounds: ["Aptitude", "Interview"],
     required_documents: "Resume", job_category: "", employment_type: "full-time", openings: 10, contact: "",
   },
   missingFields: ["drive_date", "registration_deadline", "job_category", "contact"],
+  company: {
+    name: "Example employer", short_name: "ExEm", industry: "Software", headquarters: "Bengaluru", website: "https://example.org",
+    hr_name: "Asha Rao", hr_email: "hr@example.org", hr_phone: "", about: "Builds analytics tools.", hiring_roles: "Graduate analyst",
+    job_categories: ["Data & analytics"],
+  },
+  missingCompanyFields: ["hr_phone"],
   warnings: ["The PDF did not state a drive date."],
   document: { filename: "drive.pdf", pageCount: 2, chars: 1840, truncated: false, lowText: false, stored: "text" },
   text: "Graduate analyst at Example employer.",
@@ -145,7 +155,8 @@ import{StudentFridayChat}from'@/features/student/components/StudentFridayChat';
 import{Dashboard}from'@/features/student/components/Dashboard';
 import{Workspace}from'@/features/placement/components/Workspace';
 import{DriveCreator}from'@/features/placement/components/DriveImport';
-const session=${JSON.stringify(session)},completed=${JSON.stringify(completed)},plan=${JSON.stringify(plan)},attempt=${JSON.stringify(attempt)},withheld=${JSON.stringify(withheld)},dashboard=${JSON.stringify(dashboard)},company=${JSON.stringify(company)},options=${JSON.stringify(options)};
+import{CompanyEditorForm}from'@/features/placement/components/CompanyEditorForm';
+const session=${JSON.stringify(session)},completed=${JSON.stringify(completed)},plan=${JSON.stringify(plan)},attempt=${JSON.stringify(attempt)},withheld=${JSON.stringify(withheld)},dashboard=${JSON.stringify(dashboard)},company=${JSON.stringify(company)},plainCompany=${JSON.stringify(plainCompany)},options=${JSON.stringify(options)};
 const route=location.pathname.split('/').pop();
 const student=(page)=><StudentShell name='Example Student' usn='QA001'>{page}</StudentShell>;
 const pages={
@@ -156,7 +167,8 @@ const pages={
  withheld:()=>student(<TestResults initial={withheld}/>),
  chat:()=>student(<StudentFridayChat initial={[{id:'${id}',title:'Resume feedback',updated_at:'${now}'},{id:'22222222-2222-4222-8222-222222222222',title:'Interview plan',updated_at:'${now}'}]}/>),
  dashboard:()=>student(<Dashboard data={dashboard}/>),
- 'drive-import':()=><Workspace><h1>Create a placement drive.</h1><DriveCreator companies={[company]} options={options}/></Workspace>,
+ 'company-import':()=><Workspace><h1>Add a recruiting company.</h1><CompanyEditorForm company={{}} newRecord departments={options.departments}/></Workspace>,
+ 'drive-new':()=><Workspace><h1>Create a placement drive.</h1><DriveCreator companies={[company,plainCompany]} options={options}/></Workspace>,
 };
 import{depositMedia}from"@/features/student/lib/media";if(location.pathname.endsWith("/room"))depositMedia(session.id,window.__makeInterviewMedia());createRoot(document.getElementById('root')).render(<React.StrictMode>{pages[route]()}</React.StrictMode>);`;
 const mocks = {...require("./harness-server-mocks.cjs"),
@@ -179,6 +191,8 @@ const send = (res, status, body) => {
       stdin: { contents: entry, resolveDir: process.cwd(), loader: "tsx" },
       bundle: true, outfile: path.join(dir, "bundle.js"), jsx: "automatic", platform: "browser",
       define: { "process.env.NODE_ENV": '"development"' },
+      // Shared modules read other process.env values; browsers have no process.
+      banner: { js: "var process=globalThis.process||{env:{NODE_ENV:'development'}};" },
       plugins: [{
         name: "boundaries",
         setup(b) {
@@ -242,7 +256,7 @@ const send = (res, status, body) => {
         if (p.startsWith("sessions/")) return send(res, 200, { data: session });
         return send(res, 200, { data: [] });
       }
-      if (req.url === "/placement/drive-import-api") {
+      if (req.url === "/placement/company-import-api") {
         calls.push({ url: req.url, body: { filename: body?.filename } });
         return send(res, 200, { data: importResult });
       }
@@ -270,7 +284,8 @@ const send = (res, status, body) => {
       result: ["Reasoning", "Ratio reasoning needs work."],
       withheld: ["release"],
       dashboard: ["Your preparation", "Example."],
-      "drive-import": ["Import from drive PDF"],
+      "company-import": ["Fill from a recruiter PDF", "Default drive details"],
+      "drive-new": ["Create a placement drive."],
       chat: ["What can I help you with?", "Find my direction"],
     };
     const checks = [];
@@ -310,7 +325,7 @@ const send = (res, status, body) => {
         }
         await context.close();
       }
-    checks.push("room, report, plan, result, withheld, dashboard and drive import at 1440/375 px in light and dark");
+    checks.push("room, report, plan, result, withheld, dashboard, company import and new drive at 1440/375 px in light and dark");
 
     // Withheld answers: no expected answers or section marks on the page.
     {
@@ -535,29 +550,74 @@ const send = (res, status, body) => {
       checks.push("full-screen Haki, mobile history drawer, draft preservation and back-to-dashboard navigation");
     }
 
-    // Drive import: fills the form, then asks before replacing typed values.
+    // Company PDF import: fills company details and default drive details,
+    // keeps dates off the company, and asks before replacing typed values.
     {
       const { context, page } = await open("light", 1440);
-      await page.goto(`${origin}/qa/drive-import`);
+      await page.goto(`${origin}/qa/company-import`);
       await page.locator("h1").first().waitFor();
       await page.setInputFiles('input[type="file"]', { name: "drive.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4\n%fixture\n") });
       await page.getByRole("button", { name: "Read PDF" }).click();
       await page.getByRole("button", { name: /Fill the form/ }).waitFor();
-      assert.ok((await page.locator("body").innerText()).includes("fields found"), "review summary shown");
+      const review = await page.locator(".po-import-review").innerText();
+      assert.match(review, /company details and \d+ role details found/, "review summary shown");
+      assert.match(review, /Dates are not kept on the company/, "PDF dates are explained, not stored");
       await page.getByRole("button", { name: /Fill the form/ }).click();
-      const title = page.locator('input[name="title"]');
-      await title.waitFor();
-      assert.equal(await title.inputValue(), "Graduate analyst", "form filled from the PDF");
-      await title.fill("My own title");
+      await page.locator('input[name="name"]').waitFor();
+      assert.equal(await page.locator('input[name="name"]').inputValue(), "Example employer");
+      assert.equal(await page.locator('input[name="industry"]').inputValue(), "Software");
+      assert.equal(await page.locator('input[name="hr_email"]').inputValue(), "hr@example.org");
+      assert.ok(await page.locator('input[name="job_categories"][value="Data & analytics"]').isChecked());
+      const defaults = JSON.parse(await page.locator('input[name="drive_defaults"]').inputValue());
+      assert.equal(defaults.title, "Graduate analyst");
+      assert.deepEqual(defaults.rounds, ["Aptitude", "Interview"]);
+      assert.equal("drive_date" in defaults, false, "drive date stays off the company");
+      assert.equal(await page.getByLabel("Job role", { exact: true }).inputValue(), "Graduate analyst");
+      await page.screenshot({ path: path.join(dir, "company-import.png"), fullPage: true });
+      await page.locator('input[name="industry"]').fill("My own industry");
       let asked = false;
       page.once("dialog", (d) => { asked = true; void d.dismiss(); });
       await page.getByRole("button", { name: /Fill the form again/ }).click();
       await page.waitForTimeout(300);
       assert.ok(asked, "officer is asked before typed values are replaced");
-      assert.equal(await page.locator('input[name="title"]').inputValue(), "My own title", "declining keeps typed values");
+      assert.equal(await page.locator('input[name="industry"]').inputValue(), "My own industry", "declining keeps typed values");
       assert.ok(!calls.some((c) => /save|publish/.test(c.url)), "nothing saved or published");
       await context.close();
-      checks.push("drive PDF import fill and overwrite confirmation");
+      checks.push("company PDF import fills company and default drive details, with overwrite confirmation");
+    }
+
+    // New drive: no PDF upload; choosing a company fills its saved drive details
+    // and leaves batch, academic year and both dates for the officer.
+    {
+      const { context, page } = await open("light", 1440);
+      await page.goto(`${origin}/qa/drive-new`);
+      await page.locator("h1").first().waitFor();
+      assert.equal(await page.locator('input[type="file"]').count(), 0, "no PDF upload on the drive form");
+      await page.getByLabel("Company", { exact: true }).selectOption("c1");
+      await page.locator(".po-drive-prefill").getByText(/Filled from Example employer/).waitFor();
+      assert.equal(await page.locator('input[name="title"]').inputValue(), "Graduate analyst");
+      assert.equal(await page.locator('input[name="package_lpa"]').inputValue(), "8");
+      assert.equal(await page.locator('input[name="openings"]').inputValue(), "10");
+      assert.deepEqual(await page.locator('select[name="branches"]').evaluate((e) => [...e.selectedOptions].map((o) => o.value)), ["CSE"]);
+      assert.ok((await page.locator(".po-drive-prefill").innerText()).includes("Robotics"), "unmatched branch reported");
+      for (const name of ["drive_date", "registration_deadline", "academic_year"])
+        assert.equal(await page.locator(`input[name="${name}"]`).inputValue(), "", `${name} left for the officer`);
+      assert.equal(await page.locator('select[name="batch"]').inputValue(), "");
+      assert.equal(await page.locator('input[name="published"]').isChecked(), false);
+      await page.screenshot({ path: path.join(dir, "drive-from-company.png"), fullPage: true });
+      // A company without saved details keeps the form and says where to add them.
+      await page.locator('input[name="title"]').fill("Typed role");
+      await page.getByLabel("Company", { exact: true }).selectOption("c2");
+      await page.locator(".po-drive-prefill").getByText(/no saved drive details/).waitFor();
+      assert.equal(await page.locator('input[name="title"]').inputValue(), "Typed role");
+      let asked = false;
+      page.once("dialog", (d) => { asked = true; void d.dismiss(); });
+      await page.getByLabel("Company", { exact: true }).selectOption("c1");
+      await page.waitForTimeout(300);
+      assert.ok(asked, "officer is asked before typed values are replaced");
+      assert.equal(await page.locator('input[name="title"]').inputValue(), "Typed role");
+      await context.close();
+      checks.push("new drive fills from the chosen company's saved details, dates left empty");
     }
 
     assert.deepEqual(errors, []);

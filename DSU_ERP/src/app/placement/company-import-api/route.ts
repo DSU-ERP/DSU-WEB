@@ -7,8 +7,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const json = (body: unknown, status = 200) =>
   Response.json(body, { status, headers: { "Cache-Control": "private, no-store" } });
-// Forwards a drive PDF (base64 JSON, 10 MB file limit) to the backend parser.
-// The backend verifies the officer, extracts text and returns suggestions only.
+// Forwards a recruiter PDF (base64 JSON, 10 MB file limit) to the backend
+// parser. The backend verifies the officer, extracts text and returns company
+// and role suggestions only; nothing is saved until the officer saves the form.
 export async function POST(req: NextRequest) {
   if (!sameOrigin(req)) return json({ error: "Invalid request origin." }, 403);
   try {
@@ -29,12 +30,18 @@ export async function POST(req: NextRequest) {
     }
     const body = Buffer.concat(chunks).toString("utf8");
     JSON.parse(body);
-    return json(await backendApi("/placement/drives/parse", { method: "POST", body }));
+    try {
+      return json(await backendApi("/placement/companies/parse", { method: "POST", body }));
+    } catch (error) {
+      // A backend that predates company extraction still reads the role details.
+      if (!(error instanceof CampusError) || error.status !== 404) throw error;
+      return json(await backendApi("/placement/drives/parse", { method: "POST", body }));
+    }
   } catch (error) {
     if (error instanceof Error && error.message.includes("NEXT_REDIRECT"))
       return json({ error: "Please sign in again." }, 401);
     return json(
-      { error: error instanceof CampusError ? error.message : "The drive PDF could not be read." },
+      { error: error instanceof CampusError ? error.message : "The PDF could not be read." },
       error instanceof CampusError ? error.status : 400,
     );
   }

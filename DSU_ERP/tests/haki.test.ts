@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { formatMessage, parseInline } from "../src/features/student/lib/format";
 import { groupFridayHistory } from "../src/features/student/lib/friday-history";
 import { activitySeries } from "../src/features/student/lib/progress";
-import { driveImportDefaults, type DriveImportFields } from "../src/features/placement/lib/driveImport";
+import { driveDefaultsFromImport, driveFromCompanyDefaults, readDriveDefaults, type DriveImportFields } from "../src/features/placement/lib/driveImport";
 
 test("assistant replies format headings, lists and bold without HTML", () => {
   const blocks = formatMessage(
@@ -101,28 +101,31 @@ test("the activity strip covers fourteen campus days with real counts only", () 
   assert.equal(activitySeries(undefined, "2026-03-01", 3)[0].day, "2026-02-27");
 });
 
-test("drive PDF suggestions map to campus records and report what does not match", () => {
+test("recruiter PDF role details become company defaults, and defaults fill a new drive", () => {
   const fields: DriveImportFields = {
     company_name: "acme  systems", title: "Graduate Engineer", package_lpa: 8, location: "Bengaluru",
-    drive_date: "2026-11-20", registration_deadline: "", min_cgpa: null, max_backlogs: 0,
+    drive_date: "2026-11-20", registration_deadline: "2026-11-10", min_cgpa: null, max_backlogs: 0,
     branches: ["cse", "Mechatronics"], skills: "SQL", description: "", rounds: ["Aptitude", "HR"],
     required_documents: "", job_category: "Software / IT", employment_type: "full-time", openings: null, contact: "hr@acme.example",
   };
-  const { prefill, notes } = driveImportDefaults(
-    fields,
-    [{ id: "c1", name: "Acme Systems" }, { id: "c2", name: "Other" }],
-    ["CSE", "ISE", "__missing__"],
-  );
+  const defaults = driveDefaultsFromImport(fields);
+  // Dates, the company name and the contact stay out of the company's drive defaults.
+  assert.deepEqual(Object.keys(defaults).sort(), ["branches", "employment_type", "job_category", "location", "max_backlogs", "package_lpa", "rounds", "skills", "title"]);
+  assert.equal(defaults.max_backlogs, 0);
+
+  const { prefill, notes, filled } = driveFromCompanyDefaults("c1", defaults, ["CSE", "ISE", "__missing__"]);
   assert.equal(prefill.company_id, "c1");
   assert.deepEqual(prefill.branches, ["CSE"]);
-  assert.equal(prefill.max_backlogs, 0);
-  assert.equal(prefill.min_cgpa, undefined);
-  assert.equal(prefill.registration_deadline, undefined);
-  assert.equal("published" in prefill, false);
   assert.deepEqual(prefill.rounds, ["Aptitude", "HR"]);
+  for (const left of ["drive_date", "registration_deadline", "batch", "academic_year", "published", "min_cgpa"])
+    assert.equal(left in prefill, false, left);
+  assert.equal(filled, 9);
   assert.ok(notes.some((n) => n.includes("Mechatronics")));
-  assert.ok(notes.some((n) => n.includes("hr@acme.example")));
-  const unknown = driveImportDefaults({ ...fields, company_name: "Nova" }, [{ id: "c1", name: "Acme Systems" }], []);
-  assert.equal(unknown.prefill.company_id, undefined);
-  assert.match(unknown.notes[0], /Nova/);
+
+  // Stored values are read defensively: unknown keys, blanks and bad shapes are ignored.
+  assert.deepEqual(readDriveDefaults({ title: " Analyst ", openings: 3, drive_date: "2027-01-01", rounds: [], skills: "" }), { title: "Analyst", openings: 3 });
+  assert.deepEqual(readDriveDefaults(null), {});
+  assert.deepEqual(readDriveDefaults(["x"]), {});
+  const none = driveFromCompanyDefaults("c2", {}, ["CSE"]);
+  assert.deepEqual(none, { prefill: { company_id: "c2" }, notes: [], filled: 0 });
 });

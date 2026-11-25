@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { officerSession, placementRead } from "@/features/placement/lib/server";
-import { JOB_CATEGORIES, text, type Report, type Row } from "@/features/placement/lib/types";
-import { ChangeForm, DeleteRecord } from "@/features/placement/components/Controls";
+import { text, type Report, type Row } from "@/features/placement/lib/types";
+import { DeleteRecord } from "@/features/placement/components/Controls";
+import { CompanyEditorForm } from "@/features/placement/components/CompanyEditorForm";
 import { Metrics, Table } from "@/features/placement/components/UI";
 import { CompanyAccessPanel } from "@/features/placement/components/CompanyRequests";
 import { companyAccess } from "@/features/placement/lib/company";
@@ -15,27 +16,18 @@ export default async function CompanyEditor({
   const { id } = await params,
     newRecord = id === "new";
   if (!newRecord && !/^[0-9a-f-]{36}$/i.test(id)) notFound();
+  // A new company has no record to carry the campus options, so read them from the list.
   const company = newRecord ? {} : await placementRead<Row>("company", { id });
+  const options = (newRecord
+    ? (await placementRead<Report>("companies", { limit: "1" })).options
+    : (company as Row & { options?: Report["options"] }).options) as Report["options"] | undefined;
+  const departments = Array.isArray(options?.departments) ? options.departments : [];
   const [drives, access] = newRecord
     ? [null, null]
     : await Promise.all([
         placementRead<Report>("drives", { company: id, limit: "100" }),
         companyAccess(id).catch(() => null),
       ]);
-  const fields = [
-    ["name", "Company name", "text"],
-    ["short_name", "Short name", "text"],
-    ["industry", "Industry", "text"],
-    ["headquarters", "Headquarters / location", "text"],
-    ["website", "Website", "url"],
-    ["hr_name", "HR contact name", "text"],
-    ["hr_email", "HR email", "email"],
-    ["hr_phone", "HR phone", "tel"],
-  ];
-  const chosen = new Set(
-    Array.isArray(company.job_categories) ? company.job_categories.map(String) : [],
-  );
-  const categories = [...new Set([...JOB_CATEGORIES, ...chosen])];
   const rows = drives?.rows || [];
   const totals: Row = {
     drives: rows.length,
@@ -93,79 +85,7 @@ export default async function CompanyEditor({
           )}
         </>
       )}
-      <section className="erp-panel">
-        <h2>{newRecord ? "Company details" : "Edit company details"}</h2>
-        <ChangeForm
-          action="company.save"
-          base={newRecord ? {} : { id, revision: company.revision }}
-          destination="/placement/companies"
-        >
-          <div className="po-split">
-            {fields.map(([key, title, type]) => (
-              <label key={key}>
-                {title}
-                <input
-                  name={key}
-                  type={type}
-                  defaultValue={String(company[key] || "")}
-                  required={key === "name"}
-                  maxLength={
-                    key === "hr_phone"
-                      ? 40
-                      : key === "short_name"
-                        ? 50
-                        : key === "industry"
-                          ? 100
-                          : 200
-                  }
-                />
-              </label>
-            ))}
-          </div>
-          <label>
-            Roles they hire for
-            <textarea
-              name="hiring_roles"
-              maxLength={1000}
-              placeholder="e.g. Software engineer, Data analyst, Graduate engineer trainee"
-              defaultValue={String(company.hiring_roles || "")}
-            />
-          </label>
-          <fieldset className="po-checks">
-            <legend>Job categories</legend>
-            <input type="hidden" name="job_categories_present" value="1" />
-            {categories.map((value) => (
-              <label key={value} className="po-checkbox">
-                <input
-                  type="checkbox"
-                  name="job_categories"
-                  value={value}
-                  defaultChecked={chosen.has(value)}
-                />
-                {value}
-              </label>
-            ))}
-          </fieldset>
-          <label>
-            About the company
-            <textarea
-              name="about"
-              maxLength={4000}
-              placeholder="What the company does, locations, notes from past visits…"
-              defaultValue={String(company.about || "")}
-            />
-          </label>
-          <input type="hidden" name="active_present" value="true" />
-          <label className="po-checkbox">
-            <input
-              type="checkbox"
-              name="active"
-              defaultChecked={newRecord || company.active === true}
-            />
-            Active recruiting company
-          </label>
-        </ChangeForm>
-      </section>
+      <CompanyEditorForm company={company} newRecord={newRecord} departments={departments} />
       {!newRecord && (
         <DeleteRecord
           kind="company"

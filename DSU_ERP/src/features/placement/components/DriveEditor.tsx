@@ -7,13 +7,16 @@ export function DriveEditor({
   options,
   defaultCompany,
   prefill,
+  onCompanyChange,
 }: {
   drive?: Row;
   companies: Row[];
   options: Report["options"];
   defaultCompany?: string;
-  /** Reviewable defaults for a new drive (from a drive PDF); never saved automatically. */
+  /** Reviewable defaults for a new drive (from the company's saved drive details); never saved automatically. */
   prefill?: Row;
+  /** New drives only: fill the form from the chosen company's drive details. */
+  onCompanyChange?: (companyId: string) => void;
 }) {
   const d = drive || prefill || {},
     existing = !!drive;
@@ -33,6 +36,7 @@ export function DriveEditor({
             name="company_id"
             defaultValue={String(d.company_id || defaultCompany || "")}
             required
+            onChange={onCompanyChange ? (e) => onCompanyChange(e.currentTarget.value) : undefined}
           >
             <option value="">Select company</option>
             {companies.map((c) => (
