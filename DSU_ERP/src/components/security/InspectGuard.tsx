@@ -12,7 +12,7 @@ export function InspectGuard() {
     if (process.env.NEXT_PUBLIC_ALLOW_INSPECT === '1') return;
     const onContextMenu = (event: MouseEvent) => event.preventDefault();
     const onKeyDown = (event: KeyboardEvent) => {
-      const key = event.key.toLowerCase();
+      const key = (event.key ?? "").toLowerCase();
       const ctrl = event.ctrlKey || event.metaKey;
       const blocked =
         key === 'f12' ||
