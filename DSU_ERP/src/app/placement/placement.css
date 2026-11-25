@@ -3419,3 +3419,12 @@ html:has(.po-shell) {
 @media (prefers-reduced-motion: reduce) {
   .po-route { animation: none; }
 }
+
+/* Report tables fill their card: no inner padding or second border, larger type. */
+.po-shell .erp-panel:has(> .erp-table-scroll) { padding: 0; overflow: hidden; }
+.po-shell .erp-panel:has(> .erp-table-scroll) > .erp-table-scroll { margin: 0; border: 0; border-radius: 0; }
+.po-shell .erp-panel:has(> .erp-table-scroll) > :not(.erp-table-scroll) { margin-inline: 1.25rem; }
+.po-shell .erp-panel:has(> .erp-table-scroll) > .erp-pagination { margin: 0; padding: 0.875rem 1.25rem; border-top: 1px solid var(--erp-border); font-size: 0.8125rem; }
+.po-shell .erp-panel:has(> .erp-table-scroll) .erp-table { font-size: 0.9375rem; }
+.po-shell .erp-panel:has(> .erp-table-scroll) .erp-table th { font-size: 0.75rem; padding: 1rem 1.25rem; }
+.po-shell .erp-panel:has(> .erp-table-scroll) .erp-table td { font-size: 0.9375rem; padding: 1.125rem 1.25rem; }
