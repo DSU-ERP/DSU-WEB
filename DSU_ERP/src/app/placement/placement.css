@@ -3428,3 +3428,18 @@ html:has(.po-shell) {
 .po-shell .erp-panel:has(> .erp-table-scroll) .erp-table { font-size: 0.9375rem; }
 .po-shell .erp-panel:has(> .erp-table-scroll) .erp-table th { font-size: 0.75rem; padding: 1rem 1.25rem; }
 .po-shell .erp-panel:has(> .erp-table-scroll) .erp-table td { font-size: 0.9375rem; padding: 1.125rem 1.25rem; }
+
+/* Drive page: read-only role details */
+.po-drive-details h2 { margin: 0 0 1.25rem; }
+.po-drive-details h3 { margin: 0 0 0.5rem; font-size: 0.8125rem; font-weight: 600; }
+.po-drive-details-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.5rem 2rem; }
+.po-drive-details-block { min-width: 0; }
+
+.po-drive-details > :not(h2) + :not(h2) { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--erp-border); }
+.po-drive-details .po-facts > div { font-size: 0.8125rem; }
+.po-drive-description { font-size: 0.875rem; line-height: 1.65; white-space: pre-line; max-width: 75ch; overflow-wrap: anywhere; }
+.po-drive-rounds, .po-drive-list { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.375rem; font-size: 0.8125rem; }
+.po-drive-tags { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.po-drive-tags li { padding: 0.25rem 0.5rem; border: 1px solid var(--erp-border); border-radius: 0.25rem; font-size: 0.75rem; background: var(--po-highlight); }
+.po-drive-pdf { margin-top: 0.75rem; font-size: 0.8125rem; }
+.po-drive-pdf a, .po-drive-details dd a { text-decoration: underline; text-underline-offset: 3px; }

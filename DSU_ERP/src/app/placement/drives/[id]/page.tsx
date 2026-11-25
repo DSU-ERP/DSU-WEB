@@ -7,6 +7,7 @@ import { DriveCreator } from "@/features/placement/components/DriveImport";
 import { DriveCandidates } from "@/features/placement/components/DriveCandidates";
 import { DeleteRecord } from "@/features/placement/components/Controls";
 import { Metrics, Filters, Pagination } from "@/features/placement/components/UI";
+import { DriveDetails } from "@/features/placement/components/DriveDetails";
 import { DriveAudiencePanel } from "@/features/placement/components/CompanyRequests";
 import { driveAudience } from "@/features/placement/lib/company";
 export default async function DrivePage({
@@ -70,11 +71,19 @@ export default async function DrivePage({
       id: drive.company_id,
       name: `${report.company} (inactive)`,
     });
+  // Opened from a company's page: go back there rather than to all drives.
+  const fromCompany = raw.from === "company" && typeof drive.company_id === "string";
   return (
     <>
-      <Link className="erp-back" href="/placement/drives">
-        ← Drives
-      </Link>
+      {fromCompany ? (
+        <Link className="erp-back" href={`/placement/companies/${drive.company_id}`}>
+          ← {text(report.company)}
+        </Link>
+      ) : (
+        <Link className="erp-back" href="/placement/drives">
+          ← Drives
+        </Link>
+      )}
       <p className="erp-eyebrow">{text(report.company)}</p>
       <h1>{text(drive.title)}</h1>
       <p className="erp-muted">
@@ -83,6 +92,7 @@ export default async function DrivePage({
         {drive.job_category ? ` · ${text(drive.job_category)}` : ""}
         {drive.employment_type ? ` · ${drive.employment_type === "internship-ppo" ? "Internship + PPO" : text(drive.employment_type)}` : ""}
       </p>
+      <DriveDetails drive={drive} company={report.company} />
       {(() => {
         const counts = report.counts as Row;
         const openings = Number(counts.openings) || 0;

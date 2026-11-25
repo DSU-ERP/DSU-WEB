@@ -60,7 +60,7 @@ export default async function CompanyEditor({
                 caption="Company drives"
                 rows={rows}
                 columns={[
-                  { key: "title", title: "Role", link: (r) => `/placement/drives/${r.id}` },
+                  { key: "title", title: "Role", link: (r) => `/placement/drives/${r.id}?from=company` },
                   { key: "job_category", title: "Job category" },
                   { key: "batch" },
                   { key: "package_lpa", title: "Package (LPA)", numeric: true },
