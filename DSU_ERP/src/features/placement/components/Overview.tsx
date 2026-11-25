@@ -25,7 +25,6 @@ import { driveDateWarning } from "../lib/overview";
 
 const records = (value: unknown): Row[] => Array.isArray(value) ? value as Row[] : [];
 const UPCOMING_LIMIT = 5;
-const CAMPUS_PHOTO = "/images/placement/campus.webp";
 
 /**
  * Home, on the adjustable glass surface: the placement rate with the other
@@ -58,7 +57,6 @@ export function PlacementOverview({ data, charts, chartError, query, environment
       <GlassHome
         eyebrow={query.batch ? `Passing-out batch ${query.batch}` : "All passing-out batches"}
         title="Placement overview"
-        background={CAMPUS_PHOTO}
         actions={<>
           {environment && <span className="po-environment">{environment}</span>}
           <BatchPicker batch={query.batch} batches={data.options.batches} />

@@ -96,6 +96,9 @@
   --po-glass-third: #e0a77c;
 }
 
+/* Without a photo the surface sits straight on the page background. */
+.po-shell .gw-root.po-glass.po-glass-plain { padding: 0; border-radius: 0; background: transparent; }
+
 /* Layout inside the shell's content column. */
 .po-shell .po-glass .po-glass-main {
   padding: clamp(1rem, 2vw, 1.75rem);

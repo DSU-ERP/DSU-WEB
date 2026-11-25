@@ -57,7 +57,6 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await build({stdin:{contents:entry,resolveDir:root,loader:'tsx'},bundle:true,outfile:path.join(dir,'bundle.js'),platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'},plugins:[{name:'boundaries',setup(b){b.onResolve({filter:/.*/},a=>mocks[a.path]?{path:a.path,namespace:'mock'}:undefined);b.onLoad({filter:/.*/,namespace:'mock'},a=>({contents:mocks[a.path],loader:'tsx',resolveDir:root}));}}]});
   server=http.createServer((req,res)=>{
    if(req.url==='/bundle.js'){res.setHeader('Content-Type','text/javascript');res.end(fs.readFileSync(path.join(dir,'bundle.js')));return;}
-   if(req.url==='/images/placement/campus.webp'){res.setHeader('Content-Type','image/webp');res.end(fs.readFileSync(path.join(root,'public/images/placement/campus.webp')));return;}
    if(req.url.startsWith('/fonts/')&&/^\/fonts\/[a-z0-9.-]+\.woff2$/.test(req.url)){res.setHeader('Content-Type','font/woff2');res.end(fs.readFileSync(path.join(root,'public',req.url)));return;}
    res.setHeader('Content-Type','text/html');res.end(`<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><div id="root"></div><script src="/bundle.js"></script></body></html>`);
   });
@@ -74,7 +73,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   for(const theme of ['light','dark']) for(const width of [1600,1440,1280,1024,768,390]){
    await page.setViewportSize({width,height:900});await open();await page.evaluate(t=>localStorage.setItem('dsu-placement-theme',t),theme);await page.reload();await page.locator('.po-'+theme).waitFor();
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false,`Overflow ${theme} ${width}`);
-   assert.ok(await page.locator('.gw-root.po-glass .gw-room').evaluate(img=>img.complete&&img.naturalWidth>0),'campus photo behind the glass');
+   assert.equal(await page.locator('.gw-root.po-glass .gw-room, .gw-room-shade').count(),0,'no background photo on Home');
    assert.equal(await page.locator('.po-glass-rate .gw-balance-value').innerText(),'0.00%');
    assert.equal(await page.locator('.po-glass-kpis li').count(),3,'rate plus three headline numbers');
    assert.equal(await page.locator('.po-overview-secondary').count(),0,'secondary metrics live in Insights');
@@ -239,7 +238,7 @@ const css='*{box-sizing:border-box}body,h1,h2,h3,p,dl,dd{margin:0}a{color:inheri
   await touchPage.locator('.po-department-chart').screenshot({path:path.join(dir,'department-mobile.png')});
   await touchPage.close();
   assert.deepEqual(errors,[]);
-  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['glass Home: photo, rate and 3 KPIs, activity periods, drives, attention, notices, status tracks','Adjust glass popover, persistence, Escape focus return','pending and unavailable drive requests','batch picker','Insights KPIs, charts and supporting measures','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','filters/clear/refresh','7 sections with every original route reachable through tabs','FRIDAY in the top bar','testing-only tab','mobile dialog and focus return','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
+  console.log(JSON.stringify({passed:true,widths:[1600,1440,1280,1024,768,390],themes:['light','dark'],checks:['glass Home without a photo: rate and 3 KPIs, activity periods, drives, attention, notices, status tracks','Adjust glass popover, persistence, Escape focus return','pending and unavailable drive requests','batch picker','Insights KPIs, charts and supporting measures','zero/missing/empty states','chart values and live updates','hover, keyboard, Escape and touch tooltips','series colors and reduced motion','filters/clear/refresh','7 sections with every original route reachable through tabs','FRIDAY in the top bar','testing-only tab','mobile dialog and focus return','no browser errors'],screenshots:dir,data:'synthetic local component fixtures; no database access'}));
  } catch(e){console.error(e.stack);if(page)await page.screenshot({path:path.join(dir,'failure.png'),fullPage:true});process.exitCode=1;}
  finally{await browser?.close();await new Promise(r=>server?server.close(r):r());}
 })();

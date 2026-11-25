@@ -71,7 +71,7 @@ export function GlassHome({
   eyebrow: ReactNode;
   title: string;
   actions?: ReactNode;
-  background: string;
+  background?: string;
   children: ReactNode;
 }) {
   const root = useRef<HTMLDivElement>(null);
@@ -122,18 +122,18 @@ export function GlassHome({
   return (
     <div
       ref={root}
-      className="gw-root po-glass"
+      className={`gw-root po-glass${background ? "" : " po-glass-plain"}`}
       style={glassVariables(material, `color-mix(in srgb, var(--po-glass-base) 80%, ${material.tint})`)}
       onKeyDown={(event) => {
         if (event.key === "Escape" && open) close();
       }}
     >
       <style>{glassWorkspaceStyles}</style>
-      {!backgroundFailed && (
+      {background && !backgroundFailed && (
         // A decorative, pre-sized local photo; next/image adds nothing behind a blur.
         <img className="gw-room" src={background} alt="" decoding="async" onError={() => setBackgroundFailed(true)} />
       )}
-      <div className="gw-room-shade" aria-hidden="true" />
+      {background && <div className="gw-room-shade" aria-hidden="true" />}
       <div className="gw-main gw-glass po-glass-main">
         <header className="gw-view-heading">
           <div>
